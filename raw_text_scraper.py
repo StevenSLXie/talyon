@@ -211,8 +211,8 @@ async def main():
     logger.info("Starting MyCareersFuture.sg raw text scraper...")
     
     try:
-        # Scrape raw texts (3 pages for testing)
-        raw_texts = await scraper.scrape_raw_texts(target_url, max_pages=3)
+        # Scrape raw texts (50 pages for comprehensive data)
+        raw_texts = await scraper.scrape_raw_texts(target_url, max_pages=50)
         
         if raw_texts:
             # Print summary

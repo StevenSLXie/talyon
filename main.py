@@ -13,7 +13,7 @@ Usage:
 Environment Variables Required:
     OPENAI_API_KEY: Your OpenAI API key
 """
-rway
+
 import asyncio
 import argparse
 import logging
@@ -113,15 +113,21 @@ async def run_scraping_pipeline(pages=50, skip_scraping=False):
 def main():
     """Main function with command line argument parsing"""
     parser = argparse.ArgumentParser(description='MyCareersFuture.sg Job Scraper Pipeline')
-    parser.add_argument('--pages', type=int, default=50, 
-                       help='Number of pages to scrape (default: 50)')
+    parser.add_argument('--pages', type=int, default=3, 
+                       help='Number of pages to scrape (default: 3)')
     parser.add_argument('--skip-scraping', action='store_true',
                        help='Skip scraping and use existing raw text file')
+    parser.add_argument('--all', action='store_true',
+                       help='Run complete pipeline (scraping + parsing)')
     
     args = parser.parse_args()
     
     # Run the pipeline
-    asyncio.run(run_scraping_pipeline(pages=args.pages, skip_scraping=args.skip_scraping))
+    if args.all:
+        logger.info("Running complete pipeline (scraping + parsing)")
+        asyncio.run(run_scraping_pipeline(pages=args.pages, skip_scraping=False))
+    else:
+        asyncio.run(run_scraping_pipeline(pages=args.pages, skip_scraping=args.skip_scraping))
 
 if __name__ == "__main__":
     main()

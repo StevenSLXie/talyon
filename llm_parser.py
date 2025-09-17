@@ -20,7 +20,8 @@ class LLMJobParser:
         
     def parse_raw_texts(self, input_file_path: str):
         """
-        Parse raw job texts using GPT-4o-mini and convert to structured data
+        Parse raw job texts using GPT-4o-mini with BATCH PROCESSING
+        Groups jobs into batches to minimize API calls
         """
         logger.info(f"Starting to parse raw texts from: {input_file_path}")
         
@@ -28,24 +29,28 @@ class LLMJobParser:
         raw_texts = self.read_raw_texts(input_file_path)
         logger.info(f"Found {len(raw_texts)} raw job texts to parse")
         
-        # Parse each text using LLM
-        parsed_jobs = []
-        for i, raw_text in enumerate(raw_texts):
-            logger.info(f"Parsing job {i+1}/{len(raw_texts)}")
+        # Group jobs into batches for efficient processing
+        batches = self.create_batches(raw_texts)
+        logger.info(f"Created {len(batches)} batches for processing")
+        
+        # Parse each batch using LLM
+        all_parsed_jobs = []
+        for i, batch in enumerate(batches):
+            logger.info(f"Processing batch {i+1}/{len(batches)} ({len(batch)} jobs)")
             try:
-                parsed_job = self.parse_single_job(raw_text)
-                if parsed_job:
-                    parsed_jobs.append(parsed_job)
+                batch_results = self.parse_batch(batch)
+                if batch_results:
+                    all_parsed_jobs.extend(batch_results)
             except Exception as e:
-                logger.error(f"Error parsing job {i+1}: {str(e)}")
+                logger.error(f"Error processing batch {i+1}: {str(e)}")
                 continue
         
-        logger.info(f"Successfully parsed {len(parsed_jobs)} jobs")
+        logger.info(f"Successfully parsed {len(all_parsed_jobs)} jobs from {len(batches)} batches")
         
         # Save results
-        self.save_results(parsed_jobs)
+        self.save_results(all_parsed_jobs)
         
-        return parsed_jobs
+        return all_parsed_jobs
     
     def read_raw_texts(self, file_path: str):
         """Read and split raw texts from the input file"""
@@ -74,6 +79,141 @@ class LLMJobParser:
                 raw_texts.append(text_content)
         
         return raw_texts
+    
+    def create_batches(self, raw_texts: list):
+        """
+        Create batches of jobs for efficient processing
+        Each batch should be under 100k characters to avoid token limits
+        """
+        batches = []
+        current_batch = []
+        current_batch_size = 0
+        max_batch_size = 20000  # 20k characters per batch (very conservative to avoid truncation)
+        
+        for raw_text in raw_texts:
+            text_size = len(raw_text)
+            
+            # If adding this job would exceed batch size, start a new batch
+            if current_batch_size + text_size > max_batch_size and current_batch:
+                batches.append(current_batch)
+                current_batch = [raw_text]
+                current_batch_size = text_size
+            else:
+                current_batch.append(raw_text)
+                current_batch_size += text_size
+        
+        # Add the last batch if it has content
+        if current_batch:
+            batches.append(current_batch)
+        
+        return batches
+    
+    def parse_batch(self, batch: list):
+        """
+        Parse a batch of jobs in a single LLM call
+        """
+        # Combine all jobs in the batch into a single text
+        batch_text = "\n\n=== BATCH SEPARATOR ===\n\n".join(batch)
+        
+        prompt = f"""
+You are a job data extraction expert. Parse the following batch of raw job texts and extract the required information for EACH job.
+
+The batch contains multiple jobs separated by "=== BATCH SEPARATOR ===". Extract information for each job separately.
+
+Batch of job texts:
+{batch_text}
+
+For EACH job, extract the following fields and return a JSON array with one object per job:
+- company: Company name
+- title: Job title
+- location: Job location (North/South/East/West/Central/Singapore/Islandwide)
+- industry: Industry or job category
+- post_date: Convert relative dates to concrete date. If it says "Posted today", use today's date. If it says "Posted yesterday", use yesterday's date. If it says "Posted X days ago", calculate the date. Format as YYYY-MM-DD.
+- salary_range: Salary range (e.g., "$6,000to$8,000" or "N/A" if not specified)
+- job_type: Job type (Full Time/Part Time/Contract/Temporary/Internship/Permanent)
+- url: Job URL if present (look for "JOB_URL:" prefix in the text)
+- application_count: Number of applications received (extract number from text like "0 application" or "5 applications")
+- raw_text: The original raw text for this specific job
+
+Important notes:
+1. For post_date: Today is {self.scraped_date.strftime('%Y-%m-%d')}
+2. If any field is not found, use "N/A"
+3. Return ONLY a valid JSON array starting with [ and ending with ], no other text
+4. Each job should be a separate object in the array
+5. Make sure to extract the correct raw_text for each individual job (not the entire batch)
+
+Example format:
+[
+  {{
+    "company": "Company Name",
+    "title": "Job Title",
+    "location": "Singapore",
+    "industry": "Technology",
+    "post_date": "2025-09-17",
+    "salary_range": "$6,000to$8,000",
+    "job_type": "Full Time",
+    "url": "https://example.com",
+    "application_count": "0",
+    "raw_text": "Original job text here"
+  }}
+]
+"""
+
+        try:
+            response = self.client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {"role": "system", "content": "You are a helpful assistant designed to output JSON arrays."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.1
+            )
+            
+            # Parse the response
+            response_content = response.choices[0].message.content
+            logger.info(f"LLM response length: {len(response_content)}")
+            logger.info(f"LLM response preview: {response_content[:200]}...")
+            
+            if not response_content.strip():
+                logger.error("Empty response from LLM")
+                return []
+            
+            # Check if response appears truncated (doesn't end with ])
+            if not response_content.strip().endswith(']'):
+                logger.warning("Response appears truncated (doesn't end with ])")
+                logger.warning(f"Response ends with: ...{response_content[-100:]}")
+                # Try to fix truncated JSON by adding closing bracket
+                if response_content.strip().startswith('[') and not response_content.strip().endswith(']'):
+                    response_content = response_content.strip() + ']'
+                    logger.info("Attempted to fix truncated JSON by adding closing bracket")
+            
+            try:
+                result = json.loads(response_content)
+            except json.JSONDecodeError as e:
+                logger.error(f"JSON parsing error: {str(e)}")
+                logger.error(f"Raw response: {response_content}")
+                return []
+            
+            # Handle both single object and array responses
+            if isinstance(result, dict):
+                # If it's a single object, wrap it in an array
+                parsed_jobs = [result]
+            elif isinstance(result, list):
+                parsed_jobs = result
+            else:
+                logger.error("Unexpected response format from LLM")
+                return []
+            
+            # Add scraped_at timestamp to each job
+            for job in parsed_jobs:
+                job['scraped_at'] = self.scraped_date.isoformat()
+            
+            logger.info(f"Successfully parsed {len(parsed_jobs)} jobs from batch")
+            return parsed_jobs
+            
+        except Exception as e:
+            logger.error(f"Error in batch LLM parsing: {str(e)}")
+            return []
     
     def parse_single_job(self, raw_text: str):
         """Parse a single job's raw text using GPT-4o-mini"""
@@ -136,6 +276,68 @@ JSON:
         except Exception as e:
             logger.error(f"Error in LLM parsing: {str(e)}")
             return None
+    
+    def parse_long_job(self, raw_text: str):
+        """
+        Parse a long job text by chunking it into smaller pieces
+        """
+        # Split the text into chunks of ~100k characters
+        chunk_size = 100000
+        chunks = []
+        
+        # Try to split at job separators first
+        if '=== JOB ' in raw_text:
+            # Split by job separators
+            job_parts = raw_text.split('=== JOB ')
+            current_chunk = ""
+            
+            for part in job_parts:
+                if len(current_chunk + part) < chunk_size:
+                    current_chunk += ("=== JOB " + part if current_chunk else part)
+                else:
+                    if current_chunk:
+                        chunks.append(current_chunk)
+                    current_chunk = "=== JOB " + part
+            
+            if current_chunk:
+                chunks.append(current_chunk)
+        else:
+            # Fallback: split by character count
+            for i in range(0, len(raw_text), chunk_size):
+                chunks.append(raw_text[i:i + chunk_size])
+        
+        logger.info(f"Split long text into {len(chunks)} chunks")
+        
+        # Parse each chunk
+        chunk_results = []
+        for i, chunk in enumerate(chunks):
+            logger.info(f"Parsing chunk {i+1}/{len(chunks)}")
+            try:
+                parsed_chunk = self.parse_single_job(chunk)
+                if parsed_chunk:
+                    chunk_results.append(parsed_chunk)
+            except Exception as e:
+                logger.error(f"Error parsing chunk {i+1}: {str(e)}")
+                continue
+        
+        # Merge results from all chunks
+        if chunk_results:
+            # Use the first chunk as base and merge others
+            merged_job = chunk_results[0]
+            
+            # Merge additional fields from other chunks
+            for chunk_result in chunk_results[1:]:
+                # Add any missing fields
+                for key, value in chunk_result.items():
+                    if key not in merged_job or merged_job[key] == "N/A":
+                        merged_job[key] = value
+            
+            # Combine raw_text from all chunks
+            merged_job['raw_text'] = raw_text
+            
+            return merged_job
+        
+        return None
     
     def save_results(self, parsed_jobs):
         """Save parsed jobs to JSON and CSV files in the output folder"""
