@@ -125,11 +125,12 @@ Batch of job texts:
 
 For EACH job, extract the following fields and return a JSON array with one object per job:
 - company: Company name
-- title: Job title
+- title: Job title (remove internal references like "(Ref 26099)", "(#78196)", etc.)
 - location: Job location (North/South/East/West/Central/Singapore/Islandwide)
 - industry: Industry or job category
 - post_date: Convert relative dates to concrete date. If it says "Posted today", use today's date. If it says "Posted yesterday", use yesterday's date. If it says "Posted X days ago", calculate the date. Format as YYYY-MM-DD.
-- salary_range: Salary range (e.g., "$6,000to$8,000" or "N/A" if not specified)
+- salary_low: Lower bound of salary range (e.g., "6000" from "$6,000to$8,000" or "N/A" if not specified)
+- salary_high: Upper bound of salary range (e.g., "8000" from "$6,000to$8,000" or "N/A" if not specified)
 - job_type: Job type (Full Time/Part Time/Contract/Temporary/Internship/Permanent)
 - url: Job URL if present (look for "JOB_URL:" prefix in the text)
 - application_count: Number of applications received (extract number from text like "0 application" or "5 applications")
@@ -150,7 +151,8 @@ Example format:
     "location": "Singapore",
     "industry": "Technology",
     "post_date": "2025-09-17",
-    "salary_range": "$6,000to$8,000",
+    "salary_low": "6000",
+    "salary_high": "8000",
     "job_type": "Full Time",
     "url": "https://example.com",
     "application_count": "0",
