@@ -29,7 +29,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-async def run_scraping_pipeline(pages=200, skip_scraping=False):
+async def run_scraping_pipeline(pages=200, start_page=0, skip_scraping=False):
     """
     Run the complete scraping and parsing pipeline
     """
@@ -42,7 +42,7 @@ async def run_scraping_pipeline(pages=200, skip_scraping=False):
     if not skip_scraping:
         logger.info("Step 1: Scraping raw job texts...")
         scraper = RawTextScraper()
-        target_url = "https://www.mycareersfuture.gov.sg/search?salary=6000&postingCompany=Direct&sortBy=new_posting_date&page=0"
+        target_url = f"https://www.mycareersfuture.gov.sg/search?salary=6000&postingCompany=Direct&sortBy=new_posting_date&page={start_page}"
         
         try:
             raw_texts = await scraper.scrape_raw_texts(target_url, max_pages=pages)
@@ -109,6 +109,8 @@ def main():
     parser = argparse.ArgumentParser(description='MyCareersFuture.sg Job Scraper Pipeline')
     parser.add_argument('--pages', type=int, default=200, 
                        help='Number of pages to scrape (default: 200)')
+    parser.add_argument('--start-page', type=int, default=0,
+                       help='Starting page number (default: 0)')
     parser.add_argument('--skip-scraping', action='store_true',
                        help='Skip scraping and use existing raw text file')
     parser.add_argument('--all', action='store_true',
@@ -119,9 +121,9 @@ def main():
     # Run the pipeline
     if args.all:
         logger.info("Running complete pipeline (scraping + parsing)")
-        asyncio.run(run_scraping_pipeline(pages=args.pages, skip_scraping=False))
+        asyncio.run(run_scraping_pipeline(pages=args.pages, start_page=args.start_page, skip_scraping=False))
     else:
-        asyncio.run(run_scraping_pipeline(pages=args.pages, skip_scraping=args.skip_scraping))
+        asyncio.run(run_scraping_pipeline(pages=args.pages, start_page=args.start_page, skip_scraping=args.skip_scraping))
 
 if __name__ == "__main__":
     main()

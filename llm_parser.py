@@ -150,7 +150,7 @@ class LLMJobParser:
         # Combine all jobs in the batch into a single text
         batch_text = "\n\n=== BATCH SEPARATOR ===\n\n".join(batch)
         
-            prompt = f"""
+        prompt = f"""
 You are a job data extraction expert. Parse the following batch of raw job texts and extract the required information for EACH job.
 
 For EACH job, extract the following fields and return a JSON array with one object per job:
@@ -164,14 +164,12 @@ For EACH job, extract the following fields and return a JSON array with one obje
 - job_type: Job type (Full Time/Part Time/Contract/Temporary/Internship/Permanent)
 - url: Job URL if present (look for "JOB_URL:" prefix in the text)
 - application_count: Number of applications received (extract number from text like "0 application" or "5 applications")
-- raw_text: The original raw text for this specific job
 
 Important notes:
 1. For post_date: Today is {self.scraped_date.strftime('%Y-%m-%d')}
 2. If any field is not found, use "N/A"
 3. Return ONLY a valid JSON array starting with [ and ending with ], no other text
 4. Each job should be a separate object in the array
-5. Make sure to extract the correct raw_text for each individual job (not the entire batch)
 
 Example format:
 [
@@ -185,8 +183,7 @@ Example format:
     "salary_high": "8000",
     "job_type": "Full Time",
     "url": "https://example.com",
-    "application_count": "0",
-    "raw_text": "Original job text here"
+    "application_count": "0"
   }}
 ]
 
@@ -241,9 +238,12 @@ Batch of job texts:
                 logger.error("Unexpected response format from LLM")
                 return []
             
-            # Add scraped_at timestamp to each job
-            for job in parsed_jobs:
+            # Add scraped_at timestamp and raw_text to each job
+            for i, job in enumerate(parsed_jobs):
                 job['scraped_at'] = self.scraped_date.isoformat()
+                # Add the corresponding raw text back
+                if i < len(batch):
+                    job['raw_text'] = batch[i]
             
             logger.info(f"Successfully parsed {len(parsed_jobs)} jobs from batch")
             return parsed_jobs
@@ -271,7 +271,6 @@ Extract the following fields and return ONLY a valid JSON object:
 - job_type: Job type (Full Time/Part Time/Contract/Temporary/Internship/Permanent)
 - url: Job URL if present (look for "JOB_URL:" prefix in the text)
 - application_count: Number of applications received (extract number from text like "0 application" or "5 applications")
-- raw_text: The original raw text
 
 Important notes:
 1. For post_date: Today is {self.scraped_date.strftime('%Y-%m-%d')}

@@ -343,7 +343,7 @@ async def main():
     """Main function to run the scraper"""
     scraper = MyCareersFutureScraper()
     
-    # Target URL from the user
+    # Target URL from the user (page=0 is hardcoded for standalone script)
     target_url = "https://www.mycareersfuture.gov.sg/search?salary=6000&postingCompany=Direct&sortBy=new_posting_date&page=0"
     
     logger.info("Starting MyCareersFuture.sg job scraper...")
