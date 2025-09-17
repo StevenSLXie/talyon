@@ -19,7 +19,6 @@ logger = logging.getLogger(__name__)
 class RawTextScraper:
     def __init__(self):
         self.raw_texts = []
-        self.seen_jobs_global = set()  # Track all seen jobs across pages
         
     async def scrape_raw_texts(self, url: str, max_pages: int = 50):
         """
@@ -59,15 +58,8 @@ class RawTextScraper:
                     # Extract raw text from current page
                     page_texts = await self.extract_raw_texts_from_page(page)
                     
-                    # Add only new texts (deduplicate across pages)
-                    new_texts = []
-                    for text in page_texts:
-                        text_hash = hash(text.strip())
-                        if text_hash not in self.seen_jobs_global:
-                            self.seen_jobs_global.add(text_hash)
-                            new_texts.append(text)
-                    
-                    self.raw_texts.extend(new_texts)
+                    # Add all texts without deduplication
+                    self.raw_texts.extend(page_texts)
                     
                     logger.info(f"Found {len(page_texts)} raw texts on page {current_page + 1} (Total so far: {len(self.raw_texts)})")
                     
@@ -84,7 +76,6 @@ class RawTextScraper:
     async def extract_raw_texts_from_page(self, page):
         """Extract raw text from the current page - IMPROVED TO HANDLE FRAGMENTED JOBS"""
         texts = []
-        seen_jobs = set()  # Track seen jobs to avoid duplicates
         
         try:
             # Try different selectors to find job card containers
@@ -135,11 +126,8 @@ class RawTextScraper:
                     if job_url:
                         raw_text = f"{raw_text}\n\nJOB_URL: {job_url}"
                     
-                    # Create a unique key for deduplication
-                    text_hash = hash(raw_text)
-                    if text_hash not in seen_jobs:
-                        seen_jobs.add(text_hash)
-                        texts.append(raw_text)
+                    # Add the raw text without deduplication
+                    texts.append(raw_text)
                         
                 except Exception as e:
                     logger.warning(f"Error extracting raw text: {str(e)}")
@@ -148,7 +136,7 @@ class RawTextScraper:
         except Exception as e:
             logger.error(f"Error extracting raw texts from page: {str(e)}")
             
-        logger.info(f"After deduplication: {len(texts)} unique raw texts")
+        logger.info(f"Extracted {len(texts)} raw texts from page")
         return texts
     
     def update_page_url(self, base_url, page_number):

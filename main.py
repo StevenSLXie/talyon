@@ -29,7 +29,7 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-async def run_scraping_pipeline(pages=50, skip_scraping=False):
+async def run_scraping_pipeline(pages=200, skip_scraping=False):
     """
     Run the complete scraping and parsing pipeline
     """
@@ -47,15 +47,9 @@ async def run_scraping_pipeline(pages=50, skip_scraping=False):
         try:
             raw_texts = await scraper.scrape_raw_texts(target_url, max_pages=pages)
             if raw_texts:
-                # Find the most recent raw text file
-                input_files = [f for f in os.listdir('input') if f.startswith('raw_job_texts_') and f.endswith('.txt')]
-                if input_files:
-                    latest_file = sorted(input_files)[-1]
-                    raw_text_file = f"input/{latest_file}"
-                    logger.info(f"Raw texts saved to: {raw_text_file}")
-                else:
-                    logger.error("Raw text file not found after scraping")
-                    return
+                # Save the raw texts to file
+                raw_text_file = scraper.save_raw_texts()
+                logger.info(f"Raw texts saved to: {raw_text_file}")
             else:
                 logger.error("No raw texts were scraped")
                 return
@@ -113,8 +107,8 @@ async def run_scraping_pipeline(pages=50, skip_scraping=False):
 def main():
     """Main function with command line argument parsing"""
     parser = argparse.ArgumentParser(description='MyCareersFuture.sg Job Scraper Pipeline')
-    parser.add_argument('--pages', type=int, default=3, 
-                       help='Number of pages to scrape (default: 3)')
+    parser.add_argument('--pages', type=int, default=200, 
+                       help='Number of pages to scrape (default: 200)')
     parser.add_argument('--skip-scraping', action='store_true',
                        help='Skip scraping and use existing raw text file')
     parser.add_argument('--all', action='store_true',

@@ -47,10 +47,14 @@ class LLMJobParser:
         
         logger.info(f"Successfully parsed {len(all_parsed_jobs)} jobs from {len(batches)} batches")
         
-        # Save results
-        self.save_results(all_parsed_jobs)
+        # Deduplicate based on company + title + salary range
+        deduplicated_jobs = self.deduplicate_jobs(all_parsed_jobs)
+        logger.info(f"After deduplication: {len(deduplicated_jobs)} unique jobs (removed {len(all_parsed_jobs) - len(deduplicated_jobs)} duplicates)")
         
-        return all_parsed_jobs
+        # Save results
+        self.save_results(deduplicated_jobs)
+        
+        return deduplicated_jobs
     
     def read_raw_texts(self, file_path: str):
         """Read and split raw texts from the input file"""
@@ -64,21 +68,52 @@ class LLMJobParser:
         # Extract just the text content (remove the job number and separators)
         raw_texts = []
         for job in jobs:
-            if job.startswith('==='):
+            # Skip empty jobs
+            if not job:
                 continue
-            # Remove the job number and separators
+                
+            # Split by lines and process
             lines = job.split('\n')
             text_lines = []
-            for line in lines:
-                if line.startswith('===') or line.startswith('JOB '):
-                    continue
+            
+            # Skip the first line if it's just a number (job number)
+            start_idx = 1 if lines[0].strip().isdigit() else 0
+            
+            for line in lines[start_idx:]:
+                # Stop at the separator line
+                if line.strip().startswith('='):
+                    break
                 text_lines.append(line)
             
+            # Join the text lines and clean up
             text_content = '\n'.join(text_lines).strip()
             if text_content:
                 raw_texts.append(text_content)
         
         return raw_texts
+    
+    def deduplicate_jobs(self, jobs: list):
+        """Deduplicate jobs based on company + title + salary range"""
+        seen_jobs = set()
+        unique_jobs = []
+        
+        for job in jobs:
+            # Create deduplication key from company + title + salary range
+            company = job.get('company', '').strip().lower()
+            title = job.get('title', '').strip().lower()
+            salary_low = job.get('salary_low', '').strip()
+            salary_high = job.get('salary_high', '').strip()
+            
+            # Create a unique key
+            dedup_key = f"{company}|{title}|{salary_low}|{salary_high}"
+            
+            if dedup_key not in seen_jobs:
+                seen_jobs.add(dedup_key)
+                unique_jobs.append(job)
+            else:
+                logger.debug(f"Duplicate job found: {company} - {title} ({salary_low}-{salary_high})")
+        
+        return unique_jobs
     
     def create_batches(self, raw_texts: list):
         """
@@ -115,13 +150,8 @@ class LLMJobParser:
         # Combine all jobs in the batch into a single text
         batch_text = "\n\n=== BATCH SEPARATOR ===\n\n".join(batch)
         
-        prompt = f"""
+            prompt = f"""
 You are a job data extraction expert. Parse the following batch of raw job texts and extract the required information for EACH job.
-
-The batch contains multiple jobs separated by "=== BATCH SEPARATOR ===". Extract information for each job separately.
-
-Batch of job texts:
-{batch_text}
 
 For EACH job, extract the following fields and return a JSON array with one object per job:
 - company: Company name
@@ -159,6 +189,11 @@ Example format:
     "raw_text": "Original job text here"
   }}
 ]
+
+The batch contains multiple jobs separated by "=== BATCH SEPARATOR ===". Extract information for each job separately.
+
+Batch of job texts:
+{batch_text}
 """
 
         try:

@@ -1,8 +1,10 @@
 <changes_needed>
 
-llm
-1. for salary range, use 2 fields, salary low and high
-2. for job title, remove all internal ref such as (Ref 26099)
+raw_scraper
+1. crawl 200 pages
+2. wait time 3 seconds
+
+
 
 </changes_needed>
 
