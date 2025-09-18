@@ -190,19 +190,41 @@ class RawTextScraper:
             logger.info(f"{sample_text[:500]}..." if len(sample_text) > 500 else sample_text)
 
 async def main():
-    """Main function to run the raw text scraper"""
+    """Main function to run the raw text scraper with multiple URLs"""
     scraper = RawTextScraper()
     
-    # Target URL from the user
-    target_url = "https://www.mycareersfuture.gov.sg/search?salary=6000&postingCompany=Direct&sortBy=new_posting_date&page=0"
+    # Updated URLs as specified in todo.md
+    target_urls = [
+        "https://www.mycareersfuture.gov.sg/job/engineering?salary=10000&postingCompany=Direct&sortBy=new_posting_date&page=0",
+        "https://www.mycareersfuture.gov.sg/job/information-technology?salary=10000&postingCompany=Direct&sortBy=new_posting_date&page=0",
+        "https://www.mycareersfuture.gov.sg/job/banking-finance?salary=10000&postingCompany=Direct&sortBy=new_posting_date&page=0"
+    ]
     
-    logger.info("Starting MyCareersFuture.sg raw text scraper...")
+    logger.info("Starting MyCareersFuture.sg raw text scraper with multiple URLs...")
     
     try:
-        # Scrape raw texts (50 pages for comprehensive data)
-        raw_texts = await scraper.scrape_raw_texts(target_url, max_pages=50)
+        all_raw_texts = []
         
-        if raw_texts:
+        for i, target_url in enumerate(target_urls):
+            logger.info(f"\n=== Scraping URL {i+1}/{len(target_urls)} ===")
+            logger.info(f"URL: {target_url}")
+            
+            # Reset scraper for each URL
+            scraper.raw_texts = []
+            
+            # Scrape raw texts (50 pages for comprehensive data)
+            raw_texts = await scraper.scrape_raw_texts(target_url, max_pages=50)
+            
+            if raw_texts:
+                all_raw_texts.extend(raw_texts)
+                logger.info(f"Scraped {len(raw_texts)} jobs from URL {i+1}")
+            else:
+                logger.warning(f"No raw texts were scraped from URL {i+1}")
+        
+        if all_raw_texts:
+            # Update scraper with all collected texts
+            scraper.raw_texts = all_raw_texts
+            
             # Print summary
             scraper.print_summary()
             
@@ -210,9 +232,10 @@ async def main():
             txt_file = scraper.save_raw_texts()
             
             logger.info(f"\nScraping completed successfully!")
+            logger.info(f"Total jobs scraped: {len(all_raw_texts)}")
             logger.info(f"Raw text file: {txt_file}")
         else:
-            logger.warning("No raw texts were scraped")
+            logger.warning("No raw texts were scraped from any URL")
             
     except Exception as e:
         logger.error(f"Scraping failed: {str(e)}")
