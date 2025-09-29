@@ -1,12 +1,37 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import JobCard from './JobCard'
+import { useState, useEffect, useMemo } from 'react'
+import EnhancedJobRecommendationCard from './EnhancedJobRecommendationCard'
+import MatchFilter from './MatchFilter'
 
 interface JobRecommendation {
   job: any
   match_score: number
   match_reasons: string[]
+  breakdown: {
+    title_match: number
+    salary_match: number
+    skills_match: number
+    experience_match: number
+    education_match: number
+    certification_match: number
+    job_family_match: number
+    work_prefs_match: number
+    industry_match: number
+  }
+  why_match: {
+    strengths: string[]
+    concerns: string[]
+    overall_assessment: string
+  }
+  gaps_and_actions: {
+    skill_gaps: Array<{ skill: string; current_level: number; required_level: number; action: string }>
+    experience_gap?: { gap_years: number; action: string }
+    education_gaps: Array<{ requirement: string; action: string }>
+    certification_gaps: Array<{ requirement: string; action: string }>
+    interview_prep: string[]
+  }
+  personalized_suggestions?: any
 }
 
 interface JobRecommendationsProps {
@@ -18,10 +43,53 @@ export default function JobRecommendations({ limit = 3, userId }: JobRecommendat
   const [recommendations, setRecommendations] = useState<JobRecommendation[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
+  const [filters, setFilters] = useState({
+    minScore: 0,
+    maxScore: 100,
+    showHighProbability: true,
+    showMediumProbability: true,
+    showLowProbability: false
+  })
+  const [sortBy, setSortBy] = useState<'score' | 'salary' | 'company'>('score')
 
   useEffect(() => {
     loadRecommendations()
   }, [userId])
+
+  // Filter and sort recommendations
+  const filteredAndSortedRecommendations = useMemo(() => {
+    let filtered = recommendations.filter(rec => {
+      const score = rec.match_score
+      
+      // Score range filter
+      if (score < filters.minScore || score > filters.maxScore) {
+        return false
+      }
+      
+      // Probability category filter
+      if (score >= 70 && !filters.showHighProbability) return false
+      if (score >= 50 && score < 70 && !filters.showMediumProbability) return false
+      if (score < 50 && !filters.showLowProbability) return false
+      
+      return true
+    })
+
+    // Sort recommendations
+    filtered.sort((a, b) => {
+      switch (sortBy) {
+        case 'score':
+          return b.match_score - a.match_score
+        case 'salary':
+          return (b.job.salary_high + b.job.salary_low) - (a.job.salary_high + a.job.salary_low)
+        case 'company':
+          return a.job.company.localeCompare(b.job.company)
+        default:
+          return b.match_score - a.match_score
+      }
+    })
+
+    return filtered
+  }, [recommendations, filters, sortBy])
 
   const loadRecommendations = async () => {
     try {
@@ -121,44 +189,53 @@ export default function JobRecommendations({ limit = 3, userId }: JobRecommendat
           Your Personalized Job Recommendations
         </h2>
         <p className="text-gray-600">
-          Based on your resume analysis, here are the top {recommendations.length} jobs that match your profile
+          Based on your resume analysis, here are the top {filteredAndSortedRecommendations.length} jobs that match your profile
+        </p>
+      </div>
+
+      {/* Filter and Sort Controls */}
+      <MatchFilter onFilterChange={setFilters} />
+      
+      {/* Sort Controls */}
+      <div className="bg-white rounded-lg shadow-md p-4 mb-6">
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-medium text-gray-700">Sort by:</span>
+          <div className="flex space-x-2">
+            {[
+              { key: 'score', label: 'Match Score' },
+              { key: 'salary', label: 'Salary' },
+              { key: 'company', label: 'Company' }
+            ].map((option) => (
+              <button
+                key={option.key}
+                onClick={() => setSortBy(option.key as any)}
+                className={`px-3 py-1 text-sm rounded-md transition-colors ${
+                  sortBy === option.key
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                {option.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Results Count */}
+      <div className="mb-4">
+        <p className="text-sm text-gray-600">
+          Showing {filteredAndSortedRecommendations.length} of {recommendations.length} recommendations
         </p>
       </div>
 
       <div className="space-y-6">
-        {recommendations.map((recommendation, index) => (
-          <div key={recommendation.job.id} className="relative">
-            {/* Match Score Badge */}
-            <div className="absolute -top-2 -right-2 z-10">
-              <div className="bg-green-500 text-white px-3 py-1 rounded-full text-sm font-medium">
-                {recommendation.match_score}% Match
-              </div>
-            </div>
-
-            {/* Job Card */}
-            <div className="bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden">
-              <JobCard job={recommendation.job} />
-              
-              {/* Match Reasons */}
-              <div className="px-6 pb-6">
-                <div className="border-t border-gray-100 pt-4">
-                  <h4 className="text-sm font-medium text-gray-900 mb-2">
-                    Why this job matches you:
-                  </h4>
-                  <ul className="space-y-1">
-                    {recommendation.match_reasons.map((reason, reasonIndex) => (
-                      <li key={reasonIndex} className="flex items-start text-sm text-gray-600">
-                        <svg className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                        {reason}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </div>
+        {filteredAndSortedRecommendations.map((recommendation, index) => (
+          <EnhancedJobRecommendationCard
+            key={recommendation.job.id || index}
+            recommendation={recommendation}
+            index={index}
+          />
         ))}
       </div>
 

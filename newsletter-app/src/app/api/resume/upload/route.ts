@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { ResumeParser } from '@/lib/resume-parser'
 import { llmAnalysisService } from '@/lib/llm-analysis'
 import { supabaseAdmin } from '@/lib/supabase'
+import { EnhancedCandidateProfileService } from '@/lib/enhanced-candidate-profile'
 
 async function saveFlatJsonResume(userId: string, resumeId: string, jsonResume: any) {
   const db = supabaseAdmin()
@@ -318,22 +319,35 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Failed to resolve user profile.' }, { status: 500 })
     }
 
-    const userId = usersId
+    const userId = usersId as string
 
     // Process the resume (upload to storage + save metadata)
     const { resumeId, filePath } = await ResumeParser.processResume(userId, file)
 
-    // Generate JSON Resume directly from file using OpenAI
+    // Generate enhanced candidate profile directly from file using OpenAI
+    const enhancedProfile = await llmAnalysisService.generateEnhancedProfileFromFile(file)
+    console.debug('[Upload] Enhanced Profile', JSON.stringify(enhancedProfile, null, 2))
+    
+    // Save enhanced profile to database
+    const { success, counts } = await EnhancedCandidateProfileService.saveEnhancedProfile(userId, resumeId, enhancedProfile)
+    
+    if (!success) {
+      throw new Error('Failed to save enhanced profile')
+    }
+
+    // Also generate legacy JSON Resume for backward compatibility
     const jsonResume = await llmAnalysisService.generateResumeJsonFromFile(file)
-    console.debug('[Upload] JSON Resume basics', JSON.stringify(jsonResume?.basics || {}, null, 2))
-    console.debug('[Upload] work sample', JSON.stringify(jsonResume?.work || [], null, 2))
-    const counts = await saveFlatJsonResume(userId, resumeId, jsonResume)
+    const legacyCounts = await saveFlatJsonResume(userId, resumeId, jsonResume)
 
     return NextResponse.json({
       success: true,
       resumeId,
       filePath,
-      counts,
+      counts: {
+        enhanced: counts,
+        legacy: legacyCounts
+      },
+      enhancedProfile,
       jsonResume
     })
 

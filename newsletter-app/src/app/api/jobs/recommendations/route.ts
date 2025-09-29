@@ -37,25 +37,26 @@ export async function POST(request: NextRequest) {
 
     const usersId = userRow.id as string
 
-    // Pull candidate titles from candidate_work
-    const { data: workRows } = await supabaseAdmin()
-      .from('candidate_work')
-      .select('position')
-      .eq('user_id', usersId)
-      .order('start_date', { ascending: false })
-      .limit(10)
+    // Build comprehensive candidate profile
+    const candidateProfile = await jobMatchingService.buildCandidateProfile(usersId)
 
-    const candidateTitles = (workRows || [])
-      .map(w => w?.position)
-      .filter(Boolean) as string[]
-
-    if (candidateTitles.length === 0) {
-      return NextResponse.json({ error: 'No work titles found. Upload a resume first.' }, { status: 404 })
+    if (candidateProfile.titles.length === 0) {
+      return NextResponse.json({ error: 'No work experience found. Upload a resume first.' }, { status: 404 })
     }
 
-    const recommendations = await jobMatchingService.getRecommendationsFromTitles(candidateTitles, limit, usersId)
+    // Use enhanced matching algorithm
+    const recommendations = await jobMatchingService.getEnhancedRecommendations(candidateProfile, limit, usersId)
 
-    return NextResponse.json({ success: true, recommendations, titlesUsed: candidateTitles.slice(0, 3) })
+    return NextResponse.json({ 
+      success: true, 
+      recommendations, 
+      candidateProfile: {
+        titles: candidateProfile.titles.slice(0, 3),
+        skills: candidateProfile.skills.slice(0, 5),
+        experience_years: candidateProfile.experience_years,
+        salary_range: `${candidateProfile.salary_range_min}-${candidateProfile.salary_range_max}`
+      }
+    })
   } catch (error) {
     console.error('Job recommendations error:', error)
     return NextResponse.json({ error: 'Failed to get recommendations' }, { status: 500 })
