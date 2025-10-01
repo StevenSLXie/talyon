@@ -1,11 +1,7 @@
 // Advanced Two-Stage Job Recommendation System
 import { supabase } from './supabase'
 import { JobMatchingService, CandidateProfile, JobRecommendation } from './job-matching'
-import OpenAI from 'openai'
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
+import { llmAnalysisService } from './llm-analysis'
 
 export interface AdvancedJobRecommendation extends JobRecommendation {
   llm_analysis: {
@@ -223,40 +219,14 @@ Analyze each job thoughtfully and provide personalized insights.
 `
 
     try {
-      console.log('🤖 Calling OpenAI API for job analysis...')
+      console.log('🤖 Calling LLM for job analysis...')
 
-      const completion = await openai.chat.completions.create({
-        model: 'gpt-4',
-        messages: [
-          {
-            role: 'system',
-            content: 'You are an expert career advisor who provides detailed, personalized job analysis. Always respond with valid JSON format as requested.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        temperature: 0.3,
-        max_tokens: 4000,
-      })
+      // Use the new batch analysis method
+      const response = await llmAnalysisService.batchAnalyzeJobs(candidateSummary, jobSummaries)
 
-      const content = completion.choices[0]?.message?.content
+      console.log('✅ LLM API call successful')
 
-      if (!content) {
-        throw new Error('No response from OpenAI')
-      }
-
-      console.log('✅ OpenAI API call successful')
-
-      // Parse LLM response
-      const llmResponse = JSON.parse(content)
-      
-      if (!llmResponse.job_analyses || !Array.isArray(llmResponse.job_analyses)) {
-        throw new Error('Invalid LLM response format')
-      }
-
-      return llmResponse
+      return response
 
     } catch (error) {
       console.error('❌ LLM analysis failed:', error)
