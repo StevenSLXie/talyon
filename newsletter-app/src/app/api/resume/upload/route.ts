@@ -324,8 +324,8 @@ export async function POST(request: NextRequest) {
     // Process the resume (upload to storage + save metadata)
     const { resumeId, filePath } = await ResumeParser.processResume(userId, file)
 
-    // Generate enhanced candidate profile directly from file using OpenAI
-    const enhancedProfile = await llmAnalysisService.generateEnhancedProfileFromFile(file)
+    // Generate both enhanced profile and JSON resume in one OpenAI call
+    const { enhancedProfile, jsonResume } = await llmAnalysisService.generateCombinedProfileFromFile(file)
     console.debug('[Upload] Enhanced Profile', JSON.stringify(enhancedProfile, null, 2))
     
     // Save enhanced profile to database
@@ -335,8 +335,7 @@ export async function POST(request: NextRequest) {
       throw new Error('Failed to save enhanced profile')
     }
 
-    // Also generate legacy JSON Resume for backward compatibility
-    const jsonResume = await llmAnalysisService.generateResumeJsonFromFile(file)
+    // Save legacy JSON Resume for backward compatibility
     const legacyCounts = await saveFlatJsonResume(userId, resumeId, jsonResume)
 
     return NextResponse.json({

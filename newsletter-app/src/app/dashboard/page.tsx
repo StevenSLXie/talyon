@@ -22,6 +22,7 @@ interface DashboardStats {
 
 export default function Dashboard() {
   const { user } = useAuth()
+  const [refreshKey, setRefreshKey] = useState(0) // Add refresh key for job recommendations
   const [stats, setStats] = useState<DashboardStats>({
     savedJobs: 0,
     applications: 0,
@@ -35,6 +36,20 @@ export default function Dashboard() {
       loadDashboardData()
     }
   }, [user])
+
+  // Listen for resume upload completion
+  useEffect(() => {
+    const handleResumeUpload = () => {
+      setRefreshKey(prev => prev + 1)
+    }
+
+    // Listen for custom event when resume upload completes
+    window.addEventListener('resumeUploaded', handleResumeUpload)
+    
+    return () => {
+      window.removeEventListener('resumeUploaded', handleResumeUpload)
+    }
+  }, [])
 
   const loadDashboardData = async () => {
     setLoading(true)
@@ -232,7 +247,14 @@ export default function Dashboard() {
           </div>
 
           {/* Job Recommendations */}
-          <JobRecommendations limit={6} />
+          {refreshKey > 0 ? (
+            <JobRecommendations key={refreshKey} limit={6} refreshTrigger={refreshKey} userId={user?.id} />
+          ) : (
+            <div className="bg-white rounded-lg shadow p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Job Recommendations</h3>
+              <p className="text-gray-600">Upload your resume to get personalized job recommendations.</p>
+            </div>
+          )}
         </div>
       </div>
     </ProtectedRoute>

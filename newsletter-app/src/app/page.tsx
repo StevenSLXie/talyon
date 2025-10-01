@@ -45,6 +45,7 @@ const mockupJobs = [
 export default function Home() {
   const { user, loading } = useAuth()
   const [showLogin, setShowLogin] = useState(false)
+  const [refreshKey, setRefreshKey] = useState(0) // Add refresh key for job recommendations
   const [jobStats, setJobStats] = useState({
     totalJobs: 1351,
     totalCompanies: 500,
@@ -186,7 +187,10 @@ export default function Home() {
           <ResumeUpload 
             onUploadSuccess={(resumeData) => {
               console.log('Resume uploaded successfully:', resumeData)
-              // You can add success handling here
+              // Refresh job recommendations by changing the key
+              setRefreshKey(prev => prev + 1)
+              // Dispatch custom event for dashboard to listen
+              window.dispatchEvent(new CustomEvent('resumeUploaded'))
             }}
             onUploadError={(error) => {
               console.error('Resume upload error:', error)
@@ -197,8 +201,8 @@ export default function Home() {
 
         {/* Featured Jobs Preview or Recommendations */}
         <div className="max-w-4xl mx-auto">
-          {user ? (
-            <JobRecommendations limit={6} />
+          {user && refreshKey > 0 ? (
+            <JobRecommendations key={refreshKey} limit={6} refreshTrigger={refreshKey} userId={user?.id} />
           ) : (
             <>
               <h2 className="text-3xl font-bold text-center text-gray-900 mb-8">

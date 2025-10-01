@@ -37,9 +37,10 @@ interface JobRecommendation {
 interface JobRecommendationsProps {
   limit?: number
   userId?: string
+  refreshTrigger?: number // Add refresh trigger prop
 }
 
-export default function JobRecommendations({ limit = 3, userId }: JobRecommendationsProps) {
+export default function JobRecommendations({ limit = 3, userId, refreshTrigger = 0 }: JobRecommendationsProps) {
   const [recommendations, setRecommendations] = useState<JobRecommendation[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
@@ -53,8 +54,10 @@ export default function JobRecommendations({ limit = 3, userId }: JobRecommendat
   const [sortBy, setSortBy] = useState<'score' | 'salary' | 'company'>('score')
 
   useEffect(() => {
+    if (userId && refreshTrigger > 0) { // Only load when userId exists and refreshTrigger is valid
     loadRecommendations()
-  }, [userId])
+    }
+  }, [userId, refreshTrigger])
 
   // Filter and sort recommendations
   const filteredAndSortedRecommendations = useMemo(() => {
@@ -91,7 +94,18 @@ export default function JobRecommendations({ limit = 3, userId }: JobRecommendat
     return filtered
   }, [recommendations, filters, sortBy])
 
+  useEffect(() => {
+    if (userId && refreshTrigger > 0) { // Only load when userId exists and refreshTrigger is valid
+      loadRecommendations()
+    }
+  }, [userId, refreshTrigger])
+
   const loadRecommendations = async () => {
+    if (!userId) {
+      setError('User ID is required')
+      return
+    }
+    
     try {
       setLoading(true)
       setError('')
@@ -102,7 +116,7 @@ export default function JobRecommendations({ limit = 3, userId }: JobRecommendat
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          userId: userId || 'temp-user-id', // This should come from auth
+          userId: userId, // This should come from auth
           limit
         })
       })
@@ -169,7 +183,7 @@ export default function JobRecommendations({ limit = 3, userId }: JobRecommendat
           <div className="text-gray-400 mb-4">
             <svg className="w-16 h-16 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-            </svg>
+          </svg>
           </div>
           <p className="text-gray-600 mb-4">
             No personalized recommendations available yet.
@@ -206,7 +220,7 @@ export default function JobRecommendations({ limit = 3, userId }: JobRecommendat
               { key: 'salary', label: 'Salary' },
               { key: 'company', label: 'Company' }
             ].map((option) => (
-              <button
+          <button
                 key={option.key}
                 onClick={() => setSortBy(option.key as any)}
                 className={`px-3 py-1 text-sm rounded-md transition-colors ${
@@ -216,7 +230,7 @@ export default function JobRecommendations({ limit = 3, userId }: JobRecommendat
                 }`}
               >
                 {option.label}
-              </button>
+          </button>
             ))}
           </div>
         </div>
@@ -227,7 +241,7 @@ export default function JobRecommendations({ limit = 3, userId }: JobRecommendat
         <p className="text-sm text-gray-600">
           Showing {filteredAndSortedRecommendations.length} of {recommendations.length} recommendations
         </p>
-      </div>
+            </div>
 
       <div className="space-y-6">
         {filteredAndSortedRecommendations.map((recommendation, index) => (

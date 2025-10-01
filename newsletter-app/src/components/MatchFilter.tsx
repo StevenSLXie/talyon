@@ -105,7 +105,7 @@ export default function MatchFilter({ onFilterChange }: MatchFilterProps) {
               />
               <span className="ml-2 text-sm text-gray-700">
                 <span className="inline-block w-3 h-3 bg-red-500 rounded-full mr-1"></span>
-                Low (<50%)
+                Low (&lt;50%)
               </span>
             </label>
           </div>
