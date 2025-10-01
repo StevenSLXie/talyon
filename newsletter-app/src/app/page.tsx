@@ -78,9 +78,9 @@ export default function Home() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+      <div className="min-h-screen bg-white flex items-center justify-center">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto mb-4"></div>
           <p className="text-gray-600">Loading...</p>
         </div>
       </div>
@@ -88,12 +88,12 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-white">
       {/* Header */}
-      <header className="bg-white shadow-sm">
-        <div className="container mx-auto px-4 py-4 flex justify-between items-center">
+      <header className="bg-white border-b border-gray-200">
+        <div className="container mx-auto px-4 py-6 flex justify-between items-center">
           <div className="flex items-center space-x-2">
-            <h1 className="text-2xl font-bold text-blue-600">Singapore Job Matcher</h1>
+            <h1 className="text-2xl font-bold text-black">JobMatcher</h1>
           </div>
           
           <div className="flex items-center space-x-4">
@@ -102,7 +102,7 @@ export default function Home() {
             ) : (
               <button
                 onClick={() => setShowLogin(true)}
-                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                className="bg-black text-white px-6 py-2 rounded-none hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
               >
                 Sign In
               </button>
@@ -111,47 +111,47 @@ export default function Home() {
         </div>
       </header>
       {/* Hero Section */}
-      <div className="container mx-auto px-4 py-16">
-        <div className="text-center mb-16">
-          <h1 className="text-5xl font-bold text-gray-900 mb-6">
-            Why Send Your Same Resume to 100 Companies?
-            <span className="text-blue-600 block">Get Targeted Matches Instead</span>
+      <div className="container mx-auto px-4 py-20">
+        <div className="text-center mb-20">
+          <h1 className="text-6xl font-light text-black mb-8 leading-tight">
+            Stop Sending Generic Resumes
+            <span className="block font-bold">Get Targeted Matches</span>
           </h1>
-          <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-            Upload your resume and get personalized job recommendations based on your skills, 
-            experience, and career goals. No more generic applications.
+          <p className="text-lg text-gray-600 mb-12 max-w-xl mx-auto leading-relaxed">
+            Upload your resume. Get personalized job recommendations. 
+            Focus on opportunities that matter.
           </p>
           
           {user ? (
-            <div className="space-y-4 mb-8">
-              <p className="text-lg text-gray-700">Welcome back, {user.name || user.email}!</p>
-              <div className="flex justify-center space-x-4">
+            <div className="space-y-6 mb-12">
+              <p className="text-gray-600">Welcome back, {user.name || user.email}</p>
+              <div className="flex justify-center space-x-6">
                 <a
                   href="/jobs"
-                  className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 font-medium"
+                  className="bg-black text-white px-8 py-3 rounded-none hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 font-medium transition-colors"
                 >
-                  Browse All Jobs
+                  Browse Jobs
                 </a>
                 <a
                   href="/dashboard"
-                  className="bg-white text-blue-600 px-6 py-3 rounded-lg border border-blue-600 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 font-medium"
+                  className="bg-white text-black px-8 py-3 border border-black hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 font-medium transition-colors"
                 >
-                  My Dashboard
+                  Dashboard
                 </a>
               </div>
             </div>
           ) : (
-            <div className="space-y-4 mb-8">
-              <div className="flex justify-center space-x-4">
+            <div className="space-y-6 mb-12">
+              <div className="flex justify-center space-x-6">
                 <button
                   onClick={() => setShowLogin(true)}
-                  className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 font-medium"
+                  className="bg-black text-white px-8 py-3 rounded-none hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 font-medium transition-colors"
                 >
-                  Sign In to Browse Jobs
+                  Sign In
                 </button>
                 <a
                   href="#upload"
-                  className="bg-white text-blue-600 px-6 py-3 rounded-lg border border-blue-600 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 font-medium"
+                  className="bg-white text-black px-8 py-3 border border-black hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 font-medium transition-colors"
                 >
                   Upload Resume
                 </a>
@@ -160,24 +160,24 @@ export default function Home() {
           )}
           
           {/* Live Stats */}
-          <div className="flex justify-center gap-8 mb-12">
+          <div className="flex justify-center gap-12 mb-16">
             <div className="text-center">
-              <div className="text-3xl font-bold text-blue-600">
+              <div className="text-4xl font-light text-black">
                 {statsLoading ? '...' : jobStats.totalJobs.toLocaleString()}
               </div>
-              <div className="text-gray-600">Active Jobs</div>
+              <div className="text-gray-500 text-sm uppercase tracking-wide">Jobs</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-blue-600">
+              <div className="text-4xl font-light text-black">
                 {statsLoading ? '...' : jobStats.totalCompanies.toLocaleString()}+
               </div>
-              <div className="text-gray-600">Companies</div>
+              <div className="text-gray-500 text-sm uppercase tracking-wide">Companies</div>
             </div>
             <div className="text-center">
-              <div className="text-3xl font-bold text-blue-600">
+              <div className="text-4xl font-light text-black">
                 {statsLoading ? '...' : jobStats.newJobsToday}
               </div>
-              <div className="text-gray-600">New Today</div>
+              <div className="text-gray-500 text-sm uppercase tracking-wide">New Today</div>
             </div>
           </div>
         </div>
@@ -200,27 +200,27 @@ export default function Home() {
         </div>
 
         {/* Featured Jobs Preview or Recommendations */}
-        <div className="max-w-4xl mx-auto">
+        <div className="max-w-6xl mx-auto">
           {user && refreshKey > 0 ? (
             <JobRecommendations key={refreshKey} limit={6} refreshTrigger={refreshKey} userId={user?.id} />
           ) : (
             <>
-              <h2 className="text-3xl font-bold text-center text-gray-900 mb-8">
-                Featured Jobs This Week
+              <h2 className="text-3xl font-light text-center text-black mb-12">
+                Featured Jobs
               </h2>
-              <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
                 {mockupJobs.map((job, index) => (
                   <JobCard key={index} job={job} />
                 ))}
               </div>
               
-              <div className="text-center mt-8">
-                <p className="text-gray-600 mb-4">
-                  Want personalized job recommendations?
+              <div className="text-center mt-12">
+                <p className="text-gray-600 mb-6">
+                  Want personalized recommendations?
                 </p>
                 <a 
                   href="#upload" 
-                  className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 transition-colors"
+                  className="inline-flex items-center px-8 py-3 border border-black text-base font-medium text-black hover:bg-gray-50 transition-colors"
                 >
                   Upload Your Resume
                 </a>
@@ -231,48 +231,48 @@ export default function Home() {
       </div>
 
       {/* Features Section */}
-      <div className="bg-white py-16">
+      <div className="bg-gray-50 py-20">
         <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center text-gray-900 mb-12">
-            Why Choose Our Targeted Approach?
+          <h2 className="text-3xl font-light text-center text-black mb-16">
+            How It Works
           </h2>
-          <div className="grid md:grid-cols-3 gap-8">
+          <div className="grid md:grid-cols-3 gap-12">
             <div className="text-center">
-              <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+              <div className="w-16 h-16 bg-black rounded-none flex items-center justify-center mx-auto mb-6">
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold mb-2">AI-Powered Analysis</h3>
-              <p className="text-gray-600">Our AI analyzes your resume to understand your strengths, skills, and career goals.</p>
+              <h3 className="text-xl font-medium mb-4 text-black">AI Analysis</h3>
+              <p className="text-gray-600 leading-relaxed">Our AI analyzes your resume to understand your strengths, skills, and career goals.</p>
             </div>
             <div className="text-center">
-              <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              <div className="w-16 h-16 bg-black rounded-none flex items-center justify-center mx-auto mb-6">
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold mb-2">Smart Matching</h3>
-              <p className="text-gray-600">Get matched with jobs that truly fit your profile, not just keyword matches.</p>
+              <h3 className="text-xl font-medium mb-4 text-black">Smart Matching</h3>
+              <p className="text-gray-600 leading-relaxed">Get matched with jobs that truly fit your profile, not just keyword matches.</p>
             </div>
             <div className="text-center">
-              <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <svg className="w-8 h-8 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+              <div className="w-16 h-16 bg-black rounded-none flex items-center justify-center mx-auto mb-6">
+                <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-semibold mb-2">Save Time</h3>
-              <p className="text-gray-600">Stop applying to hundreds of jobs. Focus on the ones that matter most to your career.</p>
+              <h3 className="text-xl font-medium mb-4 text-black">Save Time</h3>
+              <p className="text-gray-600 leading-relaxed">Stop applying to hundreds of jobs. Focus on the ones that matter most to your career.</p>
             </div>
           </div>
         </div>
       </div>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-white py-8">
+      <footer className="bg-black text-white py-12">
         <div className="container mx-auto px-4 text-center">
           <p className="text-gray-400">
-            © 2025 Singapore Job Matcher. Helping you find targeted opportunities.
+            © 2025 JobMatcher. Focus on what matters.
           </p>
         </div>
       </footer>

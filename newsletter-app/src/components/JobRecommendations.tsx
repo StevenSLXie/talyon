@@ -3,6 +3,7 @@
 import { useState, useEffect, useMemo } from 'react'
 import EnhancedJobRecommendationCard from './EnhancedJobRecommendationCard'
 import MatchFilter from './MatchFilter'
+import { AdvancedJobRecommendation } from '@/lib/advanced-job-matching'
 
 interface JobRecommendation {
   job: any
@@ -41,7 +42,7 @@ interface JobRecommendationsProps {
 }
 
 export default function JobRecommendations({ limit = 3, userId, refreshTrigger = 0 }: JobRecommendationsProps) {
-  const [recommendations, setRecommendations] = useState<JobRecommendation[]>([])
+  const [recommendations, setRecommendations] = useState<AdvancedJobRecommendation[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
   const [filters, setFilters] = useState({
@@ -52,6 +53,7 @@ export default function JobRecommendations({ limit = 3, userId, refreshTrigger =
     showLowProbability: false
   })
   const [sortBy, setSortBy] = useState<'score' | 'salary' | 'company'>('score')
+  const [showAdvancedAnalysis, setShowAdvancedAnalysis] = useState(false)
 
   useEffect(() => {
     if (userId && refreshTrigger > 0) { // Only load when userId exists and refreshTrigger is valid

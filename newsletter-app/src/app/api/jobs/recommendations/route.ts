@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { jobMatchingService } from '@/lib/job-matching'
+import { advancedJobMatchingService } from '@/lib/advanced-job-matching'
 import { supabaseAdmin } from '@/lib/supabase'
 
 export async function POST(request: NextRequest) {
@@ -37,28 +37,25 @@ export async function POST(request: NextRequest) {
 
     const usersId = userRow.id as string
 
-    // Build comprehensive candidate profile
-    const candidateProfile = await jobMatchingService.buildCandidateProfile(usersId)
+    console.log('🚀 Starting advanced job recommendations for user:', usersId)
 
-    if (candidateProfile.titles.length === 0) {
-      return NextResponse.json({ error: 'No work experience found. Upload a resume first.' }, { status: 404 })
-    }
+    // Use advanced two-stage matching system
+    const recommendations = await advancedJobMatchingService.getEnhancedJobRecommendations(usersId, limit)
 
-    // Use enhanced matching algorithm
-    const recommendations = await jobMatchingService.getEnhancedRecommendations(candidateProfile, limit, usersId)
+    console.log('✅ Advanced recommendations generated:', recommendations.length)
 
     return NextResponse.json({ 
       success: true, 
-      recommendations, 
-      candidateProfile: {
-        titles: candidateProfile.titles.slice(0, 3),
-        skills: candidateProfile.skills.slice(0, 5),
-        experience_years: candidateProfile.experience_years,
-        salary_range: `${candidateProfile.salary_range_min}-${candidateProfile.salary_range_max}`
-      }
+      recommendations,
+      system: 'advanced_two_stage',
+      stage1_jobs_analyzed: recommendations.length > 0 ? 20 : 0,
+      stage2_llm_analysis: recommendations.length > 0 ? 'completed' : 'skipped'
     })
   } catch (error) {
-    console.error('Job recommendations error:', error)
-    return NextResponse.json({ error: 'Failed to get recommendations' }, { status: 500 })
+    console.error('❌ Advanced job recommendations error:', error)
+    return NextResponse.json({ 
+      error: 'Failed to get advanced recommendations',
+      details: error instanceof Error ? error.message : 'Unknown error'
+    }, { status: 500 })
   }
 }
