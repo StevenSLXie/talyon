@@ -141,6 +141,10 @@ export class AdvancedJobMatchingService {
    * Build candidate summary for LLM analysis
    */
   private buildCandidateSummary(candidateProfile: CandidateProfile): string {
+    const educationText = candidateProfile.education?.length > 0 
+      ? candidateProfile.education.map(e => `${e.study_type} in ${e.area} from ${e.institution}`).join(', ')
+      : 'Not specified'
+
     const summary = `
 CANDIDATE PROFILE:
 - Experience: ${candidateProfile.experience_years} years
@@ -148,7 +152,7 @@ CANDIDATE PROFILE:
 - Key Skills: ${candidateProfile.skills.map(s => s.name).join(', ')}
 - Industries: ${candidateProfile.industries.join(', ')}
 - Salary Range: $${candidateProfile.salary_range_min?.toLocaleString()} - $${candidateProfile.salary_range_max?.toLocaleString()}
-- Education: ${candidateProfile.education?.map(e => `${e.study_type} in ${e.area}`).join(', ') || 'Not specified'}
+- Education: ${educationText}
 - Work Preferences: ${candidateProfile.work_prefs ? `${candidateProfile.work_prefs.remote} work, ${candidateProfile.work_prefs.job_type} position` : 'Not specified'}
 - Work Authorization: ${candidateProfile.work_auth ? (candidateProfile.work_auth.citizen_or_pr ? 'Citizen/PR' : 'Needs EP') : 'Not specified'}
 `

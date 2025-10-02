@@ -55,7 +55,7 @@ interface EnhancedJobRecommendationCardProps {
 }
 
 export default function EnhancedJobRecommendationCard({ recommendation, index }: EnhancedJobRecommendationCardProps) {
-  const [activeTab, setActiveTab] = useState<'analysis' | 'breakdown' | 'gaps' | 'suggestions'>('analysis')
+  const [activeTab, setActiveTab] = useState<'analysis' | 'breakdown' | 'gaps'>('analysis')
   const [isExpanded, setIsExpanded] = useState(true) // Show detailed analysis by default
 
   const getMatchScoreColor = (score: number) => {
@@ -161,8 +161,7 @@ export default function EnhancedJobRecommendationCard({ recommendation, index }:
               {[
                 { key: 'analysis', label: 'Detailed Analysis' },
                 { key: 'breakdown', label: 'Score Breakdown' },
-                { key: 'gaps', label: 'Gaps & Actions' },
-                { key: 'suggestions', label: 'AI Suggestions' }
+                { key: 'gaps', label: 'Gaps & Actions' }
               ].map((tab) => (
                 <button
                   key={tab.key}
@@ -337,68 +336,6 @@ export default function EnhancedJobRecommendationCard({ recommendation, index }:
                   <div className="text-center py-8 text-gray-500">
                     <p>Gap analysis not available for this recommendation.</p>
                     <p className="text-sm mt-2">This job was analyzed using our advanced AI system.</p>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {activeTab === 'suggestions' && recommendation.personalized_suggestions && (
-              <div className="space-y-4">
-                <div className="p-4 bg-blue-50 rounded-lg">
-                  <h6 className="font-medium text-blue-900 mb-2">Overall Strategy:</h6>
-                  <p className="text-sm text-blue-800">{recommendation.personalized_suggestions.overall_strategy}</p>
-                </div>
-
-                {recommendation.personalized_suggestions.skill_gaps.length > 0 && (
-                  <div>
-                    <h6 className="font-medium text-gray-800 mb-2">Personalized Skill Development:</h6>
-                    <div className="space-y-3">
-                      {recommendation.personalized_suggestions.skill_gaps.map((suggestion: any, idx: number) => (
-                        <div key={idx} className="p-3 bg-green-50 rounded-lg">
-                          <div className="flex justify-between items-start mb-2">
-                            <h7 className="font-medium text-green-900">{suggestion.title}</h7>
-                            <span className={`px-2 py-1 text-xs rounded ${
-                              suggestion.priority === 'high' ? 'bg-red-100 text-red-800' :
-                              suggestion.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-                              'bg-gray-100 text-gray-800'
-                            }`}>
-                              {suggestion.priority}
-                            </span>
-                          </div>
-                          <p className="text-sm text-green-800 mb-2">{suggestion.description}</p>
-                          <div className="text-xs text-green-700">
-                            <span className="font-medium">Timeline:</span> {suggestion.timeline}
-                          </div>
-                          {suggestion.specific_actions && suggestion.specific_actions.length > 0 && (
-                            <div className="mt-2">
-                              <span className="text-xs font-medium text-green-700">Actions:</span>
-                              <ul className="mt-1 space-y-1">
-                                {suggestion.specific_actions.map((action: string, actionIdx: number) => (
-                                  <li key={actionIdx} className="text-xs text-green-700">• {action}</li>
-                                ))}
-                              </ul>
-                            </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {recommendation.personalized_suggestions.interview_prep.length > 0 && (
-                  <div>
-                    <h6 className="font-medium text-gray-800 mb-2">Interview Strategy:</h6>
-                    <div className="space-y-2">
-                      {recommendation.personalized_suggestions.interview_prep.map((prep: any, idx: number) => (
-                        <div key={idx} className="p-3 bg-purple-50 rounded-lg">
-                          <h7 className="font-medium text-purple-900 mb-1">{prep.title}</h7>
-                          <p className="text-sm text-purple-800 mb-2">{prep.description}</p>
-                          <div className="text-xs text-purple-700">
-                            <span className="font-medium">Timeline:</span> {prep.timeline}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
                   </div>
                 )}
               </div>
