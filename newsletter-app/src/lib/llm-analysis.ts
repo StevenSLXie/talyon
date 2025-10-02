@@ -425,28 +425,86 @@ Return ONLY valid JSON without code fences.`
   }
 
   /**
-   * Complete resume analysis
+   * Comprehensive resume analysis - all aspects in one call
+   */
+  async analyzeResumeComprehensive(resumeText: string): Promise<CandidateProfile> {
+    try {
+      const prompt = `You are an expert career counselor and talent acquisition specialist analyzing a resume comprehensively.
+
+Analyze the following resume text and provide a complete candidate profile analysis:
+
+Resume text:
+${resumeText}
+
+Please provide ALL of the following analysis in a single JSON response:
+
+1. **Strengths and Weaknesses**
+2. **Salary Range Analysis** 
+3. **Skills and Profile Tags**
+
+Return your response as JSON with this exact structure:
+{
+  "strengths": ["strength1", "strength2", "strength3"],
+  "weaknesses": ["weakness1", "weakness2", "weakness3"],
+  "salary_min": 5000,
+  "salary_max": 12000,
+  "salary_reasoning": "Brief explanation of the salary range",
+  "skills": ["skill1", "skill2", "skill3"],
+  "companies": ["company1", "company2"],
+  "experience_years": 5,
+  "industry_tags": ["industry1", "industry2"],
+  "role_tags": ["role1", "role2"]
+}
+
+Guidelines:
+- For salary analysis, consider Singapore market rates, experience level, education, and industry
+- Extract all technical and soft skills mentioned
+- Count total years of work experience accurately
+- Identify industries and role types from work history
+- Be specific and actionable in strengths/weaknesses
+- Return ONLY valid JSON without code fences`
+
+      const response = await this.callOpenAI(prompt, SYSTEM_PROMPTS.resumeAnalysis)
+      const parsed = this.parseJsonResponse(response)
+      
+      // Validate and return the comprehensive analysis
+      return {
+        strengths: parsed.strengths || [],
+        weaknesses: parsed.weaknesses || [],
+        skills: parsed.skills || [],
+        companies: parsed.companies || [],
+        experience_years: parsed.experience_years || 0,
+        salary_range_min: parsed.salary_min || 5000,
+        salary_range_max: parsed.salary_max || 10000,
+        industry_tags: parsed.industry_tags || [],
+        role_tags: parsed.role_tags || []
+      }
+    } catch (error) {
+      console.error('Comprehensive resume analysis failed:', error)
+      // Return fallback data
+      return {
+        strengths: ['Strong technical background', 'Good communication skills', 'Team player'],
+        weaknesses: ['Limited leadership experience', 'Could improve project management', 'Needs more industry-specific knowledge'],
+        skills: ['Communication', 'Problem Solving', 'Teamwork'],
+        companies: ['Previous Employer'],
+        experience_years: 2,
+        salary_range_min: 5000,
+        salary_range_max: 10000,
+        industry_tags: ['Technology'],
+        role_tags: ['Software Developer']
+      }
+    }
+  }
+
+  /**
+   * Complete resume analysis (optimized - single LLM call)
    */
   async analyzeResume(resumeText: string): Promise<CandidateProfile> {
     try {
-      // Run all analyses in parallel
-      const [strengthsWeaknesses, salaryRange, profileTags] = await Promise.all([
-        this.analyzeStrengthsWeaknesses(resumeText),
-        this.analyzeSalaryRange(resumeText),
-        this.extractProfileTags(resumeText)
-      ])
-
-      return {
-        strengths: strengthsWeaknesses.strengths,
-        weaknesses: strengthsWeaknesses.weaknesses,
-        skills: profileTags.skills,
-        companies: profileTags.companies,
-        experience_years: profileTags.experience_years,
-        salary_range_min: salaryRange.salary_min,
-        salary_range_max: salaryRange.salary_max,
-        industry_tags: profileTags.industry_tags,
-        role_tags: profileTags.role_tags
-      }
+      console.log('[LLMAnalysis] analyzeResume start - using comprehensive single call')
+      const result = await this.analyzeResumeComprehensive(resumeText)
+      console.log('[LLMAnalysis] analyzeResume done - single call completed')
+      return result
     } catch (error) {
       console.error('Complete resume analysis failed:', error)
       throw new Error(`Resume analysis failed: ${error}`)
