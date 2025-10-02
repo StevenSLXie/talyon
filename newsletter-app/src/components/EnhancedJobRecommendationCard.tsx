@@ -7,7 +7,16 @@ interface JobRecommendation {
   job: any
   match_score: number
   match_reasons: string[]
-  breakdown: {
+  llm_analysis: {
+    final_score: number
+    matching_reasons: string[]
+    non_matching_points: string[]
+    key_highlights: string[]
+    personalized_assessment: string
+    career_impact: string
+  }
+  // Legacy fields for backward compatibility
+  breakdown?: {
     title_match: number
     salary_match: number
     skills_match: number
@@ -18,12 +27,12 @@ interface JobRecommendation {
     work_prefs_match: number
     industry_match: number
   }
-  why_match: {
+  why_match?: {
     strengths: string[]
     concerns: string[]
     overall_assessment: string
   }
-  gaps_and_actions: {
+  gaps_and_actions?: {
     skill_gaps: Array<{ skill: string; current_level: number; required_level: number; action: string }>
     experience_gap?: { gap_years: number; action: string }
     education_gaps: Array<{ requirement: string; action: string }>
@@ -46,8 +55,8 @@ interface EnhancedJobRecommendationCardProps {
 }
 
 export default function EnhancedJobRecommendationCard({ recommendation, index }: EnhancedJobRecommendationCardProps) {
-  const [activeTab, setActiveTab] = useState<'overview' | 'breakdown' | 'gaps' | 'suggestions'>('overview')
-  const [isExpanded, setIsExpanded] = useState(false)
+  const [activeTab, setActiveTab] = useState<'analysis' | 'breakdown' | 'gaps' | 'suggestions'>('analysis')
+  const [isExpanded, setIsExpanded] = useState(true) // Show detailed analysis by default
 
   const getMatchScoreColor = (score: number) => {
     if (score >= 80) return 'bg-green-500'
@@ -84,58 +93,62 @@ export default function EnhancedJobRecommendationCard({ recommendation, index }:
         <JobCard job={recommendation.job} />
       </div>
 
-      {/* Match Assessment */}
+      {/* AI Analysis */}
       <div className="px-6 pb-4">
         <div className="border-t border-gray-100 pt-4">
           <div className="flex items-center justify-between mb-3">
             <h4 className="text-lg font-semibold text-gray-900">
-              Match Assessment
+              AI Analysis
             </h4>
             <button
               onClick={() => setIsExpanded(!isExpanded)}
               className="text-blue-600 hover:text-blue-800 text-sm font-medium"
             >
-              {isExpanded ? 'Show Less' : 'Show Details'}
+              {isExpanded ? 'Show Less' : 'Show More'}
             </button>
           </div>
           
-          <div className="mb-3">
-            <p className="text-sm text-gray-700 mb-2">
-              <span className="font-medium">Overall:</span> {recommendation.why_match.overall_assessment}
-            </p>
-            
-            {recommendation.why_match.strengths.length > 0 && (
-              <div className="mb-2">
-                <span className="text-sm font-medium text-green-700">Strengths:</span>
-                <ul className="mt-1 space-y-1">
-                  {recommendation.why_match.strengths.map((strength, idx) => (
-                    <li key={idx} className="flex items-start text-sm text-green-600">
-                      <svg className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      {strength}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            {recommendation.why_match.concerns.length > 0 && (
-              <div className="mb-2">
-                <span className="text-sm font-medium text-orange-700">Areas to Address:</span>
-                <ul className="mt-1 space-y-1">
-                  {recommendation.why_match.concerns.map((concern, idx) => (
-                    <li key={idx} className="flex items-start text-sm text-orange-600">
-                      <svg className="w-4 h-4 text-orange-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                      </svg>
-                      {concern}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
+          {/* Personalized Assessment - Always visible */}
+          <div className="mb-4">
+            <div className="bg-blue-50 rounded-lg p-4">
+              <h5 className="font-medium text-blue-900 mb-2">Personalized Assessment</h5>
+              <p className="text-sm text-blue-800">{recommendation.llm_analysis.personalized_assessment}</p>
+            </div>
           </div>
+
+          {/* Matching Reasons - Always visible */}
+          {recommendation.llm_analysis.matching_reasons.length > 0 && (
+            <div className="mb-3">
+              <span className="text-sm font-medium text-green-700">Why This Job Fits You:</span>
+              <ul className="mt-1 space-y-1">
+                {recommendation.llm_analysis.matching_reasons.map((reason, idx) => (
+                  <li key={idx} className="flex items-start text-sm text-green-600">
+                    <svg className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    {reason}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Non-matching Points - Always visible */}
+          {recommendation.llm_analysis.non_matching_points.length > 0 && (
+            <div className="mb-3">
+              <span className="text-sm font-medium text-orange-700">Areas to Consider:</span>
+              <ul className="mt-1 space-y-1">
+                {recommendation.llm_analysis.non_matching_points.map((point, idx) => (
+                  <li key={idx} className="flex items-start text-sm text-orange-600">
+                    <svg className="w-4 h-4 text-orange-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                    {point}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       </div>
 
@@ -146,7 +159,7 @@ export default function EnhancedJobRecommendationCard({ recommendation, index }:
           <div className="px-6 py-3 bg-gray-50">
             <div className="flex space-x-1">
               {[
-                { key: 'overview', label: 'Overview' },
+                { key: 'analysis', label: 'Detailed Analysis' },
                 { key: 'breakdown', label: 'Score Breakdown' },
                 { key: 'gaps', label: 'Gaps & Actions' },
                 { key: 'suggestions', label: 'AI Suggestions' }
@@ -168,12 +181,38 @@ export default function EnhancedJobRecommendationCard({ recommendation, index }:
 
           {/* Tab Content */}
           <div className="px-6 py-4">
-            {activeTab === 'overview' && (
+            {activeTab === 'analysis' && (
               <div className="space-y-4">
+                {/* Key Highlights */}
+                {recommendation.llm_analysis.key_highlights.length > 0 && (
+                  <div>
+                    <h5 className="font-medium text-gray-900 mb-2">Key Highlights:</h5>
+                    <ul className="space-y-1">
+                      {recommendation.llm_analysis.key_highlights.map((highlight, idx) => (
+                        <li key={idx} className="flex items-start text-sm text-gray-600">
+                          <svg className="w-4 h-4 text-blue-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          {highlight}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Career Impact */}
                 <div>
-                  <h5 className="font-medium text-gray-900 mb-2">Why This Job Matches You:</h5>
+                  <h5 className="font-medium text-gray-900 mb-2">Career Impact:</h5>
+                  <div className="bg-green-50 rounded-lg p-3">
+                    <p className="text-sm text-green-800">{recommendation.llm_analysis.career_impact}</p>
+                  </div>
+                </div>
+
+                {/* Matching Reasons */}
+                <div>
+                  <h5 className="font-medium text-gray-900 mb-2">Why This Job Fits You:</h5>
                   <ul className="space-y-1">
-                    {recommendation.match_reasons.map((reason, idx) => (
+                    {recommendation.llm_analysis.matching_reasons.map((reason, idx) => (
                       <li key={idx} className="flex items-start text-sm text-gray-600">
                         <svg className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
@@ -183,24 +222,48 @@ export default function EnhancedJobRecommendationCard({ recommendation, index }:
                     ))}
                   </ul>
                 </div>
+
+                {/* Non-matching Points */}
+                {recommendation.llm_analysis.non_matching_points.length > 0 && (
+                  <div>
+                    <h5 className="font-medium text-gray-900 mb-2">Areas to Consider:</h5>
+                    <ul className="space-y-1">
+                      {recommendation.llm_analysis.non_matching_points.map((point, idx) => (
+                        <li key={idx} className="flex items-start text-sm text-gray-600">
+                          <svg className="w-4 h-4 text-orange-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                          </svg>
+                          {point}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
               </div>
             )}
 
             {activeTab === 'breakdown' && (
               <div className="space-y-3">
                 <h5 className="font-medium text-gray-900 mb-3">Detailed Score Breakdown:</h5>
-                <div className="grid grid-cols-2 gap-3">
-                  {Object.entries(recommendation.breakdown).map(([key, score]) => (
-                    <div key={key} className="flex justify-between items-center p-2 bg-gray-50 rounded">
-                      <span className="text-sm text-gray-700 capitalize">
-                        {key.replace('_', ' ')}
-                      </span>
-                      <span className={`text-sm font-medium ${getScoreColor(score)}`}>
-                        {score}%
-                      </span>
-                    </div>
-                  ))}
-                </div>
+                {recommendation.breakdown ? (
+                  <div className="grid grid-cols-2 gap-3">
+                    {Object.entries(recommendation.breakdown).map(([key, score]) => (
+                      <div key={key} className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                        <span className="text-sm text-gray-700 capitalize">
+                          {key.replace('_', ' ')}
+                        </span>
+                        <span className={`text-sm font-medium ${getScoreColor(score)}`}>
+                          {score}%
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <p>Score breakdown not available for this recommendation.</p>
+                    <p className="text-sm mt-2">This job was analyzed using our advanced AI system.</p>
+                  </div>
+                )}
               </div>
             )}
 
@@ -208,63 +271,72 @@ export default function EnhancedJobRecommendationCard({ recommendation, index }:
               <div className="space-y-4">
                 <h5 className="font-medium text-gray-900 mb-3">Gaps & Action Items:</h5>
                 
-                {recommendation.gaps_and_actions.skill_gaps.length > 0 && (
-                  <div>
-                    <h6 className="font-medium text-gray-800 mb-2">Skill Gaps:</h6>
-                    <div className="space-y-2">
-                      {recommendation.gaps_and_actions.skill_gaps.map((gap, idx) => (
-                        <div key={idx} className="p-3 bg-orange-50 rounded-lg">
-                          <div className="flex justify-between items-center mb-1">
-                            <span className="font-medium text-gray-800">{gap.skill}</span>
-                            <span className="text-sm text-gray-600">
-                              Level {gap.current_level} → {gap.required_level}
-                            </span>
-                          </div>
-                          <p className="text-sm text-gray-600">{gap.action}</p>
+                {recommendation.gaps_and_actions ? (
+                  <>
+                    {recommendation.gaps_and_actions.skill_gaps.length > 0 && (
+                      <div>
+                        <h6 className="font-medium text-gray-800 mb-2">Skill Gaps:</h6>
+                        <div className="space-y-2">
+                          {recommendation.gaps_and_actions.skill_gaps.map((gap, idx) => (
+                            <div key={idx} className="p-3 bg-orange-50 rounded-lg">
+                              <div className="flex justify-between items-center mb-1">
+                                <span className="font-medium text-gray-800">{gap.skill}</span>
+                                <span className="text-sm text-gray-600">
+                                  Level {gap.current_level} → {gap.required_level}
+                                </span>
+                              </div>
+                              <p className="text-sm text-gray-600">{gap.action}</p>
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                      </div>
+                    )}
 
-                {recommendation.gaps_and_actions.experience_gap && (
-                  <div>
-                    <h6 className="font-medium text-gray-800 mb-2">Experience Gap:</h6>
-                    <div className="p-3 bg-orange-50 rounded-lg">
-                      <p className="text-sm text-gray-600">
-                        {recommendation.gaps_and_actions.experience_gap.gap_years} years gap: {recommendation.gaps_and_actions.experience_gap.action}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {recommendation.gaps_and_actions.education_gaps.length > 0 && (
-                  <div>
-                    <h6 className="font-medium text-gray-800 mb-2">Education Gaps:</h6>
-                    <div className="space-y-2">
-                      {recommendation.gaps_and_actions.education_gaps.map((gap, idx) => (
-                        <div key={idx} className="p-3 bg-orange-50 rounded-lg">
-                          <p className="font-medium text-gray-800 mb-1">{gap.requirement}</p>
-                          <p className="text-sm text-gray-600">{gap.action}</p>
+                    {recommendation.gaps_and_actions.experience_gap && (
+                      <div>
+                        <h6 className="font-medium text-gray-800 mb-2">Experience Gap:</h6>
+                        <div className="p-3 bg-orange-50 rounded-lg">
+                          <p className="text-sm text-gray-600">
+                            {recommendation.gaps_and_actions.experience_gap.gap_years} years gap: {recommendation.gaps_and_actions.experience_gap.action}
+                          </p>
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                      </div>
+                    )}
 
-                {recommendation.gaps_and_actions.interview_prep.length > 0 && (
-                  <div>
-                    <h6 className="font-medium text-gray-800 mb-2">Interview Preparation:</h6>
-                    <ul className="space-y-1">
-                      {recommendation.gaps_and_actions.interview_prep.map((tip, idx) => (
-                        <li key={idx} className="flex items-start text-sm text-gray-600">
-                          <svg className="w-4 h-4 text-blue-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-                          </svg>
-                          {tip}
-                        </li>
-                      ))}
-                    </ul>
+                    {recommendation.gaps_and_actions.education_gaps.length > 0 && (
+                      <div>
+                        <h6 className="font-medium text-gray-800 mb-2">Education Gaps:</h6>
+                        <div className="space-y-2">
+                          {recommendation.gaps_and_actions.education_gaps.map((gap, idx) => (
+                            <div key={idx} className="p-3 bg-orange-50 rounded-lg">
+                              <p className="font-medium text-gray-800 mb-1">{gap.requirement}</p>
+                              <p className="text-sm text-gray-600">{gap.action}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {recommendation.gaps_and_actions.interview_prep.length > 0 && (
+                      <div>
+                        <h6 className="font-medium text-gray-800 mb-2">Interview Preparation:</h6>
+                        <ul className="space-y-1">
+                          {recommendation.gaps_and_actions.interview_prep.map((tip, idx) => (
+                            <li key={idx} className="flex items-start text-sm text-gray-600">
+                              <svg className="w-4 h-4 text-blue-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+                              </svg>
+                              {tip}
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <p>Gap analysis not available for this recommendation.</p>
+                    <p className="text-sm mt-2">This job was analyzed using our advanced AI system.</p>
                   </div>
                 )}
               </div>

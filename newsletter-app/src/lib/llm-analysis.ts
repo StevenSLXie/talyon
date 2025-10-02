@@ -488,15 +488,17 @@ ${candidateSummary}
 JOBS:
 ${jobDetails}
 
-Return JSON with job_analyses array containing exactly ${jobSummaries.length} items. Each item needs:
-- final_score: 0-100
-- matching_reasons: array of 2-3 reasons
-- non_matching_points: array of 1-2 concerns  
-- key_highlights: array of 2-3 highlights
-- personalized_assessment: 1-2 sentences
-- career_impact: 1-2 sentences
+IMPORTANT: Pay special attention to education levels. If the candidate has a PhD, Doctorate, or Doctoral degree, this is the HIGHEST level of education and should be recognized as such. PhD holders are highly qualified for most positions.
 
-Be concise but specific. Return ONLY valid JSON.`
+Return JSON with job_analyses array containing exactly ${jobSummaries.length} items. Each item needs:
+- final_score: 0-100 (consider PhD as highest qualification)
+- matching_reasons: array of 2-3 specific reasons why this job fits THIS candidate
+- non_matching_points: array of 1-2 specific concerns or gaps
+- key_highlights: array of 2-3 key things about this job that matter for this candidate
+- personalized_assessment: 2-3 sentences explaining why this job is good/bad for THIS specific candidate
+- career_impact: 2-3 sentences about how this role would advance their career
+
+Be specific and personalized. Consider the candidate's exact background, education level, and experience. Return ONLY valid JSON.`
 
     try {
       const response = await this.callOpenAI(prompt, 'You are an expert career advisor who provides detailed, personalized job analysis. Always respond with valid JSON format as requested.')
