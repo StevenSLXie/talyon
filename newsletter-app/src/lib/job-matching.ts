@@ -1,6 +1,6 @@
 // Enhanced Job Matching Service
 import { supabase } from './supabase'
-import { enhancedCandidateProfileService } from './enhanced-candidate-profile'
+import { EnhancedCandidateProfileService } from './enhanced-candidate-profile'
 import { LLMActionSuggestionsService } from './llm-action-suggestions'
 
 export interface JobRecommendation {
@@ -977,7 +977,7 @@ export class JobMatchingService {
       console.log('[JobMatching] buildCandidateProfile start', { usersId })
       
       // First try to get enhanced profile data
-      const enhancedProfile = await enhancedCandidateProfileService.getEnhancedProfile(usersId)
+      const enhancedProfile = await EnhancedCandidateProfileService.getEnhancedProfile(usersId)
       
       if (enhancedProfile) {
         console.log('[JobMatching] Using enhanced profile data')
