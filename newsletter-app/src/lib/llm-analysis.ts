@@ -118,7 +118,7 @@ export class LLMAnalysisService {
             { role: 'user', content: prompt }
           ],
           temperature: 0.2,
-          max_tokens: 4000,
+          max_tokens: 6000,
           response_format: { type: 'json_object' }
         })
       })
@@ -476,7 +476,13 @@ Job ${job.id}: ${job.job.title} at ${job.job.company}
 - Industry: ${job.job.industry}
 - Experience Level: ${job.job.experience_level}
 - Job Type: ${job.job.job_type}
-- Description: ${job.job.job_description?.substring(0, 500)}...
+- Post Date: ${job.job.post_date}
+- URL: ${job.job.url || 'N/A'}
+- Job Category: ${job.job.job_category || 'N/A'}
+
+FULL JOB DESCRIPTION:
+${job.job.job_description || job.job.raw_text || 'No description available'}
+
 - Stage 1 Score: ${job.stage1_score}/100
 - Stage 1 Reasons: ${job.stage1_reasons.join(', ')}
 `).join('\n')
@@ -490,13 +496,20 @@ ${jobDetails}
 
 IMPORTANT: Pay special attention to education levels. If the candidate has a PhD, Doctorate, or Doctoral degree, this is the HIGHEST level of education and should be recognized as such. PhD holders are highly qualified for most positions.
 
+ANALYSIS REQUIREMENTS:
+- Read the FULL job description carefully to understand specific requirements, responsibilities, and qualifications
+- Consider the candidate's exact background, skills, experience, and education level
+- Analyze how well the candidate's profile matches the job requirements
+- Consider career progression opportunities and growth potential
+- Evaluate company culture fit based on job description and company information
+
 Return JSON with job_analyses array containing exactly ${jobSummaries.length} items. Each item needs:
-- final_score: 0-100 (consider PhD as highest qualification)
-- matching_reasons: array of 2-3 specific reasons why this job fits THIS candidate
-- non_matching_points: array of 1-2 specific concerns or gaps
-- key_highlights: array of 2-3 key things about this job that matter for this candidate
-- personalized_assessment: 2-3 sentences explaining why this job is good/bad for THIS specific candidate
-- career_impact: 2-3 sentences about how this role would advance their career
+- final_score: 0-100 (consider PhD as highest qualification, analyze full job requirements)
+- matching_reasons: array of 2-3 specific reasons why this job fits THIS candidate (be specific about skills, experience, education)
+- non_matching_points: array of 1-2 specific concerns or gaps (reference actual job requirements)
+- key_highlights: array of 2-3 key things about this job that matter for this candidate (growth, learning, impact)
+- personalized_assessment: 2-3 sentences explaining why this job is good/bad for THIS specific candidate (reference their background)
+- career_impact: 2-3 sentences about how this role would advance their career (be specific about progression)
 
 Be specific and personalized. Consider the candidate's exact background, education level, and experience. Return ONLY valid JSON.`
 
