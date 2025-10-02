@@ -61,9 +61,11 @@ export class LLMAnalysisService {
           try {
             return JSON.parse(slice)
           } catch (_e3) {
+            console.log('❌ Failed to parse JSON slice:', slice.substring(0, 200) + '...')
             return {}
           }
         }
+        console.log('❌ No valid JSON found in response:', raw.substring(0, 200) + '...')
         return {}
       }
     }
@@ -486,15 +488,21 @@ Analyze each job thoughtfully and provide personalized insights.
 
     try {
       const response = await this.callOpenAI(prompt, 'You are an expert career advisor who provides detailed, personalized job analysis. Always respond with valid JSON format as requested.')
+      console.log('🔍 Raw LLM response:', response.substring(0, 500) + '...')
+      
       const parsed = this.parseJsonResponse(response)
+      console.log('🔍 Parsed response keys:', Object.keys(parsed))
       
       if (!parsed.job_analyses || !Array.isArray(parsed.job_analyses)) {
+        console.log('❌ Invalid response format. Expected job_analyses array, got:', parsed)
         throw new Error('Invalid LLM response format')
       }
 
       return parsed
     } catch (error) {
       console.error('Batch job analysis failed:', error)
+      console.log('🔄 Falling back to mock response...')
+      
       // Return fallback data
       return {
         job_analyses: jobSummaries.map((job, index) => ({
