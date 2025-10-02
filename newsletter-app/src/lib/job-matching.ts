@@ -267,6 +267,7 @@ function calculateSkillsMatch(
     let descriptionMatches = 0
     
     for (const skill of candidateSkills) {
+      if (!skill.name) continue // Skip skills with null/undefined names
       const skillLower = skill.name.toLowerCase()
       if (jobText.includes(skillLower) || 
           jobText.includes(skillLower.replace(/\s+/g, '')) ||
