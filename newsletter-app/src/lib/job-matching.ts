@@ -35,7 +35,7 @@ export interface JobRecommendation {
 
 export interface CandidateProfile {
   titles: string[]
-  skills: string[]
+  skills: Array<{ name: string; level: number }>
   experience_years: number
   salary_range_min?: number
   salary_range_max?: number
@@ -366,7 +366,7 @@ function calculateExperienceMatch(
 }
 
 function calculateEducationMatch(
-  candidateEducation: Array<{ study_type: string; area: string; institution: string }>,
+  candidateEducation: Array<{ study_type?: string; degree?: string; area?: string; major?: string; institution?: string }>,
   jobEducationReq: string[]
 ): { score: number; reason: string; matched_education: string[] } {
   if (!jobEducationReq || jobEducationReq.length === 0) {
@@ -391,19 +391,19 @@ function calculateEducationMatch(
 
       // Check for exact match
       if (studyType.includes(reqLower) || reqLower.includes(studyType)) {
-        bestMatch = { score: 100, education: `${education.study_type} in ${education.area}` }
+        bestMatch = { score: 100, education: `${education.study_type || education.degree} in ${education.area || education.major}` }
         break
       }
 
       // Check for area match
       if (area.includes(reqLower) || reqLower.includes(area)) {
-        bestMatch = { score: 80, education: `${education.study_type} in ${education.area}` }
+        bestMatch = { score: 80, education: `${education.study_type || education.degree} in ${education.area || education.major}` }
       }
 
       // Check for institution match (lower weight)
       if (institution.includes(reqLower) || reqLower.includes(institution)) {
         if (bestMatch.score < 60) {
-          bestMatch = { score: 60, education: `${education.study_type} from ${education.institution}` }
+          bestMatch = { score: 60, education: `${education.study_type || education.degree} from ${education.institution}` }
         }
       }
     }
@@ -477,7 +477,7 @@ function calculateCertificationMatch(
   return { 
     score: Math.round(averageScore), 
     reason, 
-    matched_certifications 
+    matched_certifications: matchedCertifications 
   }
 }
 
@@ -997,7 +997,7 @@ export class JobMatchingService {
           work_auth: {
             citizen_or_pr: enhancedProfile.work_auth.citizen_or_pr,
             ep_needed: enhancedProfile.work_auth.ep_needed,
-            work_permit_type: enhancedProfile.work_auth.work_permit_type
+            work_permit_type: enhancedProfile.work_auth.work_permit_type || undefined
           },
           work_prefs: {
             remote: enhancedProfile.work_prefs.remote as 'Onsite' | 'Hybrid' | 'Remote',
@@ -1114,7 +1114,7 @@ export class JobMatchingService {
         blacklist_companies: [], // TODO: Extract from intent.blacklist_companies
         education: educationProfileData || [],
         certifications: certificationsData || [],
-        company_tiers: basicsData?.company_tiers || []
+        company_tiers: []
       }
     } catch (error) {
       console.error('Failed to build candidate profile:', error)
@@ -1161,7 +1161,22 @@ export class JobMatchingService {
               salary_match: 0,
               skills_match: 0,
               experience_match: 0,
-              industry_match: 0
+              industry_match: 0,
+              education_match: 0,
+              certification_match: 0,
+              job_family_match: 0,
+              work_prefs_match: 0
+            },
+            why_match: {
+              strengths: [],
+              concerns: [],
+              overall_assessment: 'Filtered out by hard filters'
+            },
+            gaps_and_actions: {
+              skill_gaps: [],
+              education_gaps: [],
+              certification_gaps: [],
+              interview_prep: []
             }
           }
         }
@@ -1201,13 +1216,13 @@ export class JobMatchingService {
 
         // 5. Education matching (10% weight)
         const educationMatch = calculateEducationMatch(
-          candidateProfile.education,
+          candidateProfile.education || [],
           job.education_req || []
         )
 
         // 6. Certification matching (5% weight)
         const certificationMatch = calculateCertificationMatch(
-          candidateProfile.certifications,
+          candidateProfile.certifications || [],
           job.certifications_req || []
         )
 
@@ -1318,11 +1333,11 @@ export class JobMatchingService {
             salary_match: salaryMatch.score,
             skills_match: skillsMatch.score,
             experience_match: experienceMatch.score,
-            education_match: educationMatch.score,
-            certification_match: certificationMatch.score,
-            job_family_match: jobFamilyMatch.score,
-            work_prefs_match: workPrefsMatch.score,
-            industry_match: industryMatch.score
+            education_match: educationMatch.score || 0,
+            certification_match: certificationMatch.score || 0,
+            job_family_match: jobFamilyMatch.score || 0,
+            work_prefs_match: workPrefsMatch.score || 0,
+            industry_match: industryMatch.score || 0
           },
           why_match: whyMatch,
           gaps_and_actions: gapsAndActions
@@ -1502,7 +1517,29 @@ export class JobMatchingService {
       return data.map(rec => ({
         job: rec.jobs,
         match_score: rec.match_score,
-        match_reasons: rec.match_reasons
+        match_reasons: rec.match_reasons,
+        breakdown: {
+          title_match: 0,
+          salary_match: 0,
+          skills_match: 0,
+          experience_match: 0,
+          industry_match: 0,
+          education_match: 0,
+          certification_match: 0,
+          job_family_match: 0,
+          work_prefs_match: 0
+        },
+        why_match: {
+          strengths: [],
+          concerns: [],
+          overall_assessment: 'Basic matching based on saved recommendations'
+        },
+        gaps_and_actions: {
+          skill_gaps: [],
+          education_gaps: [],
+          certification_gaps: [],
+          interview_prep: []
+        }
       }))
     } catch (error) {
       console.error('Get saved recommendations failed:', error)
@@ -1521,7 +1558,7 @@ export class JobMatchingService {
     const maxScore = 100
 
     // Industry match
-    if (candidateProfile.industry_tags.some(tag => 
+    if (candidateProfile.industry_tags.some((tag: string) => 
       job.industry?.toLowerCase().includes(tag.toLowerCase())
     )) {
       score += 20
@@ -1548,7 +1585,7 @@ export class JobMatchingService {
 
     // Skills match (basic keyword matching)
     const jobText = (job.job_description || '').toLowerCase()
-    const skillMatches = candidateProfile.skills.filter(skill =>
+    const skillMatches = candidateProfile.skills.filter((skill: string) =>
       jobText.includes(skill.toLowerCase())
     ).length
     

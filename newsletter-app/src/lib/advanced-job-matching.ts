@@ -26,11 +26,11 @@ export class AdvancedJobMatchingService {
    * Stage 2: LLM-powered fine ranking with detailed analysis
    */
   /**
-   * Get two-stage recommendations with enhanced profile for Stage 2
+   * Get two-stage recommendations with enhanced profile JSON string for Stage 2
    */
   async getTwoStageRecommendationsWithEnhanced(
     candidateProfile: CandidateProfile,
-    enhancedProfile: any,
+    enhancedProfileJson: string,
     limit: number = 3,
     userId?: string
   ): Promise<AdvancedJobRecommendation[]> {
@@ -52,10 +52,10 @@ export class AdvancedJobMatchingService {
 
       console.log(`✅ Stage 1 complete: ${stage1Recommendations.length} jobs selected`)
 
-      // Stage 2: Fine Ranking - LLM analysis of top 20 jobs using enhanced profile
+      // Stage 2: Fine Ranking - LLM analysis of top 20 jobs using enhanced profile JSON
       console.log('🤖 Stage 2: Fine ranking (LLM-powered)')
       const stage2Recommendations = await this.performLLMFineRankingWithEnhanced(
-        enhancedProfile,
+        enhancedProfileJson,
         stage1Recommendations,
         limit
       )
@@ -70,11 +70,11 @@ export class AdvancedJobMatchingService {
   }
 
   /**
-   * Stage 2: LLM-powered fine ranking with enhanced profile
-   * Analyzes enhanced profile + 20 jobs in a single LLM call
+   * Stage 2: LLM-powered fine ranking with enhanced profile JSON
+   * Analyzes enhanced profile JSON + 20 jobs in a single LLM call
    */
   private async performLLMFineRankingWithEnhanced(
-    enhancedProfile: any,
+    enhancedProfileJson: string,
     stage1Jobs: JobRecommendation[],
     limit: number
   ): Promise<AdvancedJobRecommendation[]> {
@@ -87,8 +87,8 @@ export class AdvancedJobMatchingService {
         stage1_reasons: rec.match_reasons
       }))
 
-      // Call LLM for batch analysis with enhanced profile
-      const llmAnalysis = await this.callLLMForBatchAnalysis(enhancedProfile, jobSummaries)
+      // Call LLM for batch analysis with enhanced profile JSON
+      const llmAnalysis = await this.callLLMForBatchAnalysis(enhancedProfileJson, jobSummaries)
 
       // Process LLM results and create final recommendations
       const finalRecommendations: AdvancedJobRecommendation[] = []
@@ -172,7 +172,7 @@ CANDIDATE PROFILE:
    * Call LLM for batch analysis of multiple jobs
    */
   private async callLLMForBatchAnalysis(
-    enhancedProfile: any,
+    enhancedProfileJson: string,
     jobSummaries: Array<{ id: number; job: any; stage1_score: number; stage1_reasons: string[] }>
   ): Promise<{
     job_analyses: Array<{
@@ -184,8 +184,9 @@ CANDIDATE PROFILE:
       career_impact: string
     }>
   }> {
-    // The enhanced profile is now passed directly to batchAnalyzeJobs
-    // No need to build candidate profile text here anymore
+    // Parse the enhanced profile JSON to get the object
+    const enhancedProfile = JSON.parse(enhancedProfileJson)
+    
     try {
       console.log('🤖 Calling LLM for job analysis...')
 
@@ -217,14 +218,14 @@ CANDIDATE PROFILE:
         console.log('[AdvancedJobMatching] No enhanced profile found, falling back to legacy method')
         // Fallback to legacy method
         const candidateProfile = await this.jobMatchingService.buildCandidateProfile(userId)
-        return await this.getTwoStageRecommendationsWithEnhanced(candidateProfile, candidateProfile, limit, userId)
+        return await this.getTwoStageRecommendationsWithEnhanced(candidateProfile, JSON.stringify(candidateProfile), limit, userId)
       }
 
       // Build candidate profile for Stage 1
       const candidateProfile = await this.jobMatchingService.buildCandidateProfile(userId)
       
-      // Get two-stage recommendations with enhanced profile for Stage 2
-      return await this.getTwoStageRecommendationsWithEnhanced(candidateProfile, enhancedProfile, limit, userId)
+      // Get two-stage recommendations with enhanced profile JSON string for Stage 2
+      return await this.getTwoStageRecommendationsWithEnhanced(candidateProfile, JSON.stringify(enhancedProfile), limit, userId)
       
     } catch (error) {
       console.error('Enhanced job recommendations failed:', error)
