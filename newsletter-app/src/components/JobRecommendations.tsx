@@ -57,7 +57,7 @@ export default function JobRecommendations({ limit = 3, userId, refreshTrigger =
 
   useEffect(() => {
     if (userId && refreshTrigger > 0) { // Only load when userId exists and refreshTrigger is valid
-    loadRecommendations()
+      loadRecommendations()
     }
   }, [userId, refreshTrigger])
 
@@ -95,12 +95,6 @@ export default function JobRecommendations({ limit = 3, userId, refreshTrigger =
 
     return filtered
   }, [recommendations, filters, sortBy])
-
-  useEffect(() => {
-    if (userId && refreshTrigger > 0) { // Only load when userId exists and refreshTrigger is valid
-      loadRecommendations()
-    }
-  }, [userId, refreshTrigger])
 
   const loadRecommendations = async () => {
     if (!userId) {
