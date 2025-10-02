@@ -199,35 +199,12 @@ export default function Home() {
           />
         </div>
 
-        {/* Featured Jobs Preview or Recommendations */}
-        <div className="max-w-6xl mx-auto">
-          {user && refreshKey > 0 ? (
+        {/* Job Recommendations for logged-in users */}
+        {user && refreshKey > 0 && (
+          <div className="max-w-6xl mx-auto">
             <JobRecommendations key={refreshKey} limit={6} refreshTrigger={refreshKey} userId={user?.id} />
-          ) : (
-            <>
-              <h2 className="text-3xl font-light text-center text-black mb-12">
-                Featured Jobs
-              </h2>
-              <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-                {mockupJobs.map((job, index) => (
-                  <JobCard key={index} job={job} />
-                ))}
-              </div>
-              
-              <div className="text-center mt-12">
-                <p className="text-gray-600 mb-6">
-                  Want personalized recommendations?
-                </p>
-                <a 
-                  href="#upload" 
-                  className="inline-flex items-center px-8 py-3 border border-black text-base font-medium text-black hover:bg-gray-50 transition-colors"
-                >
-                  Upload Your Resume
-                </a>
-              </div>
-            </>
-          )}
-        </div>
+          </div>
+        )}
       </div>
 
       {/* Features Section */}

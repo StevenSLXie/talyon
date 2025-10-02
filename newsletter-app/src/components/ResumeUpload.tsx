@@ -11,6 +11,7 @@ interface ResumeUploadProps {
 export default function ResumeUpload({ onUploadSuccess, onUploadError }: ResumeUploadProps) {
   const [isUploading, setIsUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
+  const [uploadStage, setUploadStage] = useState('')
   const [dragActive, setDragActive] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -46,6 +47,7 @@ export default function ResumeUpload({ onUploadSuccess, onUploadError }: ResumeU
     if (!selectedFile) return
     setIsUploading(true)
     setUploadProgress(0)
+    setUploadStage('Uploading file...')
 
     try {
       const progressInterval = setInterval(() => {
@@ -61,10 +63,12 @@ export default function ResumeUpload({ onUploadSuccess, onUploadError }: ResumeU
       const formData = new FormData()
       formData.append('resume', selectedFile)
 
+      setUploadStage('Analyzing resume with AI...')
       const response = await fetch('/api/resume/upload', { method: 'POST', body: formData })
 
       clearInterval(progressInterval)
       setUploadProgress(100)
+      setUploadStage('Analysis complete!')
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
@@ -73,14 +77,21 @@ export default function ResumeUpload({ onUploadSuccess, onUploadError }: ResumeU
 
       const resumeData = await response.json()
       onUploadSuccess?.(resumeData)
-      setSelectedFile(null)
-      if (fileInputRef.current) fileInputRef.current.value = ''
+      
+      // Reset after success
+      setTimeout(() => {
+        setIsUploading(false)
+        setUploadProgress(0)
+        setUploadStage('')
+        setSelectedFile(null)
+        if (fileInputRef.current) fileInputRef.current.value = ''
+      }, 2000)
     } catch (error) {
       console.error('Upload error:', error)
       onUploadError?.(error instanceof Error ? error.message : 'Upload failed')
-    } finally {
       setIsUploading(false)
       setUploadProgress(0)
+      setUploadStage('')
     }
   }
 
@@ -116,7 +127,7 @@ export default function ResumeUpload({ onUploadSuccess, onUploadError }: ResumeU
             <p className="text-sm text-gray-500">or click to browse files</p>
           </div>
           <input ref={fileInputRef} type="file" accept=".pdf,.doc,.docx" onChange={handleFileInput} className="hidden" />
-          <button type="button" onClick={() => fileInputRef.current?.click()} className="bg-blue-600 text-white px-6 py-2 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">Choose File</button>
+          <button type="button" onClick={() => fileInputRef.current?.click()} className="bg-white text-black px-6 py-2 border border-black hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">Choose File</button>
         </div>
       </div>
 
@@ -124,8 +135,8 @@ export default function ResumeUpload({ onUploadSuccess, onUploadError }: ResumeU
         <div className="mt-4 p-4 bg-gray-50 rounded-lg">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                <svg className="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <div className="w-8 h-8 bg-gray-100 rounded-full flex items-center justify-center">
+                <svg className="w-4 h-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
@@ -146,18 +157,18 @@ export default function ResumeUpload({ onUploadSuccess, onUploadError }: ResumeU
       {isUploading && (
         <div className="mt-4">
           <div className="flex justify-between text-sm text-gray-600 mb-1">
-            <span>Uploading...</span>
-            <span>{uploadProgress}%</span>
+            <span>{uploadStage}</span>
+            <span>{Math.round(uploadProgress)}%</span>
           </div>
           <div className="w-full bg-gray-200 rounded-full h-2">
-            <div className="bg-blue-600 h-2 rounded-full transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
+            <div className="bg-gray-600 h-2 transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
           </div>
         </div>
       )}
 
       {selectedFile && !isUploading && (
         <div className="mt-6">
-          <button onClick={handleUpload} className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors">Upload & Analyze Resume</button>
+          <button onClick={handleUpload} className="w-full bg-black text-white py-3 px-6 font-medium hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors">Upload & Analyze Resume</button>
         </div>
       )}
 
