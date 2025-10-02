@@ -2,6 +2,7 @@
 import { supabase } from './supabase'
 import { JobMatchingService, CandidateProfile, JobRecommendation } from './job-matching'
 import { llmAnalysisService } from './llm-analysis'
+import { EnhancedCandidateProfileService } from './enhanced-candidate-profile'
 
 export interface AdvancedJobRecommendation extends JobRecommendation {
   llm_analysis: {
@@ -24,8 +25,12 @@ export class AdvancedJobMatchingService {
    * Stage 1: Coarse ranking using rules-based scoring (top 20 jobs)
    * Stage 2: LLM-powered fine ranking with detailed analysis
    */
-  async getTwoStageRecommendations(
+  /**
+   * Get two-stage recommendations with enhanced profile for Stage 2
+   */
+  async getTwoStageRecommendationsWithEnhanced(
     candidateProfile: CandidateProfile,
+    enhancedProfile: any,
     limit: number = 3,
     userId?: string
   ): Promise<AdvancedJobRecommendation[]> {
@@ -47,17 +52,17 @@ export class AdvancedJobMatchingService {
 
       console.log(`✅ Stage 1 complete: ${stage1Recommendations.length} jobs selected`)
 
-      // Stage 2: Fine Ranking - LLM analysis of top 20 jobs
+      // Stage 2: Fine Ranking - LLM analysis of top 20 jobs using enhanced profile
       console.log('🤖 Stage 2: Fine ranking (LLM-powered)')
-      const stage2Recommendations = await this.performLLMFineRanking(
-        candidateProfile,
+      const stage2Recommendations = await this.performLLMFineRankingWithEnhanced(
+        enhancedProfile,
         stage1Recommendations,
         limit
       )
 
       console.log(`✅ Stage 2 complete: ${stage2Recommendations.length} final recommendations`)
       return stage2Recommendations
-
+      
     } catch (error) {
       console.error('❌ Two-stage recommendation failed:', error)
       throw error
@@ -65,18 +70,15 @@ export class AdvancedJobMatchingService {
   }
 
   /**
-   * Stage 2: LLM-powered fine ranking
-   * Analyzes resume + 20 jobs in a single LLM call
+   * Stage 2: LLM-powered fine ranking with enhanced profile
+   * Analyzes enhanced profile + 20 jobs in a single LLM call
    */
-  private async performLLMFineRanking(
-    candidateProfile: CandidateProfile,
+  private async performLLMFineRankingWithEnhanced(
+    enhancedProfile: any,
     stage1Jobs: JobRecommendation[],
     limit: number
   ): Promise<AdvancedJobRecommendation[]> {
     try {
-      // Prepare candidate summary for LLM
-      const candidateSummary = this.buildCandidateSummary(candidateProfile)
-      
       // Prepare job summaries for LLM
       const jobSummaries = stage1Jobs.map((rec, index) => ({
         id: index + 1,
@@ -85,8 +87,8 @@ export class AdvancedJobMatchingService {
         stage1_reasons: rec.match_reasons
       }))
 
-      // Call LLM for batch analysis
-      const llmAnalysis = await this.callLLMForBatchAnalysis(candidateProfile, jobSummaries)
+      // Call LLM for batch analysis with enhanced profile
+      const llmAnalysis = await this.callLLMForBatchAnalysis(enhancedProfile, jobSummaries)
 
       // Process LLM results and create final recommendations
       const finalRecommendations: AdvancedJobRecommendation[] = []
@@ -117,7 +119,7 @@ export class AdvancedJobMatchingService {
       return finalRecommendations
         .sort((a, b) => b.llm_analysis.final_score - a.llm_analysis.final_score)
         .slice(0, limit)
-
+        
     } catch (error) {
       console.error('❌ LLM fine ranking failed:', error)
       // Fallback to Stage 1 results
@@ -141,8 +143,8 @@ export class AdvancedJobMatchingService {
    * Build candidate summary for LLM analysis
    */
   private buildCandidateSummary(candidateProfile: CandidateProfile): string {
-    const educationText = candidateProfile.education?.length > 0 
-      ? candidateProfile.education.map(e => {
+    const educationText = candidateProfile.education && candidateProfile.education.length > 0 
+      ? candidateProfile.education.map((e: any) => {
           // Handle different degree formats
           const degree = e.study_type || e.degree || 'Degree'
           const major = e.area || e.major || 'Unknown'
@@ -155,7 +157,7 @@ export class AdvancedJobMatchingService {
 CANDIDATE PROFILE:
 - Experience: ${candidateProfile.experience_years} years
 - Current/Previous Titles: ${candidateProfile.titles.join(', ')}
-- Key Skills: ${candidateProfile.skills.map(s => s.name).join(', ')}
+- Key Skills: ${candidateProfile.skills.map((s: any) => s.name).join(', ')}
 - Industries: ${candidateProfile.industries.join(', ')}
 - Salary Range: $${candidateProfile.salary_range_min?.toLocaleString()} - $${candidateProfile.salary_range_max?.toLocaleString()}
 - Education: ${educationText}
@@ -208,11 +210,21 @@ CANDIDATE PROFILE:
     limit: number = 3
   ): Promise<AdvancedJobRecommendation[]> {
     try {
-      // Build candidate profile
+      // Get enhanced profile from database
+      const enhancedProfile = await EnhancedCandidateProfileService.getEnhancedProfile(userId)
+      
+      if (!enhancedProfile) {
+        console.log('[AdvancedJobMatching] No enhanced profile found, falling back to legacy method')
+        // Fallback to legacy method
+        const candidateProfile = await this.jobMatchingService.buildCandidateProfile(userId)
+        return await this.getTwoStageRecommendationsWithEnhanced(candidateProfile, candidateProfile, limit, userId)
+      }
+
+      // Build candidate profile for Stage 1
       const candidateProfile = await this.jobMatchingService.buildCandidateProfile(userId)
       
-      // Get two-stage recommendations
-      return await this.getTwoStageRecommendations(candidateProfile, limit, userId)
+      // Get two-stage recommendations with enhanced profile for Stage 2
+      return await this.getTwoStageRecommendationsWithEnhanced(candidateProfile, enhancedProfile, limit, userId)
       
     } catch (error) {
       console.error('Enhanced job recommendations failed:', error)

@@ -33,7 +33,7 @@ export interface JobRecommendation {
   personalized_suggestions?: any // LLM-generated personalized suggestions
 }
 
-interface CandidateProfile {
+export interface CandidateProfile {
   titles: string[]
   skills: string[]
   experience_years: number
@@ -222,7 +222,11 @@ function calculateSkillsMatch(
   // Create candidate skills map for quick lookup
   const candidateSkillsMap = new Map<string, number>()
   candidateSkills.forEach(skill => {
-    candidateSkillsMap.set(skill.name.toLowerCase(), skill.level)
+    const skillName = (skill?.name || '').toString().trim()
+    if (!skillName) return
+    const norm = skillName.toLowerCase()
+    const level = typeof skill?.level === 'number' ? skill.level : 3
+    candidateSkillsMap.set(norm, level)
   })
 
   // Check required skills
@@ -418,7 +422,7 @@ function calculateEducationMatch(
   return { 
     score: Math.round(averageScore), 
     reason, 
-    matched_education 
+    matched_education: matchedEducation 
   }
 }
 
