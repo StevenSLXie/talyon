@@ -142,7 +142,13 @@ export class AdvancedJobMatchingService {
    */
   private buildCandidateSummary(candidateProfile: CandidateProfile): string {
     const educationText = candidateProfile.education?.length > 0 
-      ? candidateProfile.education.map(e => `${e.study_type} in ${e.area} from ${e.institution}`).join(', ')
+      ? candidateProfile.education.map(e => {
+          // Handle different degree formats
+          const degree = e.study_type || e.degree || 'Degree'
+          const major = e.area || e.major || 'Unknown'
+          const institution = e.institution || 'Unknown Institution'
+          return `${degree} in ${major} from ${institution}`
+        }).join(', ')
       : 'Not specified'
 
     const summary = `

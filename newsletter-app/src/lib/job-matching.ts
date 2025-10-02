@@ -41,9 +41,11 @@ interface CandidateProfile {
   industries: string[]
   education_level?: string
   education?: Array<{
-    study_type: string
-    area: string
-    institution: string
+    study_type?: string
+    degree?: string
+    area?: string
+    major?: string
+    institution?: string
   }>
   certifications?: Array<{
     name: string
@@ -1000,7 +1002,7 @@ export class JobMatchingService {
         
         if (earliestWork.start_date) {
           const startDate = new Date(earliestWork.start_date)
-          const endDate = latestWork.end_date ? new Date(latestWork.end_date) : new Date()
+          const endDate = latestWork.end_date ? new Date(latestWork.end_date) : new Date('2025-01-01') // Assume 2025
           experienceYears = Math.round((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24 * 365))
         }
       }

@@ -206,38 +206,6 @@ export default function EnhancedJobRecommendationCard({ recommendation, index }:
                     <p className="text-sm text-green-800">{recommendation.llm_analysis.career_impact}</p>
                   </div>
                 </div>
-
-                {/* Matching Reasons */}
-                <div>
-                  <h5 className="font-medium text-gray-900 mb-2">Why This Job Fits You:</h5>
-                  <ul className="space-y-1">
-                    {recommendation.llm_analysis.matching_reasons.map((reason, idx) => (
-                      <li key={idx} className="flex items-start text-sm text-gray-600">
-                        <svg className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                        {reason}
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                {/* Non-matching Points */}
-                {recommendation.llm_analysis.non_matching_points.length > 0 && (
-                  <div>
-                    <h5 className="font-medium text-gray-900 mb-2">Areas to Consider:</h5>
-                    <ul className="space-y-1">
-                      {recommendation.llm_analysis.non_matching_points.map((point, idx) => (
-                        <li key={idx} className="flex items-start text-sm text-gray-600">
-                          <svg className="w-4 h-4 text-orange-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                          </svg>
-                          {point}
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
               </div>
             )}
 
