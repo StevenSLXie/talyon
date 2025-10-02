@@ -93,65 +93,6 @@ export default function EnhancedJobRecommendationCard({ recommendation, index }:
         <JobCard job={recommendation.job} />
       </div>
 
-      {/* AI Analysis */}
-      <div className="px-6 pb-4">
-        <div className="border-t border-gray-100 pt-4">
-          <div className="flex items-center justify-between mb-3">
-            <h4 className="text-lg font-semibold text-gray-900">
-              AI Analysis
-            </h4>
-            <button
-              onClick={() => setIsExpanded(!isExpanded)}
-              className="text-blue-600 hover:text-blue-800 text-sm font-medium"
-            >
-              {isExpanded ? 'Show Less' : 'Show More'}
-            </button>
-          </div>
-          
-          {/* Personalized Assessment - Always visible */}
-          <div className="mb-4">
-            <div className="bg-blue-50 rounded-lg p-4">
-              <h5 className="font-medium text-blue-900 mb-2">Personalized Assessment</h5>
-              <p className="text-sm text-blue-800">{recommendation.llm_analysis.personalized_assessment}</p>
-            </div>
-          </div>
-
-          {/* Matching Reasons - Always visible */}
-          {recommendation.llm_analysis.matching_reasons.length > 0 && (
-            <div className="mb-3">
-              <span className="text-sm font-medium text-green-700">Why This Job Fits You:</span>
-              <ul className="mt-1 space-y-1">
-                {recommendation.llm_analysis.matching_reasons.map((reason, idx) => (
-                  <li key={idx} className="flex items-start text-sm text-green-600">
-                    <svg className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                    </svg>
-                    {reason}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-
-          {/* Non-matching Points - Always visible */}
-          {recommendation.llm_analysis.non_matching_points.length > 0 && (
-            <div className="mb-3">
-              <span className="text-sm font-medium text-orange-700">Areas to Consider:</span>
-              <ul className="mt-1 space-y-1">
-                {recommendation.llm_analysis.non_matching_points.map((point, idx) => (
-                  <li key={idx} className="flex items-start text-sm text-orange-600">
-                    <svg className="w-4 h-4 text-orange-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-                    </svg>
-                    {point}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
-      </div>
-
       {/* Expanded Details */}
       {isExpanded && (
         <div className="border-t border-gray-100">
@@ -182,6 +123,48 @@ export default function EnhancedJobRecommendationCard({ recommendation, index }:
           <div className="px-6 py-4">
             {activeTab === 'analysis' && (
               <div className="space-y-4">
+                {/* Personalized Assessment */}
+                <div>
+                  <h5 className="font-medium text-gray-900 mb-2">Personalized Assessment</h5>
+                  <div className="bg-blue-50 rounded-lg p-3">
+                    <p className="text-sm text-blue-800">{recommendation.llm_analysis.personalized_assessment}</p>
+                  </div>
+                </div>
+
+                {/* Matching Reasons */}
+                {recommendation.llm_analysis.matching_reasons.length > 0 && (
+                  <div>
+                    <h5 className="font-medium text-gray-900 mb-2">Why This Job Fits You:</h5>
+                    <ul className="space-y-1">
+                      {recommendation.llm_analysis.matching_reasons.map((reason, idx) => (
+                        <li key={idx} className="flex items-start text-sm text-gray-600">
+                          <svg className="w-4 h-4 text-green-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          {reason}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Non-matching Points */}
+                {recommendation.llm_analysis.non_matching_points.length > 0 && (
+                  <div>
+                    <h5 className="font-medium text-gray-900 mb-2">Areas to Consider:</h5>
+                    <ul className="space-y-1">
+                      {recommendation.llm_analysis.non_matching_points.map((point, idx) => (
+                        <li key={idx} className="flex items-start text-sm text-gray-600">
+                          <svg className="w-4 h-4 text-orange-500 mr-2 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                          </svg>
+                          {point}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
                 {/* Key Highlights */}
                 {recommendation.llm_analysis.key_highlights.length > 0 && (
                   <div>

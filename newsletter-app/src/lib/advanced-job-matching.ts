@@ -86,7 +86,7 @@ export class AdvancedJobMatchingService {
       }))
 
       // Call LLM for batch analysis
-      const llmAnalysis = await this.callLLMForBatchAnalysis(candidateSummary, jobSummaries)
+      const llmAnalysis = await this.callLLMForBatchAnalysis(candidateProfile, jobSummaries)
 
       // Process LLM results and create final recommendations
       const finalRecommendations: AdvancedJobRecommendation[] = []
@@ -170,7 +170,7 @@ CANDIDATE PROFILE:
    * Call LLM for batch analysis of multiple jobs
    */
   private async callLLMForBatchAnalysis(
-    candidateSummary: string,
+    candidateProfile: CandidateProfile,
     jobSummaries: Array<{ id: number; job: any; stage1_score: number; stage1_reasons: string[] }>
   ): Promise<{
     job_analyses: Array<{
@@ -182,6 +182,30 @@ CANDIDATE PROFILE:
       career_impact: string
     }>
   }> {
+    // Build comprehensive candidate profile for LLM
+    const educationText = candidateProfile.education?.length > 0 
+      ? candidateProfile.education.map(e => {
+          const degree = e.study_type || e.degree || 'Degree'
+          const major = e.area || e.major || 'Unknown'
+          const institution = e.institution || 'Unknown Institution'
+          return `${degree} in ${major} from ${institution}`
+        }).join(', ')
+      : 'Not specified'
+
+    const candidateProfileText = `
+CANDIDATE PROFILE:
+- Experience: ${candidateProfile.experience_years} years
+- Current/Previous Titles: ${candidateProfile.titles.join(', ')}
+- Key Skills: ${candidateProfile.skills.map(s => s.name).join(', ')}
+- Industries: ${candidateProfile.industries.join(', ')}
+- Salary Range: $${candidateProfile.salary_range_min?.toLocaleString()} - $${candidateProfile.salary_range_max?.toLocaleString()}
+- Education: ${educationText}
+- Work Preferences: ${candidateProfile.work_prefs ? `${candidateProfile.work_prefs.remote} work, ${candidateProfile.work_prefs.job_type} position` : 'Not specified'}
+- Work Authorization: ${candidateProfile.work_auth ? (candidateProfile.work_auth.citizen_or_pr ? 'Citizen/PR' : 'Needs EP') : 'Not specified'}
+- Company Tiers: ${candidateProfile.company_tiers?.join(', ') || 'Not specified'}
+- Certifications: ${candidateProfile.certifications?.map(c => c.name).join(', ') || 'None'}
+`
+
     const jobDetails = jobSummaries.map(job => `
 Job ${job.id}: ${job.job.title} at ${job.job.company}
 - Location: ${job.job.location}
@@ -189,50 +213,48 @@ Job ${job.id}: ${job.job.title} at ${job.job.company}
 - Industry: ${job.job.industry}
 - Experience Level: ${job.job.experience_level}
 - Job Type: ${job.job.job_type}
-- Description: ${job.job.job_description?.substring(0, 500)}...
+- Post Date: ${job.job.post_date}
+- URL: ${job.job.url || 'N/A'}
+- Job Category: ${job.job.job_category || 'N/A'}
+
+FULL JOB DESCRIPTION:
+${job.job.job_description || job.job.raw_text || 'No description available'}
+
 - Stage 1 Score: ${job.stage1_score}/100
 - Stage 1 Reasons: ${job.stage1_reasons.join(', ')}
 `).join('\n')
 
-    const prompt = `
-You are an expert career advisor analyzing job opportunities for a candidate. 
+    const prompt = `Analyze these jobs for the candidate:
 
-${candidateSummary}
+${candidateProfileText}
 
-AVAILABLE JOBS:
+JOBS:
 ${jobDetails}
 
-For EACH job, provide a detailed analysis in this EXACT JSON format:
-{
-  "job_analyses": [
-    {
-      "final_score": 85,
-      "matching_reasons": ["Strong technical skills match", "Salary expectations aligned", "Career progression opportunity"],
-      "non_matching_points": ["Requires 2 more years experience", "Different industry background"],
-      "key_highlights": ["Leading tech company", "Remote work option", "Learning opportunities"],
-      "personalized_assessment": "This role aligns well with your software engineering background and offers good growth potential. Your Python and React skills are directly applicable.",
-      "career_impact": "This position would advance your career by providing leadership experience and exposure to cloud technologies."
-    }
-  ]
-}
+IMPORTANT: Pay special attention to education levels. If the candidate has a PhD, Doctorate, or Doctoral degree, this is the HIGHEST level of education and should be recognized as such. PhD holders are highly qualified for most positions.
 
-IMPORTANT GUIDELINES:
-1. Score each job 0-100 based on overall fit for THIS specific candidate
-2. Be specific about why each job is good/bad for THIS candidate
-3. Highlight 2-3 key things about each job that matter for this candidate
-4. Write naturally, like a career advisor explaining opportunities
-5. Consider career progression, skill development, and personal fit
-6. Provide exactly ${jobSummaries.length} analyses in the array
-7. Return ONLY valid JSON, no other text
+ANALYSIS REQUIREMENTS:
+- Read the FULL job description carefully to understand specific requirements, responsibilities, and qualifications
+- Consider the candidate's exact background, skills, experience, and education level
+- Analyze how well the candidate's profile matches the job requirements
+- Consider career progression opportunities and growth potential
+- Evaluate company culture fit based on job description and company information
 
-Analyze each job thoughtfully and provide personalized insights.
-`
+Return JSON with job_analyses array containing exactly ${jobSummaries.length} items. Each item needs:
+- final_score: 0-100 (consider PhD as highest qualification, analyze full job requirements)
+- matching_reasons: array of 2-3 specific reasons why this job fits THIS candidate (be specific about skills, experience, education)
+- non_matching_points: array of 1-2 specific concerns or gaps (reference actual job requirements)
+- key_highlights: array of 2-3 key things about this job that matter for this candidate (growth, learning, impact)
+- personalized_assessment: 2-3 sentences explaining why this job is good/bad for THIS specific candidate (reference their background)
+- career_impact: 2-3 sentences about how this role would advance their career (be specific about progression)
+
+Be specific and personalized. Consider the candidate's exact background, education level, and experience. Return ONLY valid JSON.`
 
     try {
       console.log('🤖 Calling LLM for job analysis...')
 
       // Use the new batch analysis method
-      const response = await llmAnalysisService.batchAnalyzeJobs(candidateSummary, jobSummaries)
+      const response = await llmAnalysisService.batchAnalyzeJobs(candidateProfileText, jobSummaries)
 
       console.log('✅ LLM API call successful')
 
