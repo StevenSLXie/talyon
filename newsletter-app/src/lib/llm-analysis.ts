@@ -61,14 +61,43 @@ export class LLMAnalysisService {
           try {
             return JSON.parse(slice)
           } catch (_e3) {
-            console.log('❌ Failed to parse JSON slice:', slice.substring(0, 200) + '...')
-            return {}
+            // Try to fix truncated JSON by adding missing closing brackets
+            try {
+              const fixedJson = this.fixTruncatedJson(slice)
+              return JSON.parse(fixedJson)
+            } catch (_e4) {
+              console.log('❌ Failed to parse JSON slice:', slice.substring(0, 200) + '...')
+              return {}
+            }
           }
         }
         console.log('❌ No valid JSON found in response:', raw.substring(0, 200) + '...')
         return {}
       }
     }
+  }
+
+  // Helper to fix truncated JSON responses
+  private fixTruncatedJson(jsonStr: string): string {
+    let fixed = jsonStr
+    
+    // Count opening and closing braces/brackets
+    const openBraces = (fixed.match(/\{/g) || []).length
+    const closeBraces = (fixed.match(/\}/g) || []).length
+    const openBrackets = (fixed.match(/\[/g) || []).length
+    const closeBrackets = (fixed.match(/\]/g) || []).length
+    
+    // Add missing closing brackets
+    for (let i = 0; i < openBrackets - closeBrackets; i++) {
+      fixed += ']'
+    }
+    
+    // Add missing closing braces
+    for (let i = 0; i < openBraces - closeBraces; i++) {
+      fixed += '}'
+    }
+    
+    return fixed
   }
 
   /**
@@ -89,7 +118,7 @@ export class LLMAnalysisService {
             { role: 'user', content: prompt }
           ],
           temperature: 0.2,
-          max_tokens: 2000,
+          max_tokens: 4000,
           response_format: { type: 'json_object' }
         })
       })
@@ -452,39 +481,22 @@ Job ${job.id}: ${job.job.title} at ${job.job.company}
 - Stage 1 Reasons: ${job.stage1_reasons.join(', ')}
 `).join('\n')
 
-    const prompt = `
-You are an expert career advisor analyzing job opportunities for a candidate. 
+    const prompt = `Analyze these jobs for the candidate:
 
 ${candidateSummary}
 
-AVAILABLE JOBS:
+JOBS:
 ${jobDetails}
 
-For EACH job, provide a detailed analysis in this EXACT JSON format:
-{
-  "job_analyses": [
-    {
-      "final_score": 85,
-      "matching_reasons": ["Strong technical skills match", "Salary expectations aligned", "Career progression opportunity"],
-      "non_matching_points": ["Requires 2 more years experience", "Different industry background"],
-      "key_highlights": ["Leading tech company", "Remote work option", "Learning opportunities"],
-      "personalized_assessment": "This role aligns well with your software engineering background and offers good growth potential. Your Python and React skills are directly applicable.",
-      "career_impact": "This position would advance your career by providing leadership experience and exposure to cloud technologies."
-    }
-  ]
-}
+Return JSON with job_analyses array containing exactly ${jobSummaries.length} items. Each item needs:
+- final_score: 0-100
+- matching_reasons: array of 2-3 reasons
+- non_matching_points: array of 1-2 concerns  
+- key_highlights: array of 2-3 highlights
+- personalized_assessment: 1-2 sentences
+- career_impact: 1-2 sentences
 
-IMPORTANT GUIDELINES:
-1. Score each job 0-100 based on overall fit for THIS specific candidate
-2. Be specific about why each job is good/bad for THIS candidate
-3. Highlight 2-3 key things about each job that matter for this candidate
-4. Write naturally, like a career advisor explaining opportunities
-5. Consider career progression, skill development, and personal fit
-6. Provide exactly ${jobSummaries.length} analyses in the array
-7. Return ONLY valid JSON, no other text
-
-Analyze each job thoughtfully and provide personalized insights.
-`
+Be concise but specific. Return ONLY valid JSON.`
 
     try {
       const response = await this.callOpenAI(prompt, 'You are an expert career advisor who provides detailed, personalized job analysis. Always respond with valid JSON format as requested.')
