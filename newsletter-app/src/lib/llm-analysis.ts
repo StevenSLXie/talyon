@@ -535,22 +535,22 @@ Guidelines:
 
     const candidateProfileText = `
 CANDIDATE PROFILE:
-- Experience: ${enhancedProfile.experience_years} years
-- Current Title: ${enhancedProfile.current_title}
-- Target Titles: ${enhancedProfile.target_titles.join(', ')}
-- Seniority Level: ${enhancedProfile.seniority_level}
-- Key Skills: ${enhancedProfile.skills.map(s => `${s.name} (Level ${s.level})`).join(', ')}
-- Industries: ${enhancedProfile.industries.join(', ')}
-- Salary Range: $${enhancedProfile.salary_expect.min.toLocaleString()} - $${enhancedProfile.salary_expect.max.toLocaleString()} ${enhancedProfile.salary_expect.currency}
+- Experience: ${enhancedProfile.experience_years || 0} years
+- Current Title: ${enhancedProfile.current_title || 'Not specified'}
+- Target Titles: ${enhancedProfile.target_titles?.join(', ') || 'Not specified'}
+- Seniority Level: ${enhancedProfile.seniority_level || 'Not specified'}
+- Key Skills: ${enhancedProfile.skills?.map(s => `${s.name} (Level ${s.level})`).join(', ') || 'Not specified'}
+- Industries: ${enhancedProfile.industries?.join(', ') || 'Not specified'}
+- Salary Range: $${enhancedProfile.salary_expect?.min?.toLocaleString() || '0'} - $${enhancedProfile.salary_expect?.max?.toLocaleString() || '0'} ${enhancedProfile.salary_expect?.currency || 'SGD'}
 - Education: ${educationText}
-- Work Preferences: ${enhancedProfile.work_prefs.remote} work, ${enhancedProfile.work_prefs.job_type} position
-- Work Authorization: ${enhancedProfile.work_auth.citizen_or_pr ? 'Citizen/PR' : 'Needs EP'} ${enhancedProfile.work_auth.work_permit_type ? `(${enhancedProfile.work_auth.work_permit_type})` : ''}
-- Company Tiers: ${enhancedProfile.company_tiers.join(', ')}
-- Certifications: ${enhancedProfile.certifications.join(', ') || 'None'}
-- Target Industries: ${enhancedProfile.intent.target_industries.join(', ')}
-- Must Have: ${enhancedProfile.intent.must_have.join(', ')}
-- Nice to Have: ${enhancedProfile.intent.nice_to_have.join(', ')}
-- Blacklist Companies: ${enhancedProfile.intent.blacklist_companies.join(', ') || 'None'}
+- Work Preferences: ${enhancedProfile.work_prefs?.remote || 'Not specified'} work, ${enhancedProfile.work_prefs?.job_type || 'Not specified'} position
+- Work Authorization: ${enhancedProfile.work_auth?.citizen_or_pr ? 'Citizen/PR' : 'Needs EP'} ${enhancedProfile.work_auth?.work_permit_type ? `(${enhancedProfile.work_auth.work_permit_type})` : ''}
+- Company Tiers: ${enhancedProfile.company_tiers?.join(', ') || 'Not specified'}
+- Certifications: ${enhancedProfile.certifications?.join(', ') || 'None'}
+- Target Industries: ${enhancedProfile.intent?.target_industries?.join(', ') || 'Not specified'}
+- Must Have: ${enhancedProfile.intent?.must_have?.join(', ') || 'Not specified'}
+- Nice to Have: ${enhancedProfile.intent?.nice_to_have?.join(', ') || 'Not specified'}
+- Blacklist Companies: ${enhancedProfile.intent?.blacklist_companies?.join(', ') || 'None'}
 `
 
     const jobDetails = jobSummaries.map(job => `
