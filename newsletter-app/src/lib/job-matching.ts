@@ -1,5 +1,6 @@
 // Enhanced Job Matching Service
 import { supabase } from './supabase'
+import { enhancedCandidateProfileService } from './enhanced-candidate-profile'
 import { LLMActionSuggestionsService } from './llm-action-suggestions'
 
 export interface JobRecommendation {
@@ -969,9 +970,71 @@ function applyHardFilters(candidate: CandidateProfile, job: any): { passed: bool
 
 export class JobMatchingService {
   /**
-   * Build candidate profile from database
+   * Build candidate profile from database using enhanced profile data
    */
   async buildCandidateProfile(usersId: string): Promise<CandidateProfile> {
+    try {
+      console.log('[JobMatching] buildCandidateProfile start', { usersId })
+      
+      // First try to get enhanced profile data
+      const enhancedProfile = await enhancedCandidateProfileService.getEnhancedProfile(usersId)
+      
+      if (enhancedProfile) {
+        console.log('[JobMatching] Using enhanced profile data')
+        
+        // Convert enhanced profile to CandidateProfile format
+        const candidateProfile: CandidateProfile = {
+          titles: [enhancedProfile.current_title, ...enhancedProfile.target_titles].filter(Boolean),
+          skills: enhancedProfile.skills.map(s => ({ name: s.name, level: s.level })),
+          experience_years: enhancedProfile.experience_years,
+          industries: enhancedProfile.industries,
+          salary_range_min: enhancedProfile.salary_expect.min,
+          salary_range_max: enhancedProfile.salary_expect.max,
+          work_auth: {
+            citizen_or_pr: enhancedProfile.work_auth.citizen_or_pr,
+            ep_needed: enhancedProfile.work_auth.ep_needed,
+            work_permit_type: enhancedProfile.work_auth.work_permit_type
+          },
+          work_prefs: {
+            remote: enhancedProfile.work_prefs.remote as 'Onsite' | 'Hybrid' | 'Remote',
+            job_type: enhancedProfile.work_prefs.job_type as 'Permanent' | 'Contract' | 'Freelance'
+          },
+          blacklist_companies: enhancedProfile.intent.blacklist_companies,
+          education: enhancedProfile.education.map(e => ({
+            study_type: e.degree,
+            area: e.major,
+            institution: e.institution
+          })),
+          certifications: enhancedProfile.certifications.map(c => ({ name: c, issuer: '' })),
+          company_tiers: enhancedProfile.company_tiers
+        }
+        
+        console.log('[JobMatching] buildCandidateProfile done (enhanced)', { 
+          experience_years: candidateProfile.experience_years,
+          education_count: candidateProfile.education?.length || 0,
+          skills_count: candidateProfile.skills.length,
+          titles_count: candidateProfile.titles.length
+        })
+        
+        return candidateProfile
+      }
+      
+      // Fallback to legacy method if enhanced profile not available
+      console.log('[JobMatching] Enhanced profile not found, using legacy method')
+      return await this.buildCandidateProfileLegacy(usersId)
+      
+    } catch (error) {
+      console.error('[JobMatching] buildCandidateProfile failed:', error)
+      // Fallback to legacy method
+      return await this.buildCandidateProfileLegacy(usersId)
+    }
+  }
+
+  /**
+   * Legacy method to build candidate profile from raw database tables
+   * @deprecated Use enhanced profile data instead
+   */
+  private async buildCandidateProfileLegacy(usersId: string): Promise<CandidateProfile> {
     try {
       // Get work experience titles
       const { data: workData } = await supabase()
