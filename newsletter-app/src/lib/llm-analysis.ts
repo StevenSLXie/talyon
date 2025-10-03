@@ -51,14 +51,21 @@ export class LLMAnalysisService {
       // Strip markdown fences like ```json ... ```
       const fenceMatch = raw.match(/```(?:json)?[\r\n]+([\s\S]*?)```/i)
       const candidate = fenceMatch ? fenceMatch[1] : raw
+      
+      // Clean up common issues
+      const cleaned = candidate
+        .trim()
+        .replace(/^[^{[]*/, '') // Remove text before first { or [
+        .replace(/[^}\]]*$/, '') // Remove text after last } or ]
+      
       try {
-        return JSON.parse(candidate)
+        return JSON.parse(cleaned)
       } catch (_e2) {
         // Extract the first balanced JSON object as a last resort
-        const start = candidate.indexOf('{')
-        const end = candidate.lastIndexOf('}')
+        const start = cleaned.indexOf('{')
+        const end = cleaned.lastIndexOf('}')
         if (start !== -1 && end !== -1 && end > start) {
-          const slice = candidate.slice(start, end + 1)
+          const slice = cleaned.slice(start, end + 1)
           try {
             return JSON.parse(slice)
           } catch (_e3) {
@@ -599,13 +606,21 @@ Be specific and personalized. Consider the candidate's exact background, educati
 
     try {
       const response = await this.callOpenAI(prompt, 'You are an expert career advisor who provides detailed, personalized job analysis. Always respond with valid JSON format as requested.')
-      console.log('🔍 Raw LLM response:', response.substring(0, 500) + '...')
+      console.log('🔍 Raw LLM response length:', response.length)
+      console.log('🔍 Raw LLM response preview:', response.substring(0, 1000) + '...')
       
       const parsed = this.parseJsonResponse(response)
       console.log('🔍 Parsed response keys:', Object.keys(parsed))
+      console.log('🔍 Parsed response type:', typeof parsed)
+      
+      if (!parsed || typeof parsed !== 'object') {
+        console.log('❌ Invalid response: not an object, got:', typeof parsed, parsed)
+        throw new Error('Invalid LLM response format')
+      }
       
       if (!parsed.job_analyses || !Array.isArray(parsed.job_analyses)) {
         console.log('❌ Invalid response format. Expected job_analyses array, got:', parsed)
+        console.log('🔍 Available keys:', Object.keys(parsed))
         throw new Error('Invalid LLM response format')
       }
 
