@@ -7,7 +7,7 @@ const openai = new OpenAI({
 
 export async function POST(req: NextRequest) {
   try {
-    const { prompt, model = 'gpt-5-mini', temperature = 0.3 } = await req.json()
+    const { prompt, model = 'gpt-5-mini', temperature = 1 } = await req.json()
 
     if (!prompt) {
       return NextResponse.json({ error: 'Prompt is required' }, { status: 400 })
