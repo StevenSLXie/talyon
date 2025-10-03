@@ -12,42 +12,8 @@
 </regulation>
 
 <new_features>
-
-## 🎨 UI Revamp (Priority: High)
-✅ 1. **UI Design Overhaul**: Implement classic minimalist black/white design
-   - Remove unnecessary clutter and visual noise
-   - Ensure mobile-friendly responsive design
-   - Apply consistent typography and spacing
-   - Implement clean, professional aesthetic
-
-## 📋 Job Description Completeness (Priority: Medium)
-✅ 2. **Job Description Audit**: Check and fix incomplete job descriptions
-   - Audit current job descriptions in database
-   - Identify missing or incomplete descriptions
-   - If data exists in DB: insert missing descriptions
-   - If data missing: add scraping pipeline improvements
-   - Ensure all jobs have complete, readable descriptions
-
-## 🤖 Advanced Job Recommendation System (Priority: High)
-✅ 3. **Two-Stage Job Recommendation**: Implement coarse + fine ranking system
-   
-   **Stage 1: Coarse Ranking (Rules-based)**
-   - Use current job matching logic as initial filter
-   - Generate list of top 20 candidate jobs
-   - Apply hard filters and basic scoring
-   
-   **Stage 2: Fine Ranking (LLM-powered)**
-   - Single LLM call: resume + 20 jobs analysis
-   - For each job, generate:
-     - Final matching score (0-100)
-     - Detailed matching reasons
-     - Non-matching points explanation
-     - 2-3 key job highlights
-     - Personalized analysis based on candidate's specific resume
-   - Natural, advisor-like language (non-template)
-   - Rank and display final recommendations
-   - Highlight why each job is good/bad for THIS specific candidate
-
+✅ 1. for stage 1, skill match should be 40% weight
+✅ 2. in addition to uploading resume, have a slide bar to let candidate input his/her monthly salary expection range. record this, as part of the acandaiate's profile
 </new_features>
 
 <other>
@@ -166,5 +132,50 @@
    - Fixed education recognition in LLM prompts
    - Improved candidate profile accuracy for meaningful analysis
    - Enhanced profile construction from database with proper null handling
+
+
+
+## 🎨 UI Revamp (Priority: High)
+✅ 1. **UI Design Overhaul**: Implement classic minimalist black/white design
+   - Remove unnecessary clutter and visual noise
+   - Ensure mobile-friendly responsive design
+   - Apply consistent typography and spacing
+   - Implement clean, professional aesthetic
+
+## 📋 Job Description Completeness (Priority: Medium)
+✅ 2. **Job Description Audit**: Check and fix incomplete job descriptions
+   - Audit current job descriptions in database
+   - Identify missing or incomplete descriptions
+   - If data exists in DB: insert missing descriptions
+   - If data missing: add scraping pipeline improvements
+   - Ensure all jobs have complete, readable descriptions
+
+## 🤖 Advanced Job Recommendation System (Priority: High)
+✅ 3. **Two-Stage Job Recommendation**: Implement coarse + fine ranking system
+   
+   **Stage 1: Coarse Ranking (Rules-based)**
+   - Use current job matching logic as initial filter
+   - Generate list of top 20 candidate jobs
+   - Apply hard filters and basic scoring
+   
+   **Stage 2: Fine Ranking (LLM-powered)**
+   - Single LLM call: resume + 20 jobs analysis
+   - For each job, generate:
+     - Final matching score (0-100)
+     - Detailed matching reasons
+     - Non-matching points explanation
+     - 2-3 key job highlights
+     - Personalized analysis based on candidate's specific resume
+   - Natural, advisor-like language (non-template)
+   - Rank and display final recommendations
+   - Highlight why each job is good/bad for THIS specific candidate
+
+1. main page not to have browse_job and dashboard
+2. website name changed to Talyon (means talanet + lion SG)
+3. change the introduction to be more catchy, focused on reliefing candidate's anxiety of sending 1000+ resumes. "why sending blalalalal". work on the words
+4. detailed job page is still not correct -> the JD is not complete. 
+5. detailed job page "Apply Now" shall link to the url of the original mycareerfuture page
+6. detailed job page should also be black/white minimalist style
+
 </done>
 
