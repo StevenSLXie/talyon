@@ -125,7 +125,8 @@ export class LLMAnalysisService {
             ...(systemPrompt ? [{ role: 'system', content: systemPrompt + ' Return ONLY valid JSON without code fences.' }] : []),
             { role: 'user', content: prompt }
           ],
-          max_completion_tokens: 6000,
+          temperature: 0.2,
+          max_tokens: 6000,
           response_format: { type: 'json_object' }
         })
       })
@@ -208,7 +209,8 @@ export class LLMAnalysisService {
               ]
             }
           ],
-          max_completion_tokens: 2000,
+          temperature: 0.2,
+          max_tokens: 2000,
           response_format: { type: 'json_object' }
         })
       })
