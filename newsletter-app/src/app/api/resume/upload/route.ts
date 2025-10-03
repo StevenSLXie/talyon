@@ -324,8 +324,19 @@ export async function POST(request: NextRequest) {
     // Process the resume (upload to storage + save metadata)
     const { resumeId, filePath } = await ResumeParser.processResume(userId, file)
 
+    // Extract salary expectations from form data
+    const salaryMin = parseInt(formData.get('salaryMin') as string) || 3000
+    const salaryMax = parseInt(formData.get('salaryMax') as string) || 8000
+
     // Generate both enhanced profile and JSON resume in one OpenAI call
     const { enhancedProfile, jsonResume } = await llmAnalysisService.generateCombinedProfileFromFile(file)
+    
+    // Add salary expectations to enhanced profile
+    enhancedProfile.salary_expect = {
+      min: salaryMin,
+      max: salaryMax
+    }
+    
     console.debug('[Upload] Enhanced Profile', JSON.stringify(enhancedProfile, null, 2))
     
     // Save enhanced profile to database

@@ -1251,15 +1251,15 @@ export class JobMatchingService {
 
         // Calculate weighted total score
         const totalScore = Math.round(
-          (bestTitle.score * 0.20) +
+          (bestTitle.score * 0.15) +
           (salaryMatch.score * 0.20) +
-          (skillsMatch.score * 0.25) +
-          (experienceMatch.score * 0.15) +
-          (educationMatch.score * 0.10) +
+          (skillsMatch.score * 0.40) +
+          (experienceMatch.score * 0.10) +
+          (educationMatch.score * 0.05) +
           (certificationMatch.score * 0.05) +
-          (jobFamilyMatch.score * 0.10) +
-          (workPrefsMatch.score * 0.05) +
-          (industryMatch.score * 0.05)
+          (jobFamilyMatch.score * 0.03) +
+          (workPrefsMatch.score * 0.01) +
+          (industryMatch.score * 0.01)
         )
 
         // Build match reasons
