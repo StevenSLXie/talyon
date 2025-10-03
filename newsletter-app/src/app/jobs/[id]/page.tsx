@@ -20,6 +20,7 @@ interface Job {
   application_url?: string
   raw_text?: string
   scraped_at?: string
+  url?: string
 }
 
 export default function JobDetailPage() {
@@ -40,19 +41,13 @@ export default function JobDetailPage() {
   const loadJob = async (jobId: string) => {
     setLoading(true)
     try {
-      // In a real app, this would be an API call to get job by ID
-      // For now, we'll simulate loading from our jobs data
-      const response = await fetch('/api/jobs')
+      // Fetch job by ID from API
+      const response = await fetch(`/api/jobs/${jobId}`)
       if (response.ok) {
         const data = await response.json()
-        const foundJob = data.jobs.find((j: Job) => j.job_hash === jobId)
-        if (foundJob) {
-          setJob(foundJob)
-        } else {
-          // Fallback to mock data
-          setJob(getMockJob(jobId))
-        }
+        setJob(data.job)
       } else {
+        // Fallback to mock data
         setJob(getMockJob(jobId))
       }
     } catch (error) {
@@ -117,7 +112,9 @@ export default function JobDetailPage() {
   }
 
   const handleApply = () => {
-    if (job?.application_url) {
+    if (job?.url) {
+      window.open(job.url, '_blank')
+    } else if (job?.application_url) {
       window.open(job.application_url, '_blank')
     }
   }
@@ -125,9 +122,9 @@ export default function JobDetailPage() {
   if (loading) {
     return (
       <ProtectedRoute>
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="min-h-screen bg-white flex items-center justify-center">
           <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-black mx-auto mb-4"></div>
             <p className="text-gray-600">Loading job details...</p>
           </div>
         </div>
@@ -138,15 +135,15 @@ export default function JobDetailPage() {
   if (!job) {
     return (
       <ProtectedRoute>
-        <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
+        <div className="min-h-screen bg-white flex items-center justify-center">
           <div className="text-center">
-            <h1 className="text-2xl font-bold text-gray-900 mb-4">Job Not Found</h1>
+            <h1 className="text-2xl font-bold text-black mb-4">Job Not Found</h1>
             <p className="text-gray-600 mb-6">The job you're looking for doesn't exist or has been removed.</p>
             <button
-              onClick={() => router.push('/jobs')}
-              className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              onClick={() => router.push('/')}
+              className="bg-black text-white px-6 py-3 rounded-none hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
             >
-              Browse All Jobs
+              Go Home
             </button>
           </div>
         </div>
@@ -156,9 +153,9 @@ export default function JobDetailPage() {
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="min-h-screen bg-white">
         {/* Header */}
-        <header className="bg-white shadow-sm">
+        <header className="bg-white border-b border-gray-200">
           <div className="container mx-auto px-4 py-4 flex justify-between items-center">
             <div className="flex items-center space-x-2">
               <button
@@ -167,7 +164,7 @@ export default function JobDetailPage() {
               >
                 ← Back
               </button>
-              <h1 className="text-2xl font-bold text-blue-600">Singapore Jobs</h1>
+              <h1 className="text-2xl font-bold text-black">Talyon</h1>
             </div>
             
             <UserMenu user={user!} />
@@ -178,10 +175,10 @@ export default function JobDetailPage() {
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-4xl mx-auto">
             {/* Job Header */}
-            <div className="bg-white rounded-lg shadow p-8 mb-8">
+            <div className="bg-white border border-gray-200 p-8 mb-8">
               <div className="flex justify-between items-start mb-6">
                 <div className="flex-1">
-                  <h1 className="text-3xl font-bold text-gray-900 mb-2">{job.title}</h1>
+                  <h1 className="text-3xl font-bold text-black mb-2">{job.title}</h1>
                   <p className="text-xl text-gray-600 mb-4">{job.company}</p>
                   
                   <div className="flex flex-wrap gap-4 text-sm text-gray-600 mb-6">
@@ -207,13 +204,13 @@ export default function JobDetailPage() {
                   </div>
 
                   <div className="flex flex-wrap gap-2 mb-6">
-                    <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm">
+                    <span className="px-3 py-1 bg-gray-100 text-gray-800 border border-gray-300 text-sm">
                       {job.industry}
                     </span>
-                    <span className="px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm">
+                    <span className="px-3 py-1 bg-gray-100 text-gray-800 border border-gray-300 text-sm">
                       {job.experience_level}
                     </span>
-                    <span className="px-3 py-1 bg-purple-100 text-purple-800 rounded-full text-sm">
+                    <span className="px-3 py-1 bg-gray-100 text-gray-800 border border-gray-300 text-sm">
                       Posted {new Date(job.post_date).toLocaleDateString()}
                     </span>
                   </div>
@@ -224,7 +221,7 @@ export default function JobDetailPage() {
               <div className="flex gap-4">
                 <button
                   onClick={handleApply}
-                  className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 font-medium"
+                  className="bg-black text-white px-6 py-3 rounded-none hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 font-medium"
                 >
                   Apply Now
                 </button>
@@ -232,10 +229,10 @@ export default function JobDetailPage() {
                 <button
                   onClick={handleSaveJob}
                   disabled={saving || saved}
-                  className={`px-6 py-3 rounded-lg font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 ${
+                  className={`px-6 py-3 rounded-none font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 ${
                     saved
-                      ? 'bg-green-100 text-green-800 border border-green-200'
-                      : 'bg-white text-blue-600 border border-blue-600 hover:bg-blue-50'
+                      ? 'bg-gray-100 text-gray-800 border border-gray-300'
+                      : 'bg-white text-black border border-black hover:bg-gray-50'
                   }`}
                 >
                   {saving ? 'Saving...' : saved ? 'Saved ✓' : 'Save Job'}
@@ -244,8 +241,8 @@ export default function JobDetailPage() {
             </div>
 
             {/* Job Description */}
-            <div className="bg-white rounded-lg shadow p-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Job Description</h2>
+            <div className="bg-white border border-gray-200 p-8">
+              <h2 className="text-2xl font-bold text-black mb-6">Job Description</h2>
               
               {job.raw_text ? (
                 <div className="prose max-w-none">
@@ -281,8 +278,8 @@ export default function JobDetailPage() {
             </div>
 
             {/* Related Jobs */}
-            <div className="bg-white rounded-lg shadow p-8 mt-8">
-              <h2 className="text-2xl font-bold text-gray-900 mb-6">Similar Jobs</h2>
+            <div className="bg-white border border-gray-200 p-8 mt-8">
+              <h2 className="text-2xl font-bold text-black mb-6">Similar Jobs</h2>
               <div className="text-center py-8">
                 <svg className="w-12 h-12 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />

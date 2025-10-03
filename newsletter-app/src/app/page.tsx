@@ -93,7 +93,7 @@ export default function Home() {
       <header className="bg-white border-b border-gray-200">
         <div className="container mx-auto px-4 py-6 flex justify-between items-center">
           <div className="flex items-center space-x-2">
-            <h1 className="text-2xl font-bold text-black">JobMatcher</h1>
+            <h1 className="text-2xl font-bold text-black">Talyon</h1>
           </div>
           
           <div className="flex items-center space-x-4">
@@ -114,31 +114,18 @@ export default function Home() {
       <div className="container mx-auto px-4 py-20">
         <div className="text-center mb-20">
           <h1 className="text-6xl font-light text-black mb-8 leading-tight">
-            Stop Sending Generic Resumes
-            <span className="block font-bold">Get Targeted Matches</span>
+            Stop Sending 1000+ Resumes
+            <span className="block font-bold">Get Targeted Matches Instead</span>
           </h1>
           <p className="text-lg text-gray-600 mb-12 max-w-xl mx-auto leading-relaxed">
-            Upload your resume. Get personalized job recommendations. 
-            Focus on opportunities that matter.
+            Why waste time sending the same resume everywhere? Upload once, 
+            get personalized job recommendations that actually fit your skills and career goals.
           </p>
           
           {user ? (
             <div className="space-y-6 mb-12">
               <p className="text-gray-600">Welcome back, {user.name || user.email}</p>
-              <div className="flex justify-center space-x-6">
-                <a
-                  href="/jobs"
-                  className="bg-black text-white px-8 py-3 rounded-none hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 font-medium transition-colors"
-                >
-                  Browse Jobs
-                </a>
-                <a
-                  href="/dashboard"
-                  className="bg-white text-black px-8 py-3 border border-black hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 font-medium transition-colors"
-                >
-                  Dashboard
-                </a>
-              </div>
+              <JobRecommendations key={refreshKey} />
             </div>
           ) : (
             <div className="space-y-6 mb-12">
