@@ -125,7 +125,7 @@ export default function Home() {
           {user ? (
             <div className="space-y-6 mb-12">
               <p className="text-gray-600">Welcome back, {user.name || user.email}</p>
-              <JobRecommendations key={refreshKey} />
+              <p className="text-gray-600">Upload your resume below to get personalized job recommendations.</p>
             </div>
           ) : (
             <div className="space-y-6 mb-12">
