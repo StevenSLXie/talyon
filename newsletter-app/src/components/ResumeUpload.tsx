@@ -178,52 +178,34 @@ export default function ResumeUpload({ onUploadSuccess, onUploadError }: ResumeU
 
       {/* Salary Expectation Range */}
       <div className="mt-6 p-4 border border-gray-200">
-        <h3 className="text-sm font-medium text-black mb-3">Monthly Salary Expectation (SGD)</h3>
-        <div className="space-y-3">
-          <div className="relative">
+        <h3 className="text-sm font-medium text-black mb-3">Monthly Salary Expectation (SGD) - Optional</h3>
+        <div className="flex items-center space-x-4">
+          <div className="flex-1">
+            <label className="block text-xs text-gray-600 mb-1">Min Salary</label>
             <input
-              type="range"
-              min="1000"
-              max="50000"
+              type="number"
+              min="0"
               step="500"
               value={salaryMin}
-              onChange={(e) => {
-                const value = Number(e.target.value)
-                if (value <= salaryMax) setSalaryMin(value)
-              }}
-              className="absolute w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer z-10"
+              onChange={(e) => setSalaryMin(Number(e.target.value) || 0)}
+              placeholder="9000"
+              className="w-full px-3 py-2 border border-gray-300 text-black focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
             />
+          </div>
+          <div className="flex-1">
+            <label className="block text-xs text-gray-600 mb-1">Max Salary</label>
             <input
-              type="range"
-              min="1000"
-              max="50000"
+              type="number"
+              min="0"
               step="500"
               value={salaryMax}
-              onChange={(e) => {
-                const value = Number(e.target.value)
-                if (value >= salaryMin) setSalaryMax(value)
-              }}
-              className="absolute w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer z-20"
-              style={{
-                background: `linear-gradient(to right, 
-                  #d1d5db 0%, 
-                  #d1d5db ${((salaryMin - 1000) / (50000 - 1000)) * 100}%, 
-                  #000 ${((salaryMin - 1000) / (50000 - 1000)) * 100}%, 
-                  #000 ${((salaryMax - 1000) / (50000 - 1000)) * 100}%, 
-                  #d1d5db ${((salaryMax - 1000) / (50000 - 1000)) * 100}%, 
-                  #d1d5db 100%)`
-              }}
+              onChange={(e) => setSalaryMax(Number(e.target.value) || 0)}
+              placeholder="12000"
+              className="w-full px-3 py-2 border border-gray-300 text-black focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
             />
           </div>
-          <div className="flex justify-between text-xs text-gray-600">
-            <span>S$1,000</span>
-            <span>S$50,000</span>
-          </div>
-          <div className="text-center p-2 bg-gray-50 border border-gray-200">
-            <span className="text-sm text-gray-600">Range: </span>
-            <span className="font-medium text-black">S${salaryMin.toLocaleString()} - S${salaryMax.toLocaleString()}</span>
-          </div>
         </div>
+        <p className="text-xs text-gray-500 mt-2">Leave blank to let AI infer from your resume</p>
       </div>
 
       <div className="mt-6 text-center">
