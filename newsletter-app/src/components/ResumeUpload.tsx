@@ -111,43 +111,6 @@ export default function ResumeUpload({ onUploadSuccess, onUploadError }: ResumeU
         <p className="text-gray-600">Get personalized job recommendations based on your experience</p>
       </div>
 
-      {/* Salary Expectation Range */}
-      <div className="mt-6 p-4 border border-gray-200">
-        <h3 className="text-sm font-medium text-black mb-3">Monthly Salary Expectation (SGD)</h3>
-        <div className="space-y-3">
-          <div className="flex items-center space-x-4">
-            <span className="text-sm text-gray-600 min-w-[60px]">Min:</span>
-            <input
-              type="range"
-              min="1000"
-              max="20000"
-              step="500"
-              value={salaryMin}
-              onChange={(e) => setSalaryMin(Number(e.target.value))}
-              className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-            />
-            <span className="text-sm font-medium text-black min-w-[80px]">S${salaryMin.toLocaleString()}</span>
-          </div>
-          <div className="flex items-center space-x-4">
-            <span className="text-sm text-gray-600 min-w-[60px]">Max:</span>
-            <input
-              type="range"
-              min="1000"
-              max="20000"
-              step="500"
-              value={salaryMax}
-              onChange={(e) => setSalaryMax(Number(e.target.value))}
-              className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
-            />
-            <span className="text-sm font-medium text-black min-w-[80px]">S${salaryMax.toLocaleString()}</span>
-          </div>
-          <div className="text-center p-2 bg-gray-50 border border-gray-200">
-            <span className="text-sm text-gray-600">Range: </span>
-            <span className="font-medium text-black">S${salaryMin.toLocaleString()} - S${salaryMax.toLocaleString()}</span>
-          </div>
-        </div>
-      </div>
-
       <div
         className={`border-2 border-dashed p-8 text-center transition-colors ${
           dragActive ? 'border-black bg-gray-50' : 'border-gray-300 hover:border-gray-400'
@@ -212,6 +175,56 @@ export default function ResumeUpload({ onUploadSuccess, onUploadError }: ResumeU
           <button onClick={handleUpload} className="w-full bg-black text-white py-3 px-6 font-medium hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors">Upload & Analyze Resume</button>
         </div>
       )}
+
+      {/* Salary Expectation Range */}
+      <div className="mt-6 p-4 border border-gray-200">
+        <h3 className="text-sm font-medium text-black mb-3">Monthly Salary Expectation (SGD)</h3>
+        <div className="space-y-3">
+          <div className="relative">
+            <input
+              type="range"
+              min="1000"
+              max="50000"
+              step="500"
+              value={salaryMin}
+              onChange={(e) => {
+                const value = Number(e.target.value)
+                if (value <= salaryMax) setSalaryMin(value)
+              }}
+              className="absolute w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer z-10"
+            />
+            <input
+              type="range"
+              min="1000"
+              max="50000"
+              step="500"
+              value={salaryMax}
+              onChange={(e) => {
+                const value = Number(e.target.value)
+                if (value >= salaryMin) setSalaryMax(value)
+              }}
+              className="absolute w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer z-20"
+              style={{
+                background: `linear-gradient(to right, 
+                  #d1d5db 0%, 
+                  #d1d5db ${((salaryMin - 1000) / (50000 - 1000)) * 100}%, 
+                  #000 ${((salaryMin - 1000) / (50000 - 1000)) * 100}%, 
+                  #000 ${((salaryMax - 1000) / (50000 - 1000)) * 100}%, 
+                  #d1d5db ${((salaryMax - 1000) / (50000 - 1000)) * 100}%, 
+                  #d1d5db 100%)`
+              }}
+            />
+          </div>
+          <div className="flex justify-between text-xs text-gray-600">
+            <span>S$1,000</span>
+            <span>S$50,000</span>
+          </div>
+          <div className="text-center p-2 bg-gray-50 border border-gray-200">
+            <span className="text-sm text-gray-600">Range: </span>
+            <span className="font-medium text-black">S${salaryMin.toLocaleString()} - S${salaryMax.toLocaleString()}</span>
+          </div>
+        </div>
+      </div>
 
       <div className="mt-6 text-center">
         <p className="text-sm text-gray-500">Supported formats: PDF, DOC, DOCX (max 10MB)</p>
