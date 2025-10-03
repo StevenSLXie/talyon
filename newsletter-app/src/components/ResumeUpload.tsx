@@ -14,8 +14,8 @@ export default function ResumeUpload({ onUploadSuccess, onUploadError }: ResumeU
   const [uploadStage, setUploadStage] = useState('')
   const [dragActive, setDragActive] = useState(false)
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
-  const [salaryMin, setSalaryMin] = useState(3000)
-  const [salaryMax, setSalaryMax] = useState(8000)
+  const [salaryMin, setSalaryMin] = useState(9000)
+  const [salaryMax, setSalaryMax] = useState(12000)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const handleDrag = (e: React.DragEvent) => {
@@ -112,11 +112,11 @@ export default function ResumeUpload({ onUploadSuccess, onUploadError }: ResumeU
       </div>
 
       {/* Salary Expectation Range */}
-      <div className="mb-8 p-6 border border-gray-200">
-        <h3 className="text-lg font-medium text-black mb-4">Monthly Salary Expectation (SGD)</h3>
-        <div className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Minimum</label>
+      <div className="mt-6 p-4 border border-gray-200">
+        <h3 className="text-sm font-medium text-black mb-3">Monthly Salary Expectation (SGD)</h3>
+        <div className="space-y-3">
+          <div className="flex items-center space-x-4">
+            <span className="text-sm text-gray-600 min-w-[60px]">Min:</span>
             <input
               type="range"
               min="1000"
@@ -124,16 +124,12 @@ export default function ResumeUpload({ onUploadSuccess, onUploadError }: ResumeU
               step="500"
               value={salaryMin}
               onChange={(e) => setSalaryMin(Number(e.target.value))}
-              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+              className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
             />
-            <div className="flex justify-between text-sm text-gray-600 mt-1">
-              <span>S$1,000</span>
-              <span className="font-medium">S${salaryMin.toLocaleString()}</span>
-              <span>S$20,000</span>
-            </div>
+            <span className="text-sm font-medium text-black min-w-[80px]">S${salaryMin.toLocaleString()}</span>
           </div>
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">Maximum</label>
+          <div className="flex items-center space-x-4">
+            <span className="text-sm text-gray-600 min-w-[60px]">Max:</span>
             <input
               type="range"
               min="1000"
@@ -141,15 +137,11 @@ export default function ResumeUpload({ onUploadSuccess, onUploadError }: ResumeU
               step="500"
               value={salaryMax}
               onChange={(e) => setSalaryMax(Number(e.target.value))}
-              className="w-full h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+              className="flex-1 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
             />
-            <div className="flex justify-between text-sm text-gray-600 mt-1">
-              <span>S$1,000</span>
-              <span className="font-medium">S${salaryMax.toLocaleString()}</span>
-              <span>S$20,000</span>
-            </div>
+            <span className="text-sm font-medium text-black min-w-[80px]">S${salaryMax.toLocaleString()}</span>
           </div>
-          <div className="text-center p-3 bg-gray-50 border border-gray-200">
+          <div className="text-center p-2 bg-gray-50 border border-gray-200">
             <span className="text-sm text-gray-600">Range: </span>
             <span className="font-medium text-black">S${salaryMin.toLocaleString()} - S${salaryMax.toLocaleString()}</span>
           </div>
