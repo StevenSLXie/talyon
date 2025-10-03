@@ -31,8 +31,8 @@ export async function POST(req: NextRequest) {
           content: prompt
         }
       ],
-      reasoning: { effort: "medium" },
-      text: { verbosity: "medium" },
+      reasoning_effort: "medium",
+      verbosity: "low",
       max_output_tokens: 4000,
     })
 
