@@ -10,7 +10,6 @@ async function saveFlatJsonResume(userId: string, resumeId: string, jsonResume: 
 
   // Destructively clear previous rows for this (user,resume)
   const tables = [
-    'candidate_basics',
     'candidate_profiles_social',
     'candidate_work',
     'candidate_volunteer',
@@ -33,23 +32,31 @@ async function saveFlatJsonResume(userId: string, resumeId: string, jsonResume: 
   const basics = jsonResume?.basics || {}
   const loc = basics?.location || {}
   {
-    const { error } = await db.from('candidate_basics').insert({
-      user_id: userId,
-      resume_id: resumeId,
-      name: basics?.name || null,
-      label: basics?.label || null,
-      image: basics?.image || null,
-      email: basics?.email || null,
-      phone: basics?.phone || null,
-      url: basics?.url || null,
-      summary: basics?.summary || null,
-      address: loc?.address || null,
-      postal_code: loc?.postalCode || null,
-      city: loc?.city || null,
-      country_code: loc?.countryCode || null,
-      region: loc?.region || null
-    })
-    if (error) console.error('[Upload] insert candidate_basics error', error)
+    const { error, count } = await db
+      .from('candidate_basics')
+      .update({
+        name: basics?.name || null,
+        label: basics?.label || null,
+        image: basics?.image || null,
+        email: basics?.email || null,
+        phone: basics?.phone || null,
+        url: basics?.url || null,
+        summary: basics?.summary || null,
+        address: loc?.address || null,
+        postal_code: loc?.postalCode || null,
+        city: loc?.city || null,
+        country_code: loc?.countryCode || null,
+        region: loc?.region || null
+      })
+      .eq('user_id', userId)
+      .eq('resume_id', resumeId)
+
+    if (error) {
+      console.error('[Upload] update candidate_basics error', error)
+    } else if ((count || 0) === 0) {
+      console.warn('[Upload] candidate_basics update affected 0 rows, record may not exist yet')
+    }
+
     counts.basics = 1
   }
 

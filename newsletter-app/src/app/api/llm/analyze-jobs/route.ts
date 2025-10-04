@@ -33,7 +33,7 @@ export async function POST(req: NextRequest) {
       ],
       reasoning_effort: "medium",
       verbosity: "low",
-      max_output_tokens: 4000,
+      // max_output_tokens: 4000,
     })
 
     const content = completion.choices[0]?.message?.content
