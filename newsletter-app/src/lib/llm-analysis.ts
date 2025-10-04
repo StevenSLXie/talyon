@@ -1,5 +1,5 @@
 // LLM Analysis Service for Resume Processing
-import { RESUME_ANALYSIS_PROMPTS, SYSTEM_PROMPTS } from './prompts'
+import { RESUME_ANALYSIS_PROMPTS, JOB_ANALYSIS_PROMPTS, SYSTEM_PROMPTS } from './prompts'
 import { EnhancedCandidateProfile } from './enhanced-candidate-profile'
 
 export type JsonResume = {
@@ -127,7 +127,7 @@ export class LLMAnalysisService {
           ],
           reasoning_effort: "medium",
           verbosity: "low",
-          max_output_tokens: 6000,
+          // max_output_tokens: 6000,
           response_format: { type: 'json_object' }
         })
       })
@@ -212,7 +212,7 @@ export class LLMAnalysisService {
           ],
           reasoning_effort: "medium",
           verbosity: "low",
-          max_output_tokens: 2000,
+          // max_output_tokens: 2000,
           response_format: { type: 'json_object' }
         })
       })
@@ -237,46 +237,7 @@ export class LLMAnalysisService {
       console.debug('[LLMAnalysis] generateCombinedProfileFromFile start', { fileName: file.name, fileType: file.type })
       
       // Create a combined prompt that asks for both formats
-      const combinedPrompt = `Please analyze the attached resume file and extract comprehensive candidate information.
-
-Return your response as a JSON object with two main sections:
-
-1. "enhancedProfile": Extract candidate profile information for job matching including:
-   - work_auth: { citizen_or_pr: boolean, ep_needed: boolean, work_permit_type: string }
-   - seniority_level: string (Junior/Mid/Senior/Lead/Manager/Director)
-   - current_title: string
-   - target_titles: string[]
-   - experience_years: number
-   - skills: [{ name: string, level: number (1-5), last_used: string, evidence: string }]
-   - education: [{ degree: string, major: string, institution: string, grad_year: number }]
-   - certifications: [{ name: string, issuer: string, date: string }]
-   - industries: string[]
-   - company_tiers: string[] (MNC/GLC/SME/Educational Institution)
-   - salary_expect: { min: number, max: number, currency: string }
-   - work_prefs: { remote: string, job_type: string }
-   - intent: { target_industries: string[], must_have: string[], nice_to_have: string[], blacklist_companies: string[] }
-
-2. "jsonResume": Extract information in JSON Resume format including:
-   - basics: { name, email, phone, location, summary, profiles }
-   - work: [{ company, position, startDate, endDate, summary, highlights }]
-   - education: [{ institution, area, studyType, startDate, endDate, gpa }]
-   - awards: [{ title, date, awarder, summary }]
-   - certificates: [{ name, date, issuer, url }]
-   - publications: [{ name, publisher, releaseDate, url, summary }]
-   - skills: [{ name, level, keywords }]
-   - languages: [{ language, fluency }]
-   - interests: [{ name, keywords }]
-   - references: [{ name, reference }]
-   - projects: [{ name, description, highlights, keywords, startDate, endDate, url, roles }]
-
-IMPORTANT DATE FORMAT REQUIREMENTS:
-- All dates must be in YYYY-MM-DD format (e.g., "2020-02-01", "2015-09-01")
-- For "Present" or current positions, use today's date in YYYY-MM-DD format
-- For partial dates like "2015-07", convert to "2015-07-01"
-- For year-only dates like "2019", convert to "2019-01-01"
-- For "last_used" in skills, use YYYY-MM format (e.g., "2023-12")
-
-Return ONLY valid JSON without code fences.`
+      const combinedPrompt = RESUME_ANALYSIS_PROMPTS.combinedProfile
 
       const response = await this.callOpenAIWithFile(file, combinedPrompt, SYSTEM_PROMPTS.resumeAnalysis)
       const parsed = this.parseJsonResponse(response)
@@ -548,6 +509,8 @@ CANDIDATE PROFILE:
 - Current Title: ${enhancedProfile.current_title || 'Not specified'}
 - Target Titles: ${enhancedProfile.target_titles?.join(', ') || 'Not specified'}
 - Seniority Level: ${enhancedProfile.seniority_level || 'Not specified'}
+- Leadership Level: ${enhancedProfile.leadership_level || 'IC'}
+- Management Experience: ${enhancedProfile.management_experience?.has_management ? 'Yes' : 'No'} (${enhancedProfile.management_experience?.management_years || 0} years, ${enhancedProfile.management_experience?.direct_reports_count || 0} direct reports)
 - Key Skills: ${enhancedProfile.skills?.map(s => `${s.name} (Level ${s.level})`).join(', ') || 'Not specified'}
 - Industries: ${enhancedProfile.industries?.join(', ') || 'Not specified'}
 - Salary Range: $${enhancedProfile.salary_expect?.min?.toLocaleString() || '0'} - $${enhancedProfile.salary_expect?.max?.toLocaleString() || '0'} ${enhancedProfile.salary_expect?.currency || 'SGD'}
@@ -580,31 +543,9 @@ ${job.job.job_description || job.job.raw_text || 'No description available'}
 - Stage 1 Reasons: ${job.stage1_reasons.join(', ')}
 `).join('\n')
 
-    const prompt = `Analyze these jobs for the candidate:
-
-${candidateProfileText}
-
-JOBS:
-${jobDetails}
-
-IMPORTANT: Pay special attention to education levels. If the candidate has a PhD, Doctorate, or Doctoral degree, this is the HIGHEST level of education and should be recognized as such. PhD holders are highly qualified for most positions.
-
-ANALYSIS REQUIREMENTS:
-- Read the FULL job description carefully to understand specific requirements, responsibilities, and qualifications
-- Consider the candidate's exact background, skills, experience, and education level
-- Analyze how well the candidate's profile matches the job requirements
-- Consider career progression opportunities and growth potential
-- Evaluate company culture fit based on job description and company information
-
-Return JSON with job_analyses array containing exactly ${jobSummaries.length} items. Each item needs:
-- final_score: 0-100 (consider PhD as highest qualification, analyze full job requirements)
-- matching_reasons: array of 2-3 specific reasons why this job fits THIS candidate (be specific about skills, experience, education)
-- non_matching_points: array of 1-2 specific concerns or gaps (reference actual job requirements)
-- key_highlights: array of 2-3 key things about this job that matter for this candidate (growth, learning, impact)
-- personalized_assessment: 2-3 sentences explaining why this job is good/bad for THIS specific candidate (reference their background)
-- career_impact: 2-3 sentences about how this role would advance their career (be specific about progression)
-
-Be specific and personalized. Consider the candidate's exact background, education level, and experience. Return ONLY valid JSON.`
+    const prompt = JOB_ANALYSIS_PROMPTS.batchAnalyzeJobs
+      .replace('{enhancedProfile}', candidateProfileText)
+      .replace('{jobSummaries}', jobDetails)
 
     try {
       const response = await this.callOpenAI(prompt, 'You are an expert career advisor who provides detailed, personalized job analysis. Always respond with valid JSON format as requested.')

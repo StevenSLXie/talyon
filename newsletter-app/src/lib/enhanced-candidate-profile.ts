@@ -42,6 +42,14 @@ export interface EnhancedCandidateProfile {
     nice_to_have: string[]
     blacklist_companies: string[]
   }
+  leadership_level: 'IC' | 'Team Lead' | 'Team Lead++'
+  management_experience: {
+    has_management: boolean
+    direct_reports_count: number
+    team_size_range: string | null
+    management_years: number
+    management_evidence: string[]
+  }
 }
 
 export class EnhancedCandidateProfileService {
@@ -82,6 +90,12 @@ export class EnhancedCandidateProfileService {
           salary_currency: profile.salary_expect?.currency || 'SGD',
           work_prefs: profile.work_prefs || { remote: 'Not specified', job_type: 'Not specified' },
           intent: profile.intent || { target_industries: [], must_have: [], nice_to_have: [], blacklist_companies: [] },
+          leadership_level: profile.leadership_level || 'IC',
+          has_management: profile.management_experience?.has_management || false,
+          direct_reports_count: profile.management_experience?.direct_reports_count || 0,
+          team_size_range: profile.management_experience?.team_size_range || null,
+          management_years: profile.management_experience?.management_years || 0,
+          management_evidence: profile.management_experience?.management_evidence || [],
           profile_version: 2,
           extraction_meta: {
             method: 'LLM+enhanced',
@@ -313,6 +327,14 @@ export class EnhancedCandidateProfileService {
           must_have: [],
           nice_to_have: [],
           blacklist_companies: []
+        },
+        leadership_level: basics.leadership_level || 'IC',
+        management_experience: {
+          has_management: basics.has_management || false,
+          direct_reports_count: basics.direct_reports_count || 0,
+          team_size_range: basics.team_size_range || null,
+          management_years: basics.management_years || 0,
+          management_evidence: basics.management_evidence || []
         }
       }
     } catch (error) {

@@ -17,6 +17,7 @@ export interface JobRecommendation {
     job_family_match: number
     work_prefs_match: number
     industry_match: number
+    leadership_match: number
   }
   why_match: {
     strengths: string[]
@@ -62,6 +63,14 @@ export interface CandidateProfile {
   work_prefs?: {
     remote: 'Onsite' | 'Hybrid' | 'Remote'
     job_type: 'Permanent' | 'Contract' | 'Freelance'
+  }
+  leadership_level?: 'IC' | 'Team Lead' | 'Team Lead++'
+  management_experience?: {
+    has_management: boolean
+    direct_reports_count: number
+    team_size_range?: string
+    management_years: number
+    management_evidence: string[]
   }
 }
 
@@ -1011,7 +1020,9 @@ export class JobMatchingService {
             institution: e.institution
           })),
           certifications: enhancedProfile.certifications.map(c => ({ name: c, issuer: '' })),
-          company_tiers: enhancedProfile.company_tiers
+          company_tiers: enhancedProfile.company_tiers,
+          leadership_level: enhancedProfile.leadership_level,
+          management_experience: enhancedProfile.management_experience
         }
         
         console.log('[JobMatching] buildCandidateProfile done (enhanced)', { 
@@ -1249,7 +1260,13 @@ export class JobMatchingService {
           job.company_tier || ''
         )
 
-        // Calculate weighted total score
+        // 10. Leadership level matching (10% weight)
+        const leadershipMatch = this.calculateLeadershipMatch(candidateProfile, job)
+        
+        // 11. Salary expectation penalty
+        const salaryPenalty = this.calculateSalaryPenalty(candidateProfile, job)
+
+        // Calculate weighted total score with leadership matching and salary penalty
         const totalScore = Math.round(
           (bestTitle.score * 0.15) +
           (salaryMatch.score * 0.20) +
@@ -1259,7 +1276,9 @@ export class JobMatchingService {
           (certificationMatch.score * 0.05) +
           (jobFamilyMatch.score * 0.03) +
           (workPrefsMatch.score * 0.01) +
-          (industryMatch.score * 0.01)
+          (industryMatch.score * 0.01) +
+          (leadershipMatch.score * 0.10) -
+          salaryPenalty
         )
 
         // Build match reasons
@@ -1291,6 +1310,12 @@ export class JobMatchingService {
         if (workPrefsMatch.score > 50) {
           reasons.push(workPrefsMatch.reason)
         }
+        if (leadershipMatch.score > 50) {
+          reasons.push(leadershipMatch.reason)
+        }
+        if (salaryPenalty > 0) {
+          reasons.push(`Salary below expectation (penalty: -${salaryPenalty})`)
+        }
         if (industryMatch.score > 50) {
           reasons.push(industryMatch.reason)
         }
@@ -1308,7 +1333,8 @@ export class JobMatchingService {
             certification_match: certificationMatch.score,
             job_family_match: jobFamilyMatch.score,
             work_prefs_match: workPrefsMatch.score,
-            industry_match: industryMatch.score
+            industry_match: industryMatch.score,
+            leadership_match: leadershipMatch.score
           },
           skillsMatch,
           experienceMatch,
@@ -1546,6 +1572,166 @@ export class JobMatchingService {
       console.error('Get saved recommendations failed:', error)
       return []
     }
+  }
+
+  /**
+   * Calculate leadership level match between candidate and job
+   */
+  private calculateLeadershipMatch(
+    candidateProfile: CandidateProfile,
+    job: any
+  ): { score: number; reason: string; penalty: number } {
+    const candidateLeadership = candidateProfile.leadership_level || 'IC'
+    const jobLeadership = job.leadership_level
+    
+    // If job doesn't have leadership level specified, infer from job title and description
+    if (!jobLeadership) {
+      const inferredLeadership = this.inferJobLeadershipLevel(job)
+      
+      // If we can't infer leadership level, give neutral score
+      if (!inferredLeadership) {
+        return { 
+          score: 75, // Neutral score - no penalty for unknown leadership requirements
+          reason: 'Leadership level not specified for job', 
+          penalty: 0 
+        }
+      }
+      
+      // Use inferred leadership level
+      return this.calculateLeadershipMatchWithLevels(candidateLeadership, inferredLeadership)
+    }
+    
+    return this.calculateLeadershipMatchWithLevels(candidateLeadership, jobLeadership)
+  }
+
+  /**
+   * Infer job leadership level from title and description
+   */
+  private inferJobLeadershipLevel(job: any): string | null {
+    const title = (job.title || '').toLowerCase()
+    const description = (job.job_description || job.raw_text || '').toLowerCase()
+    const combinedText = `${title} ${description}`
+    
+    // Team Lead++ indicators (senior management)
+    const seniorManagementKeywords = [
+      'director', 'vp', 'vice president', 'head of', 'chief', 'cto', 'cfo', 'ceo',
+      'senior director', 'executive', 'managing', 'leadership team', 'strategic',
+      'manage team of', 'lead team of', 'oversee team', 'team of 10+', 'team of 20+'
+    ]
+    
+    // Team Lead indicators (team management)
+    const teamLeadKeywords = [
+      'team lead', 'team leader', 'lead', 'manager', 'supervisor', 'manage',
+      'team of', 'lead team', 'manage team', 'supervise', 'mentor', 'guide team'
+    ]
+    
+    // Check for senior management
+    if (seniorManagementKeywords.some(keyword => combinedText.includes(keyword))) {
+      return 'Team Lead++'
+    }
+    
+    // Check for team management
+    if (teamLeadKeywords.some(keyword => combinedText.includes(keyword))) {
+      return 'Team Lead'
+    }
+    
+    // Default to IC if no management indicators found
+    return 'IC'
+  }
+
+  /**
+   * Calculate leadership match with specific levels
+   */
+  private calculateLeadershipMatchWithLevels(
+    candidateLeadership: string,
+    jobLeadership: string
+  ): { score: number; reason: string; penalty: number } {
+    // Perfect match
+    if (candidateLeadership === jobLeadership) {
+      return { 
+        score: 100, 
+        reason: `Leadership level match: ${candidateLeadership}`, 
+        penalty: 0 
+      }
+    }
+    
+    // IC candidate applying for Team Lead role (possible promotion)
+    if (candidateLeadership === 'IC' && jobLeadership === 'Team Lead') {
+      return { 
+        score: 70, 
+        reason: 'IC candidate applying for Team Lead role (promotion opportunity)', 
+        penalty: 0 
+      }
+    }
+    
+    // Team Lead candidate applying for IC role (possible step down)
+    if (candidateLeadership === 'Team Lead' && jobLeadership === 'IC') {
+      return { 
+        score: 40, 
+        reason: 'Team Lead candidate applying for IC role (may be overqualified)', 
+        penalty: 20 
+      }
+    }
+    
+    // Team Lead++ applying for lower roles (significant step down)
+    if (candidateLeadership === 'Team Lead++' && (jobLeadership === 'IC' || jobLeadership === 'Team Lead')) {
+      return { 
+        score: 20, 
+        reason: 'Senior leader applying for lower role (significant step down)', 
+        penalty: 50 
+      }
+    }
+    
+    // Team Lead applying for Team Lead++ (promotion)
+    if (candidateLeadership === 'Team Lead' && jobLeadership === 'Team Lead++') {
+      return { 
+        score: 80, 
+        reason: 'Team Lead applying for senior leadership role (promotion opportunity)', 
+        penalty: 0 
+      }
+    }
+    
+    // Default case
+    return { 
+      score: 50, 
+      reason: 'Leadership level mismatch', 
+      penalty: 30 
+    }
+  }
+
+  /**
+   * Calculate salary expectation penalty
+   */
+  private calculateSalaryPenalty(
+    candidateProfile: CandidateProfile,
+    job: any
+  ): number {
+    // If candidate doesn't have salary expectations, no penalty
+    if (!candidateProfile.salary_range_min || !candidateProfile.salary_range_max) {
+      return 0
+    }
+    
+    // If job doesn't have salary information, no penalty
+    if (!job.salary_low || !job.salary_high) {
+      return 0
+    }
+    
+    const jobSalaryMax = job.salary_high
+    const candidateSalaryMin = candidateProfile.salary_range_min
+    
+    // If job max salary is below candidate's minimum expectation
+    if (jobSalaryMax < candidateSalaryMin) {
+      const gap = candidateSalaryMin - jobSalaryMax
+      const percentageGap = gap / candidateSalaryMin
+      
+      // Apply penalty based on how far below expectation
+      if (percentageGap > 0.3) return 50  // More than 30% below
+      if (percentageGap > 0.2) return 30  // More than 20% below
+      if (percentageGap > 0.1) return 15  // More than 10% below
+      return 5  // Less than 10% below
+    }
+    
+    return 0
   }
 
   /**
