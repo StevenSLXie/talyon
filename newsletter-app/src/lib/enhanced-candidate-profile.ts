@@ -74,6 +74,12 @@ export class EnhancedCandidateProfileService {
       }
 
       // 1. Save to candidate_basics (enhanced)
+      console.log('[EnhancedProfile] Saving salary data:', {
+        salary_expect_min: profile.salary_expect?.min ? Math.round(Number(profile.salary_expect.min)) : 0,
+        salary_expect_max: profile.salary_expect?.max ? Math.round(Number(profile.salary_expect.max)) : 0,
+        salary_currency: profile.salary_expect?.currency || 'SGD'
+      })
+      
       const { error: basicsError } = await supabaseClient
         .from('candidate_basics')
         .upsert({
@@ -85,8 +91,8 @@ export class EnhancedCandidateProfileService {
           target_titles: profile.target_titles || [],
           industries: profile.industries || [],
           company_tiers: profile.company_tiers || [],
-          salary_expect_min: Math.round(Number(profile.salary_expect?.min) || 0),
-          salary_expect_max: Math.round(Number(profile.salary_expect?.max) || 0),
+          salary_expect_min: profile.salary_expect?.min ? Math.round(Number(profile.salary_expect.min)) : 0,
+          salary_expect_max: profile.salary_expect?.max ? Math.round(Number(profile.salary_expect.max)) : 0,
           salary_currency: profile.salary_expect?.currency || 'SGD',
           work_prefs: profile.work_prefs || { remote: 'Not specified', job_type: 'Not specified' },
           intent: profile.intent || { target_industries: [], must_have: [], nice_to_have: [], blacklist_companies: [] },
@@ -316,11 +322,18 @@ export class EnhancedCandidateProfileService {
         certifications: (certificates || []).map(c => c.name),
         industries: basics.industries || [],
         company_tiers: basics.company_tiers || [],
-        salary_expect: {
-          min: basics.salary_expect_min || 3000,
-          max: basics.salary_expect_max || 6000,
-          currency: basics.salary_currency || 'SGD'
-        },
+        salary_expect: (() => {
+          console.log('[EnhancedProfile] Salary data from DB:', {
+            salary_expect_min: basics.salary_expect_min,
+            salary_expect_max: basics.salary_expect_max,
+            salary_currency: basics.salary_currency
+          })
+          return {
+            min: basics.salary_expect_min || 3000,
+            max: basics.salary_expect_max || 6000,
+            currency: basics.salary_currency || 'SGD'
+          }
+        })(),
         work_prefs: basics.work_prefs || { remote: 'Hybrid', job_type: 'Permanent' },
         intent: basics.intent || {
           target_industries: [],
