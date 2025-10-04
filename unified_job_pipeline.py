@@ -758,6 +758,9 @@ class UnifiedJobPipeline:
             ],
             "skills_optional": ["Docker", "Kubernetes"],
             "job_functions": ["Software Development", "Code Review", "Team Leadership"],
+            "leadership_level": "IC|Team Lead|Team Lead++",
+            "management_required": false,
+            "team_size_mentioned": "1-5|6-10|10+|Not specified",
             "currency": "SGD",
             "expires_at": "2024-12-31",
             "trust_score": 0.85,
@@ -773,6 +776,9 @@ class UnifiedJobPipeline:
         - Certifications: Extract specific certification requirements
         - Skills: Focus on technical and professional skills mentioned
         - Job functions: Core responsibilities and duties
+        - Leadership level: IC (Individual Contributor), Team Lead (manages 1-5 people), Team Lead++ (manages 6+ people, senior management)
+        - Management required: true if job requires managing people, false for individual contributor roles
+        - Team size mentioned: Extract team size from job description (e.g., "manage team of 5", "lead 10+ engineers")
         """
 
     async def step5_storage(self, save_to_database: bool):
@@ -859,6 +865,9 @@ class UnifiedJobPipeline:
                     'skills_required': enhanced_data.get('skills_required', []),
                     'skills_optional': enhanced_data.get('skills_optional', []),
                     'job_functions': enhanced_data.get('job_functions', []),
+                    'leadership_level': enhanced_data.get('leadership_level', 'IC'),
+                    'management_required': enhanced_data.get('management_required', False),
+                    'team_size_mentioned': enhanced_data.get('team_size_mentioned', 'Not specified'),
                     'currency': enhanced_data.get('currency', 'SGD'),
                     'expires_at': enhanced_data.get('expires_at', '2024-12-31'),
                     'trust_score': enhanced_data.get('trust_score', 0.8),
