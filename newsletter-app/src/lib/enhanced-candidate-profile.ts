@@ -88,7 +88,7 @@ export class EnhancedCandidateProfileService {
       
       const { error: basicsError } = await supabaseClient
         .from('candidate_basics')
-        .upsert({
+        .insert({
           user_id: userId,
           resume_id: resumeId,
           work_auth: profile.work_auth || { citizen_or_pr: false, ep_needed: true, work_permit_type: null },
