@@ -330,6 +330,13 @@ export async function POST(request: NextRequest) {
     const salaryMin = salaryMinInput ? parseInt(salaryMinInput) : null
     const salaryMax = salaryMaxInput ? parseInt(salaryMaxInput) : null
 
+    console.log('[Upload] Salary input received:', {
+      salaryMinInput,
+      salaryMaxInput,
+      salaryMin,
+      salaryMax
+    })
+
     // Generate both enhanced profile and JSON resume in one OpenAI call
     const { enhancedProfile, jsonResume } = await llmAnalysisService.generateCombinedProfileFromFile(file)
     
