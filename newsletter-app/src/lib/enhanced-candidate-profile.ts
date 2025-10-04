@@ -276,6 +276,18 @@ export class EnhancedCandidateProfileService {
         .order('created_at', { ascending: false })
         .limit(1)
 
+      console.log('[EnhancedProfile] Query details:', {
+        userId,
+        queryResult: basicsData?.length || 0,
+        latestRecord: basicsData?.[0] ? {
+          resume_id: basicsData[0].resume_id,
+          salary_expect_min: basicsData[0].salary_expect_min,
+          salary_expect_max: basicsData[0].salary_expect_max,
+          salary_currency: basicsData[0].salary_currency,
+          created_at: basicsData[0].created_at
+        } : null
+      })
+
       if (basicsError || !basicsData || basicsData.length === 0) {
         console.error('[EnhancedProfile] Failed to get basics:', basicsError)
         return null
