@@ -205,7 +205,7 @@ export default function ResumeUpload({ onUploadSuccess, onUploadError }: ResumeU
             />
           </div>
         </div>
-        <p className="text-xs text-gray-500 mt-2">Leave blank to let AI infer from your resume</p>
+        <p className="text-xs text-gray-500 mt-2">Your input will override AI inference. Leave blank to use AI-estimated range.</p>
       </div>
 
       <div className="mt-6 text-center">

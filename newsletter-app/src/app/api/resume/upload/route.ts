@@ -333,14 +333,19 @@ export async function POST(request: NextRequest) {
     // Generate both enhanced profile and JSON resume in one OpenAI call
     const { enhancedProfile, jsonResume } = await llmAnalysisService.generateCombinedProfileFromFile(file)
     
-    // Add salary expectations to enhanced profile (only if user provided them)
-    if (salaryMin !== null && salaryMax !== null) {
+    // Override salary expectations with user input (golden standard)
+    // User input always takes precedence over LLM inference
+    if (salaryMinInput && salaryMaxInput) {
       enhancedProfile.salary_expect = {
         min: salaryMin,
-        max: salaryMax
+        max: salaryMax,
+        currency: 'SGD',
+        source: 'user_input' // Mark as user-provided
       }
+      console.log(`[Upload] Using user salary input: $${salaryMin} - $${salaryMax}`)
+    } else {
+      console.log('[Upload] Using LLM-inferred salary range')
     }
-    // If user didn't provide salary expectations, let the LLM inference be used
     
     console.debug('[Upload] Enhanced Profile', JSON.stringify(enhancedProfile, null, 2))
     
