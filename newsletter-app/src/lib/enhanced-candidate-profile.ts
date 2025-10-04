@@ -80,6 +80,12 @@ export class EnhancedCandidateProfileService {
         salary_currency: profile.salary_expect?.currency || 'SGD'
       })
       
+      console.log('[EnhancedProfile] About to save basics with salary:', {
+        salary_expect_min: profile.salary_expect?.min ? Math.round(Number(profile.salary_expect.min)) : 0,
+        salary_expect_max: profile.salary_expect?.max ? Math.round(Number(profile.salary_expect.max)) : 0,
+        salary_currency: profile.salary_expect?.currency || 'SGD'
+      })
+      
       const { error: basicsError } = await supabaseClient
         .from('candidate_basics')
         .upsert({
@@ -114,6 +120,23 @@ export class EnhancedCandidateProfileService {
         throw new Error(`Failed to save basics: ${basicsError.message}`)
       }
       counts.basics = 1
+      
+      console.log('[EnhancedProfile] Basics save successful, verifying data...')
+      
+      // Verify the data was saved correctly
+      const { data: verifyData, error: verifyError } = await supabaseClient
+        .from('candidate_basics')
+        .select('salary_expect_min, salary_expect_max, salary_currency')
+        .eq('user_id', userId)
+        .eq('resume_id', resumeId)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        
+      if (verifyError) {
+        console.error('[EnhancedProfile] Verify query failed:', verifyError)
+      } else {
+        console.log('[EnhancedProfile] Verified saved data:', verifyData?.[0])
+      }
 
       // 2. Save skills with levels
       if (profile.skills && profile.skills.length > 0) {
