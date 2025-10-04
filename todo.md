@@ -137,7 +137,16 @@
    - Improved candidate profile accuracy for meaningful analysis
    - Enhanced profile construction from database with proper null handling
 
+✅ 28. **Leadership & Management Matching Enhancements** (Oct 4, 2025)
+   - Added leadership level detection for both candidates and jobs (IC, Team Lead, Team Lead++)
+   - Updated Supabase schema and Python pipeline to persist leadership metadata
+   - Integrated leadership-aware scoring with fallbacks when job data is missing
+   - Applied salary expectation penalty logic for underpaying roles
 
+✅ 29. **Candidate Salary Override Preservation** (Oct 4, 2025)
+   - Ensured user-entered salary ranges override LLM inference end-to-end
+   - Prevented flat JSON resume import from wiping enhanced salary fields
+   - Verified Stage 1 scoring now uses the user’s stated salary expectations
 
 ## 🎨 UI Revamp (Priority: High)
 ✅ 1. **UI Design Overhaul**: Implement classic minimalist black/white design
@@ -180,6 +189,4 @@
 4. detailed job page is still not correct -> the JD is not complete. 
 5. detailed job page "Apply Now" shall link to the url of the original mycareerfuture page
 6. detailed job page should also be black/white minimalist style
-
-</done>
 
