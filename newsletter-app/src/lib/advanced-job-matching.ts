@@ -31,7 +31,7 @@ export class AdvancedJobMatchingService {
   async getTwoStageRecommendationsWithEnhanced(
     candidateProfile: CandidateProfile,
     enhancedProfileJson: string,
-    limit: number = 3,
+    limit: number = 5,
     userId?: string
   ): Promise<AdvancedJobRecommendation[]> {
     try {
@@ -41,7 +41,7 @@ export class AdvancedJobMatchingService {
       console.log('📊 Stage 1: Coarse ranking (rules-based)')
       const stage1Recommendations = await this.jobMatchingService.getEnhancedRecommendations(
         candidateProfile,
-        20, // Get top 20 for fine ranking
+        10, // Get top 10 for fine ranking
         userId
       )
 
@@ -57,7 +57,7 @@ export class AdvancedJobMatchingService {
       const stage2Recommendations = await this.performLLMFineRankingWithEnhanced(
         enhancedProfileJson,
         stage1Recommendations,
-        limit
+        5
       )
 
       console.log(`✅ Stage 2 complete: ${stage2Recommendations.length} final recommendations`)
@@ -208,7 +208,7 @@ CANDIDATE PROFILE:
    */
   async getEnhancedJobRecommendations(
     userId: string,
-    limit: number = 3
+    limit: number = 5
   ): Promise<AdvancedJobRecommendation[]> {
     try {
       // Get enhanced profile from database
