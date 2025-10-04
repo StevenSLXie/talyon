@@ -400,40 +400,7 @@ export class LLMAnalysisService {
    */
   async analyzeResumeComprehensive(resumeText: string): Promise<CandidateProfile> {
     try {
-      const prompt = `You are an expert career counselor and talent acquisition specialist analyzing a resume comprehensively.
-
-Analyze the following resume text and provide a complete candidate profile analysis:
-
-Resume text:
-${resumeText}
-
-Please provide ALL of the following analysis in a single JSON response:
-
-1. **Strengths and Weaknesses**
-2. **Salary Range Analysis** 
-3. **Skills and Profile Tags**
-
-Return your response as JSON with this exact structure:
-{
-  "strengths": ["strength1", "strength2", "strength3"],
-  "weaknesses": ["weakness1", "weakness2", "weakness3"],
-  "salary_min": 5000,
-  "salary_max": 12000,
-  "salary_reasoning": "Brief explanation of the salary range",
-  "skills": ["skill1", "skill2", "skill3"],
-  "companies": ["company1", "company2"],
-  "experience_years": 5,
-  "industry_tags": ["industry1", "industry2"],
-  "role_tags": ["role1", "role2"]
-}
-
-Guidelines:
-- For salary analysis, consider Singapore market rates, experience level, education, and industry
-- Extract all technical and soft skills mentioned
-- Count total years of work experience accurately
-- Identify industries and role types from work history
-- Be specific and actionable in strengths/weaknesses
-- Return ONLY valid JSON without code fences`
+      const prompt = RESUME_ANALYSIS_PROMPTS.comprehensiveAnalysis.replace('{resumeText}', resumeText)
 
       const response = await this.callOpenAI(prompt, SYSTEM_PROMPTS.resumeAnalysis)
       const parsed = this.parseJsonResponse(response)
