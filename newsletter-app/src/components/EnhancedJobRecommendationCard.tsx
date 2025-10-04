@@ -56,7 +56,10 @@ interface EnhancedJobRecommendationCardProps {
 
 export default function EnhancedJobRecommendationCard({ recommendation, index }: EnhancedJobRecommendationCardProps) {
   const [activeTab, setActiveTab] = useState<'analysis' | 'breakdown' | 'gaps'>('analysis')
-  const [isExpanded, setIsExpanded] = useState(true) // Show detailed analysis by default
+  const [isExpanded, setIsExpanded] = useState(false)
+  const [showJobDetails, setShowJobDetails] = useState(false)
+
+  const jobDescription = recommendation.job?.job_description || recommendation.job?.raw_text || 'Job description not available.'
 
   const getMatchScoreColor = (score: number) => {
     if (score >= 80) return 'bg-green-500'
@@ -90,7 +93,41 @@ export default function EnhancedJobRecommendationCard({ recommendation, index }:
 
       {/* Job Card */}
       <div className="p-6">
-        <JobCard job={recommendation.job} />
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex-1 mr-4">
+            <JobCard job={recommendation.job} />
+          </div>
+          <button
+            onClick={() => setShowJobDetails((prev) => !prev)}
+            className="text-sm text-blue-600 hover:text-blue-800 underline"
+          >
+            {showJobDetails ? 'Hide Job Details' : 'Show Job Details'}
+          </button>
+        </div>
+
+        {showJobDetails && (
+          <div className="mt-4 bg-gray-50 border border-gray-200 rounded-lg p-4">
+            <h4 className="text-sm font-semibold text-gray-900 mb-2">Full Job Description</h4>
+            <div className="max-h-64 overflow-y-auto pr-2 text-sm text-gray-700 leading-relaxed whitespace-pre-line">
+              {jobDescription}
+            </div>
+          </div>
+        )}
+
+        <button
+          onClick={() => setIsExpanded((prev) => !prev)}
+          className="mt-6 w-full flex items-center justify-between bg-gray-900 text-white px-4 py-2 text-sm"
+        >
+          <span>{isExpanded ? 'Hide AI Analysis' : 'View AI Analysis'}</span>
+          <svg
+            className={`w-4 h-4 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+          </svg>
+        </button>
       </div>
 
       {/* Expanded Details */}
