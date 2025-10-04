@@ -56,7 +56,7 @@ interface EnhancedJobRecommendationCardProps {
 
 export default function EnhancedJobRecommendationCard({ recommendation, index }: EnhancedJobRecommendationCardProps) {
   const [activeTab, setActiveTab] = useState<'analysis' | 'breakdown' | 'gaps'>('analysis')
-  const [isExpanded, setIsExpanded] = useState(false)
+  const [isExpanded, setIsExpanded] = useState(true)
   const [showJobDetails, setShowJobDetails] = useState(false)
 
   const jobDescription = recommendation.job?.job_description || recommendation.job?.raw_text || 'Job description not available.'
