@@ -44,7 +44,7 @@ export default function JobRecommendations({ userId, refreshTrigger = 0 }: JobRe
     return recommendations
       .slice()
       .sort((a, b) => b.match_score - a.match_score)
-      .slice(0, 5)
+      .slice(0, 8)
   }, [recommendations])
 
   const loadRecommendations = async (silent: boolean = false) => {
