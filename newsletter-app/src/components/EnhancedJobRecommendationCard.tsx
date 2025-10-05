@@ -72,9 +72,9 @@ export default function EnhancedJobRecommendationCard({ recommendation }: { reco
             </div>
           </div>
 
-          <div className="space-y-3 text-sm text-gray-600">
-            <div>
-              <div className="font-semibold uppercase tracking-wide text-xs text-gray-500">Why it fits</div>
+          <div className="space-y-4 text-sm text-gray-700">
+            <div className="bg-gray-50 p-4 border border-gray-200">
+              <div className="font-semibold uppercase tracking-wide text-xs text-gray-500 mb-2">Why it fits</div>
               <ul className="space-y-1">
                 {recommendation.llm_analysis.matching_reasons.slice(0, 3).map((reason, idx) => (
                   <li key={idx} className="flex items-start">
@@ -86,12 +86,12 @@ export default function EnhancedJobRecommendationCard({ recommendation }: { reco
             </div>
 
             {recommendation.llm_analysis.key_highlights?.length > 0 && (
-              <div>
-                <div className="font-semibold uppercase tracking-wide text-xs text-gray-500">Highlights</div>
+              <div className="bg-gray-50 p-4 border border-gray-200">
+                <div className="font-semibold uppercase tracking-wide text-xs text-gray-500 mb-2">Highlights</div>
                 <ul className="space-y-1">
                   {recommendation.llm_analysis.key_highlights.slice(0, 3).map((highlight, idx) => (
                     <li key={idx} className="flex items-start text-gray-600">
-                      <span className="mr-2">+</span>
+                      <span className="mr-2 text-black">+</span>
                       <span>{highlight}</span>
                     </li>
                   ))}
@@ -100,12 +100,12 @@ export default function EnhancedJobRecommendationCard({ recommendation }: { reco
             )}
 
             {recommendation.llm_analysis.non_matching_points.length > 0 && (
-              <div>
-                <div className="font-semibold uppercase tracking-wide text-xs text-gray-500">Watch out for</div>
-                <ul className="space-y-1">
-                  {recommendation.llm_analysis.non_matching_points.slice(0, 2).map((point, idx) => (
-                    <li key={idx} className="flex items-start text-gray-500">
-                      <span className="mr-2">–</span>
+              <div className="bg-gray-50 p-4 border border-gray-200">
+                <div className="font-semibold uppercase tracking-wide text-xs text-gray-500 mb-2">Gaps</div>
+                <ul className="space-y-1 text-gray-600">
+                  {recommendation.llm_analysis.non_matching_points.map((point, idx) => (
+                    <li key={idx} className="flex items-start">
+                      <span className="mr-2 text-gray-500">–</span>
                       <span>{point}</span>
                     </li>
                   ))}
@@ -116,27 +116,9 @@ export default function EnhancedJobRecommendationCard({ recommendation }: { reco
         </div>
 
         <div className="w-full lg:w-72 p-6 flex flex-col justify-between bg-white gap-4">
-          <div className="space-y-3">
-            <div>
-              <div className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">Summary</div>
-              <div className="text-sm text-gray-600 leading-relaxed">
-                {recommendation.llm_analysis.personalized_assessment}
-              </div>
-            </div>
-
-            {recommendation.llm_analysis.non_matching_points.length > 0 && (
-              <div>
-                <div className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-1">Gaps</div>
-                <ul className="space-y-1 text-sm text-gray-600">
-                  {recommendation.llm_analysis.non_matching_points.map((point, idx) => (
-                    <li key={idx} className="flex items-start">
-                      <span className="mr-2 text-gray-400">–</span>
-                      <span>{point}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
+          <div className="bg-gray-50 p-4 border border-gray-200 text-sm text-gray-700 leading-relaxed">
+            <div className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">Summary</div>
+            {recommendation.llm_analysis.personalized_assessment}
           </div>
 
           <div className="flex flex-col sm:flex-row gap-2">
