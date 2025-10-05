@@ -12,12 +12,12 @@
 </regulation>
 
 <new_features>
-1. for each candidate, you should try to defuce whether he/she is an IC role or has leadership/management experience
-2. if has management experience, you can further determine whethre their direct report is IC, or their direct report is also a team lead. To summarize, there will be at least 3 types: IC, team lead, team lead++ (come with whatever name that suits)
-3. for job, you should also do the same
-4. if necessary, change the db schema
-5. matching this is important: a team lead should be matched with a team lead role. an ic should be matched with a IC role, but not always, if he has ample experience or move from big tech to relatively smaller company
-6. for matching algo, salary range should be imporant: if salary does not meet expectation, apply a very large penalty
+1. stage 1 - 10 jobs, stage -2 5 jobs
+2. for each job, the JD details shall be collapsable from main page
+3. in each job's JD list, the detailed JD seem incomplete. analyze the data and try to recover it from db
+4. when clicking into one specific job's page, and then when click back, the recommended job list will disappear. fix it 
+5. main page no need to have Filter Recommendations to choose, just output 5 jobs, no need to choose
+6. for each todo, commit git once done
 </new_features>
 
 <other>
