@@ -2,58 +2,17 @@
 
 import { useState, useEffect, useMemo } from 'react'
 import EnhancedJobRecommendationCard from './EnhancedJobRecommendationCard'
-import MatchFilter from './MatchFilter'
 import { AdvancedJobRecommendation } from '@/lib/advanced-job-matching'
 
-interface JobRecommendation {
-  job: any
-  match_score: number
-  match_reasons: string[]
-  breakdown: {
-    title_match: number
-    salary_match: number
-    skills_match: number
-    experience_match: number
-    education_match: number
-    certification_match: number
-    job_family_match: number
-    work_prefs_match: number
-    industry_match: number
-  }
-  why_match: {
-    strengths: string[]
-    concerns: string[]
-    overall_assessment: string
-  }
-  gaps_and_actions: {
-    skill_gaps: Array<{ skill: string; current_level: number; required_level: number; action: string }>
-    experience_gap?: { gap_years: number; action: string }
-    education_gaps: Array<{ requirement: string; action: string }>
-    certification_gaps: Array<{ requirement: string; action: string }>
-    interview_prep: string[]
-  }
-  personalized_suggestions?: any
-}
-
 interface JobRecommendationsProps {
-  limit?: number
   userId?: string
-  refreshTrigger?: number // Add refresh trigger prop
+  refreshTrigger?: number
 }
 
-export default function JobRecommendations({ limit = 3, userId, refreshTrigger = 0 }: JobRecommendationsProps) {
+export default function JobRecommendations({ userId, refreshTrigger = 0 }: JobRecommendationsProps) {
   const [recommendations, setRecommendations] = useState<AdvancedJobRecommendation[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [filters, setFilters] = useState({
-    minScore: 0,
-    maxScore: 100,
-    showHighProbability: true,
-    showMediumProbability: true,
-    showLowProbability: false
-  })
-  const [sortBy, setSortBy] = useState<'score' | 'salary' | 'company'>('score')
-  const [showAdvancedAnalysis, setShowAdvancedAnalysis] = useState(false)
 
   const storageKey = typeof window !== 'undefined' && userId ? `talyon_recommendations_${userId}` : null
 
@@ -81,47 +40,19 @@ export default function JobRecommendations({ limit = 3, userId, refreshTrigger =
     loadRecommendations(silent)
   }, [userId, refreshTrigger])
 
-  // Filter and sort recommendations
-  const filteredAndSortedRecommendations = useMemo(() => {
-    let filtered = recommendations.filter(rec => {
-      const score = rec.match_score
-      
-      // Score range filter
-      if (score < filters.minScore || score > filters.maxScore) {
-        return false
-      }
-      
-      // Probability category filter
-      if (score >= 70 && !filters.showHighProbability) return false
-      if (score >= 50 && score < 70 && !filters.showMediumProbability) return false
-      if (score < 50 && !filters.showLowProbability) return false
-      
-      return true
-    })
-
-    // Sort recommendations
-    filtered.sort((a, b) => {
-      switch (sortBy) {
-        case 'score':
-          return b.match_score - a.match_score
-        case 'salary':
-          return (b.job.salary_high + b.job.salary_low) - (a.job.salary_high + a.job.salary_low)
-        case 'company':
-          return a.job.company.localeCompare(b.job.company)
-        default:
-          return b.match_score - a.match_score
-      }
-    })
-
-    return filtered
-  }, [recommendations, filters, sortBy])
+  const limitedRecommendations = useMemo(() => {
+    return recommendations
+      .slice()
+      .sort((a, b) => b.match_score - a.match_score)
+      .slice(0, 5)
+  }, [recommendations])
 
   const loadRecommendations = async (silent: boolean = false) => {
     if (!userId) {
       setError('User ID is required')
       return
     }
-    
+
     try {
       if (!silent) setLoading(true)
       setError('')
@@ -129,11 +60,10 @@ export default function JobRecommendations({ limit = 3, userId, refreshTrigger =
       const response = await fetch('/api/jobs/recommendations', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          userId: userId,
-          limit
+          userId
         })
       })
 
@@ -228,48 +158,12 @@ export default function JobRecommendations({ limit = 3, userId, refreshTrigger =
           Your Personalized Job Recommendations
         </h2>
         <p className="text-gray-600">
-          Based on your resume analysis, here are the top {filteredAndSortedRecommendations.length} jobs that match your profile
+          Based on your resume analysis, here are the top {limitedRecommendations.length} jobs that match your profile
         </p>
       </div>
-
-      {/* Filter and Sort Controls */}
-      <MatchFilter onFilterChange={setFilters} />
-      
-      {/* Sort Controls */}
-      <div className="bg-white rounded-lg shadow-md p-4 mb-6">
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-medium text-gray-700">Sort by:</span>
-          <div className="flex space-x-2">
-            {[
-              { key: 'score', label: 'Match Score' },
-              { key: 'salary', label: 'Salary' },
-              { key: 'company', label: 'Company' }
-            ].map((option) => (
-          <button
-                key={option.key}
-                onClick={() => setSortBy(option.key as any)}
-                className={`px-3 py-1 text-sm rounded-md transition-colors ${
-                  sortBy === option.key
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                {option.label}
-          </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Results Count */}
-      <div className="mb-4">
-        <p className="text-sm text-gray-600">
-          Showing {filteredAndSortedRecommendations.length} of {recommendations.length} recommendations
-        </p>
-            </div>
 
       <div className="space-y-6">
-        {filteredAndSortedRecommendations.map((recommendation, index) => (
+        {limitedRecommendations.map((recommendation, index) => (
           <EnhancedJobRecommendationCard
             key={recommendation.job.id || index}
             recommendation={recommendation}
@@ -278,22 +172,13 @@ export default function JobRecommendations({ limit = 3, userId, refreshTrigger =
         ))}
       </div>
 
-      {/* Action Buttons */}
       <div className="text-center mt-8">
-        <div className="flex justify-center space-x-4">
-          <button
-            onClick={loadRecommendations}
-            className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 font-medium"
-          >
-            Refresh Recommendations
-          </button>
-          <a
-            href="/jobs"
-            className="bg-white text-blue-600 px-6 py-3 rounded-lg border border-blue-600 hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 font-medium"
-          >
-            Browse All Jobs
-          </a>
-        </div>
+        <button
+          onClick={() => loadRecommendations(false)}
+          className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 font-medium"
+        >
+          Refresh Recommendations
+        </button>
       </div>
     </div>
   )
