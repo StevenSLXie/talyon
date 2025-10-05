@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { validateResumeFile } from '@/lib/file-validation'
 
 interface ResumeUploadProps {
@@ -16,7 +16,91 @@ export default function ResumeUpload({ onUploadSuccess, onUploadError }: ResumeU
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [salaryMin, setSalaryMin] = useState(9000)
   const [salaryMax, setSalaryMax] = useState(12000)
+  const [analysisMessages, setAnalysisMessages] = useState<string[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const messageQueueRef = useRef<string[]>([])
+  const messageTimerRef = useRef<number | null>(null)
+
+  const pushMessage = (message: string) => {
+    setAnalysisMessages(prev => {
+      if (prev[prev.length - 1] === message) return prev
+      return [...prev, message]
+    })
+  }
+
+  const stopMessageLoop = () => {
+    if (messageTimerRef.current) {
+      window.clearInterval(messageTimerRef.current)
+      messageTimerRef.current = null
+    }
+  }
+
+  const startMessageLoop = () => {
+    if (messageTimerRef.current || messageQueueRef.current.length === 0) return
+    messageTimerRef.current = window.setInterval(() => {
+      const next = messageQueueRef.current.shift()
+      if (next) {
+        pushMessage(next)
+      }
+      if (messageQueueRef.current.length === 0) {
+        stopMessageLoop()
+      }
+    }, 1600)
+  }
+
+  const enqueueMessages = (messages: string[]) => {
+    if (!messages.length) return
+    const [first, ...rest] = messages
+    pushMessage(first)
+    if (rest.length) {
+      messageQueueRef.current.push(...rest)
+      startMessageLoop()
+    }
+  }
+
+  const resetAnalysis = () => {
+    stopMessageLoop()
+    messageQueueRef.current = []
+    setAnalysisMessages([])
+  }
+
+  const buildProfileMessages = (enhancedProfile: any, jsonResume: any) => {
+    if (!enhancedProfile) return []
+    const messages: string[] = []
+    if (enhancedProfile.titles?.length) {
+      messages.push(`Reviewing recent role: ${enhancedProfile.titles[0]}.`)
+    }
+    if (typeof enhancedProfile.experience_years === 'number') {
+      messages.push(`Detected around ${enhancedProfile.experience_years} years of experience.`)
+    }
+    const highlightedSkills = enhancedProfile.skills?.slice?.(0, 3)?.map((s: any) => s.name)?.filter(Boolean)
+    if (highlightedSkills?.length) {
+      messages.push(`Highlighting core skills: ${highlightedSkills.join(', ')}.`)
+    }
+    if (enhancedProfile.management_experience?.has_management) {
+      const yrs = enhancedProfile.management_experience.management_years
+      messages.push(
+        `Flagged strong team leadership${yrs ? ` with about ${yrs} years managing` : ''}.`
+      )
+    }
+    const industries = enhancedProfile.intent?.target_industries || enhancedProfile.industries
+    if (industries && industries.length) {
+      messages.push(`Focusing on opportunities in ${industries.slice(0, 2).join(', ')}.`)
+    }
+    const company = jsonResume?.work?.[0]?.name || enhancedProfile.company_history?.[0]
+    if (company) {
+      messages.push(`Analyzing impact at ${company}.`)
+    }
+    messages.push('Matching against 15 shortlisted roles…')
+    messages.push('LLM fine-tuning the final recommendations…')
+    return messages
+  }
+
+  useEffect(() => {
+    return () => {
+      stopMessageLoop()
+    }
+  }, [])
 
   const handleDrag = (e: React.DragEvent) => {
     e.preventDefault()
@@ -50,6 +134,12 @@ export default function ResumeUpload({ onUploadSuccess, onUploadError }: ResumeU
     setIsUploading(true)
     setUploadProgress(0)
     setUploadStage('Uploading file...')
+    resetAnalysis()
+    enqueueMessages([
+      'Uploading resume securely…',
+      'Extracting text and structure…',
+      'Identifying education and certifications…'
+    ])
 
     try {
       const progressInterval = setInterval(() => {
@@ -80,7 +170,9 @@ export default function ResumeUpload({ onUploadSuccess, onUploadError }: ResumeU
       }
 
       const resumeData = await response.json()
+      enqueueMessages(buildProfileMessages(resumeData.enhancedProfile, resumeData.jsonResume))
       onUploadSuccess?.(resumeData)
+      enqueueMessages(['Recommendations ready! Displaying personalized matches.'])
       
       // Reset after success
       setTimeout(() => {
@@ -96,6 +188,7 @@ export default function ResumeUpload({ onUploadSuccess, onUploadError }: ResumeU
       setIsUploading(false)
       setUploadProgress(0)
       setUploadStage('')
+      resetAnalysis()
     }
   }
 
@@ -167,6 +260,22 @@ export default function ResumeUpload({ onUploadSuccess, onUploadError }: ResumeU
           <div className="w-full bg-gray-200 h-2">
             <div className="bg-black h-2 transition-all duration-300" style={{ width: `${uploadProgress}%` }} />
           </div>
+        </div>
+      )}
+
+      {analysisMessages.length > 0 && (
+        <div className="mt-6 bg-gray-50 border border-gray-200 p-4">
+          <div className="flex items-center text-xs font-semibold uppercase tracking-wide text-gray-500 mb-3">
+            <span className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse" />
+            Live AI Analysis
+          </div>
+          <ul className="space-y-2">
+            {analysisMessages.map((msg, idx) => (
+              <li key={idx} className="text-sm text-gray-700 leading-relaxed">
+                {msg}
+              </li>
+            ))}
+          </ul>
         </div>
       )}
 
