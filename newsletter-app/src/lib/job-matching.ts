@@ -1071,7 +1071,6 @@ export class JobMatchingService {
         .from('candidate_education')
         .select('start_date, end_date, study_type')
         .eq('user_id', usersId)
-        .order('start_date', { ascending: false })
 
       // Calculate experience years
       let experienceYears = 0
@@ -1193,14 +1192,7 @@ export class JobMatchingService {
           }
         }
 
-        // 1. Title matching (30% weight)
-        let bestTitle = { score: 0, tokens: [] as string[], title: '' }
-        for (const title of candidateProfile.titles) {
-          const { score, tokens } = tokenOverlapScore(title, job.title || '')
-          if (score > bestTitle.score) bestTitle = { score, tokens, title }
-        }
-
-        // 2. Salary matching (20% weight)
+        // 2. Salary matching (14% weight)
         const salaryMatch = calculateSalaryMatch(
           candidateProfile.salary_range_min,
           candidateProfile.salary_range_max,
@@ -1219,40 +1211,48 @@ export class JobMatchingService {
           job.job_description || ''
         )
 
-        // 4. Experience matching (15% weight)
-        const experienceMatch = calculateExperienceMatch(
-          candidateProfile.experience_years,
-          job.experience_years_req,
-          job.experience_level || ''
-        )
-
-        // 5. Education matching (10% weight)
-        const educationMatch = calculateEducationMatch(
-          candidateProfile.education || [],
-          job.education_req || []
-        )
-
-        // 6. Certification matching (5% weight)
-        const certificationMatch = calculateCertificationMatch(
-          candidateProfile.certifications || [],
-          job.certifications_req || []
-        )
-
-        // 7. Job family matching (10% weight)
+        // 4. Job family / discipline matching (20% weight)
         const jobFamilyMatch = calculateJobFamilyMatch(
           candidateProfile.titles,
           job.job_family || '',
           job.title || ''
         )
 
-        // 8. Work preferences matching (5% weight)
+        // 5. Title matching (15% weight)
+        let bestTitle = { score: 0, tokens: [] as string[], title: '' }
+        const jobTitleTokens = (job.title || '').toLowerCase().split(/\s+/)
+        for (const candidateTitle of candidateProfile.titles) {
+          const { score, tokens } = tokenOverlapScore(candidateTitle.toLowerCase(), job.title || '')
+          if (score > bestTitle.score) bestTitle = { score, tokens, title: candidateTitle }
+        }
+
+        // 6. Experience matching (8% weight)
+        const experienceMatch = calculateExperienceMatch(
+          candidateProfile.experience_years,
+          job.experience_years_req,
+          job.experience_level || ''
+        )
+
+        // 7. Education matching (4% weight)
+        const educationMatch = calculateEducationMatch(
+          candidateProfile.education || [],
+          job.education_req || []
+        )
+
+        // 8. Certification matching (3% weight)
+        const certificationMatch = calculateCertificationMatch(
+          candidateProfile.certifications || [],
+          job.certifications_req || []
+        )
+
+        // 9. Work preferences matching (1% weight)
         const workPrefsMatch = calculateWorkPrefsMatch(
           candidateProfile.work_prefs,
           job.remote_policy || '',
           job.job_type || ''
         )
 
-        // 9. Industry matching (5% weight)
+        // 10. Industry matching (1% weight)
         const industryMatch = calculateIndustryMatch(
           candidateProfile.industries,
           job.industry || '',
@@ -1260,21 +1260,21 @@ export class JobMatchingService {
           job.company_tier || ''
         )
 
-        // 10. Leadership level matching (10% weight)
+        // 11. Leadership level matching (10% weight)
         const leadershipMatch = this.calculateLeadershipMatch(candidateProfile, job)
         
-        // 11. Salary expectation penalty
+        // 12. Salary expectation penalty
         const salaryPenalty = this.calculateSalaryPenalty(candidateProfile, job)
 
         // Calculate weighted total score with leadership matching and salary penalty
         const totalScore = Math.round(
           (bestTitle.score * 0.15) +
-          (salaryMatch.score * 0.20) +
-          (skillsMatch.score * 0.40) +
-          (experienceMatch.score * 0.10) +
-          (educationMatch.score * 0.05) +
-          (certificationMatch.score * 0.05) +
-          (jobFamilyMatch.score * 0.03) +
+          (salaryMatch.score * 0.14) +
+          (skillsMatch.score * 0.25) +
+          (jobFamilyMatch.score * 0.20) +
+          (experienceMatch.score * 0.08) +
+          (educationMatch.score * 0.04) +
+          (certificationMatch.score * 0.03) +
           (workPrefsMatch.score * 0.01) +
           (industryMatch.score * 0.01) +
           (leadershipMatch.score * 0.10) -
@@ -1359,12 +1359,13 @@ export class JobMatchingService {
             title_match: bestTitle.score,
             salary_match: salaryMatch.score,
             skills_match: skillsMatch.score,
+            job_family_match: jobFamilyMatch.score,
             experience_match: experienceMatch.score,
             education_match: educationMatch.score || 0,
             certification_match: certificationMatch.score || 0,
-            job_family_match: jobFamilyMatch.score || 0,
             work_prefs_match: workPrefsMatch.score || 0,
-            industry_match: industryMatch.score || 0
+            industry_match: industryMatch.score || 0,
+            leadership_match: leadershipMatch.score
           },
           why_match: whyMatch,
           gaps_and_actions: gapsAndActions
