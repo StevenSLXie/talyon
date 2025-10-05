@@ -55,10 +55,30 @@ export default function JobRecommendations({ limit = 3, userId, refreshTrigger =
   const [sortBy, setSortBy] = useState<'score' | 'salary' | 'company'>('score')
   const [showAdvancedAnalysis, setShowAdvancedAnalysis] = useState(false)
 
+  const storageKey = typeof window !== 'undefined' && userId ? `talyon_recommendations_${userId}` : null
+
   useEffect(() => {
-    if (userId && refreshTrigger > 0) { // Only load when userId exists and refreshTrigger is valid
-      loadRecommendations()
+    if (!userId) return
+
+    let cacheUsed = false
+    if (storageKey) {
+      const cached = window.sessionStorage.getItem(storageKey)
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached)
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setRecommendations(parsed)
+            setLoading(false)
+            cacheUsed = true
+          }
+        } catch (error) {
+          console.warn('Failed to parse cached recommendations', error)
+        }
+      }
     }
+
+    const silent = cacheUsed && refreshTrigger === 0
+    loadRecommendations(silent)
   }, [userId, refreshTrigger])
 
   // Filter and sort recommendations
@@ -96,14 +116,14 @@ export default function JobRecommendations({ limit = 3, userId, refreshTrigger =
     return filtered
   }, [recommendations, filters, sortBy])
 
-  const loadRecommendations = async () => {
+  const loadRecommendations = async (silent: boolean = false) => {
     if (!userId) {
       setError('User ID is required')
       return
     }
     
     try {
-      setLoading(true)
+      if (!silent) setLoading(true)
       setError('')
 
       const response = await fetch('/api/jobs/recommendations', {
@@ -112,7 +132,7 @@ export default function JobRecommendations({ limit = 3, userId, refreshTrigger =
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          userId: userId, // This should come from auth
+          userId: userId,
           limit
         })
       })
@@ -122,7 +142,16 @@ export default function JobRecommendations({ limit = 3, userId, refreshTrigger =
       }
 
       const data = await response.json()
-      setRecommendations(data.recommendations || [])
+      const recs = data.recommendations || []
+      setRecommendations(recs)
+
+      if (storageKey) {
+        try {
+          window.sessionStorage.setItem(storageKey, JSON.stringify(recs))
+        } catch (error) {
+          console.warn('Failed to cache recommendations', error)
+        }
+      }
     } catch (error) {
       console.error('Error loading recommendations:', error)
       setError('Failed to load job recommendations')
