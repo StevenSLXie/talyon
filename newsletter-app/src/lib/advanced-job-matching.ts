@@ -41,7 +41,7 @@ export class AdvancedJobMatchingService {
       console.log('📊 Stage 1: Coarse ranking (rules-based)')
       const stage1Recommendations = await this.jobMatchingService.getEnhancedRecommendations(
         candidateProfile,
-        10, // Get top 10 for fine ranking
+        15,
         userId
       )
 
