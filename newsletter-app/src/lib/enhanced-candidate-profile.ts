@@ -3,14 +3,15 @@ import { supabaseAdmin } from './supabase'
 import { currencyConverter } from './currency-converter'
 
 export interface EnhancedCandidateProfile {
+  titles?: string[]
+  current_title?: string
+  target_titles?: string[]
   work_auth: {
     citizen_or_pr: boolean
     ep_needed: boolean
     work_permit_type: string | null
   }
   seniority_level: string
-  current_title: string
-  target_titles: string[]
   experience_years: number
   skills: Array<{
     name: string
@@ -91,10 +92,11 @@ export class EnhancedCandidateProfileService {
         .insert({
           user_id: userId,
           resume_id: resumeId,
+          titles: profile.titles || [],
+          current_title: profile.current_title || profile.titles?.[0] || 'Not specified',
+          target_titles: profile.target_titles || [],
           work_auth: profile.work_auth || { citizen_or_pr: false, ep_needed: true, work_permit_type: null },
           seniority_level: profile.seniority_level || 'Not specified',
-          current_title: profile.current_title || 'Not specified',
-          target_titles: profile.target_titles || [],
           industries: profile.industries || [],
           company_tiers: profile.company_tiers || [],
           salary_expect_min: profile.salary_expect?.min ? Math.round(Number(profile.salary_expect.min)) : 0,
@@ -337,10 +339,11 @@ export class EnhancedCandidateProfileService {
       }
 
       return {
-        work_auth: basics.work_auth || { citizen_or_pr: true, ep_needed: false, work_permit_type: null },
-        seniority_level: basics.seniority_level || 'Mid',
+        titles: basics.titles || [],
         current_title: basics.current_title || '',
         target_titles: basics.target_titles || [],
+        work_auth: basics.work_auth || { citizen_or_pr: true, ep_needed: false, work_permit_type: null },
+        seniority_level: basics.seniority_level || 'Mid',
         experience_years: Math.max(experienceYears, basics.experience_years || 0),
         skills: (skills || []).map(s => ({
           name: s.name,
