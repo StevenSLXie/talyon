@@ -4,7 +4,7 @@ import { EnhancedCandidateProfileService } from './enhanced-candidate-profile'
 import { LLMActionSuggestionsService } from './llm-action-suggestions'
 
 export interface JobRecommendation {
-  job: any
+  job: CandidateJob
   match_score: number
   match_reasons: string[]
   breakdown: {
@@ -31,7 +31,7 @@ export interface JobRecommendation {
     certification_gaps: Array<{ requirement: string; action: string }>
     interview_prep: string[]
   }
-  personalized_suggestions?: any // LLM-generated personalized suggestions
+  personalized_suggestions?: ReturnType<typeof LLMActionSuggestionsService.generateActionSuggestions> extends Promise<infer R> ? R : unknown
 }
 
 export interface CandidateProfile {
@@ -302,11 +302,22 @@ function calculateSkillsMatch(
   }
 }
 
+interface ExperienceRequirement {
+  min: number
+  max: number
+}
+
+interface ExperienceMatchResult {
+  score: number
+  reason: string
+  penalty: number
+}
+
 function calculateExperienceMatch(
-  candidateYears: number, 
-  jobExperienceReq: { min: number; max: number } | null,
+  candidateYears: number,
+  jobExperienceReq: ExperienceRequirement | null,
   jobLevel: string
-): { score: number; reason: string; penalty: number } {
+): ExperienceMatchResult {
   // Use structured experience requirements if available
   if (jobExperienceReq && jobExperienceReq.min !== undefined && jobExperienceReq.max !== undefined) {
     const { min, max } = jobExperienceReq
@@ -375,10 +386,30 @@ function calculateExperienceMatch(
   return { score: 50, reason: 'Experience level unclear', penalty: 0 }
 }
 
+interface EducationEntry {
+  study_type?: string
+  degree?: string
+  area?: string
+  major?: string
+  institution?: string
+}
+
+interface EducationMatchResult {
+  score: number
+  reason: string
+  matched_education: string[]
+}
+
+interface CertificationMatchResult {
+  score: number
+  reason: string
+  matched_certifications: string[]
+}
+
 function calculateEducationMatch(
-  candidateEducation: Array<{ study_type?: string; degree?: string; area?: string; major?: string; institution?: string }>,
+  candidateEducation: EducationEntry[],
   jobEducationReq: string[]
-): { score: number; reason: string; matched_education: string[] } {
+): EducationMatchResult {
   if (!jobEducationReq || jobEducationReq.length === 0) {
     return { score: 100, reason: 'No education requirements specified', matched_education: [] }
   }
@@ -429,10 +460,10 @@ function calculateEducationMatch(
     ? `Education match: ${matchedEducation.join(', ')}`
     : 'No education requirements met'
 
-  return { 
-    score: Math.round(averageScore), 
-    reason, 
-    matched_education: matchedEducation 
+  return {
+    score: Math.round(averageScore),
+    reason,
+    matched_education: matchedEducation
   }
 }
 
@@ -725,11 +756,11 @@ function calculateWorkPrefsMatch(
 function generateWhyMatch(
   candidateProfile: CandidateProfile,
   job: any,
-  breakdown: any,
-  skillsMatch: any,
-  experienceMatch: any,
-  educationMatch: any,
-  certificationMatch: any
+  breakdown: RecommendationBreakdown,
+  skillsMatch: SkillsMatchResult,
+  experienceMatch: ExperienceMatchResult,
+  educationMatch: EducationMatchResult,
+  certificationMatch: CertificationMatchResult
 ): { strengths: string[]; concerns: string[]; overall_assessment: string } {
   const strengths: string[] = []
   const concerns: string[] = []
@@ -784,11 +815,11 @@ function generateWhyMatch(
 
 function generateGapsAndActions(
   candidateProfile: CandidateProfile,
-  job: any,
-  skillsMatch: any,
-  experienceMatch: any,
-  educationMatch: any,
-  certificationMatch: any
+  job: CandidateJob,
+  skillsMatch: SkillsMatchResult,
+  experienceMatch: ExperienceMatchResult,
+  educationMatch: EducationMatchResult,
+  certificationMatch: CertificationMatchResult
 ): {
   skill_gaps: Array<{ skill: string; current_level: number; required_level: number; action: string }>
   experience_gap?: { gap_years: number; action: string }
@@ -1220,7 +1251,6 @@ export class JobMatchingService {
 
         // 5. Title matching (15% weight)
         let bestTitle = { score: 0, tokens: [] as string[], title: '' }
-        const jobTitleTokens = (job.title || '').toLowerCase().split(/\s+/)
         for (const candidateTitle of candidateProfile.titles) {
           const { score, tokens } = tokenOverlapScore(candidateTitle.toLowerCase(), job.title || '')
           if (score > bestTitle.score) bestTitle = { score, tokens, title: candidateTitle }

@@ -1,5 +1,4 @@
 // Advanced Two-Stage Job Recommendation System
-import { supabase } from './supabase'
 import { JobMatchingService, CandidateProfile, JobRecommendation } from './job-matching'
 import { llmAnalysisService } from './llm-analysis'
 import { EnhancedCandidateProfileService } from './enhanced-candidate-profile'
@@ -15,6 +14,26 @@ export interface AdvancedJobRecommendation extends JobRecommendation {
   }
   stage1_score: number
   stage2_score: number
+}
+
+interface Stage1JobSummary {
+  id: number
+  job: JobRecommendation['job']
+  stage1_score: number
+  stage1_reasons: string[]
+}
+
+interface LLMJobAnalysis {
+  final_score: number
+  matching_reasons: string[]
+  non_matching_points: string[]
+  key_highlights: string[]
+  personalized_assessment: string
+  career_impact: string
+}
+
+interface LLMJobAnalysisResponse {
+  job_analyses: LLMJobAnalysis[]
 }
 
 export class AdvancedJobMatchingService {
@@ -39,9 +58,10 @@ export class AdvancedJobMatchingService {
       
       // Stage 1: Coarse Ranking - Get top 20 jobs using current logic
       console.log('📊 Stage 1: Coarse ranking (rules-based)')
+      const stage1Limit = Math.max(limit * 4, 20)
       const stage1Recommendations = await this.jobMatchingService.getEnhancedRecommendations(
         candidateProfile,
-        20,
+        stage1Limit,
         userId
       )
 
@@ -61,7 +81,7 @@ export class AdvancedJobMatchingService {
       const stage2Recommendations = await this.performLLMFineRankingWithEnhanced(
         enhancedProfileJson,
         stage1Recommendations,
-        5
+        limit
       )
 
       console.log(`✅ Stage 2 complete: ${stage2Recommendations.length} final recommendations`)
@@ -84,7 +104,7 @@ export class AdvancedJobMatchingService {
   ): Promise<AdvancedJobRecommendation[]> {
     try {
       // Prepare job summaries for LLM
-      const jobSummaries = stage1Jobs.map((rec, index) => ({
+      const jobSummaries: Stage1JobSummary[] = stage1Jobs.map((rec, index) => ({
         id: index + 1,
         job: rec.job,
         stage1_score: rec.match_score,
@@ -95,31 +115,27 @@ export class AdvancedJobMatchingService {
       const llmAnalysis = await this.callLLMForBatchAnalysis(enhancedProfileJson, jobSummaries)
 
       // Process LLM results and create final recommendations
-      const finalRecommendations: AdvancedJobRecommendation[] = []
+      const finalRecommendations: AdvancedJobRecommendation[] = stage1Jobs
+        .slice(0, llmAnalysis.job_analyses.length)
+        .map((stage1Rec, index) => {
+          const llmResult = llmAnalysis.job_analyses[index]
 
-      for (let i = 0; i < Math.min(stage1Jobs.length, llmAnalysis.job_analyses.length); i++) {
-        const stage1Rec = stage1Jobs[i]
-        const llmResult = llmAnalysis.job_analyses[i]
-
-        const advancedRec: AdvancedJobRecommendation = {
-          ...stage1Rec,
-          stage1_score: stage1Rec.match_score,
-          stage2_score: llmResult.final_score,
-          match_score: llmResult.final_score, // Use LLM score as final score
-          llm_analysis: {
-            final_score: llmResult.final_score,
-            matching_reasons: llmResult.matching_reasons,
-            non_matching_points: llmResult.non_matching_points,
-            key_highlights: llmResult.key_highlights,
-            personalized_assessment: llmResult.personalized_assessment,
-            career_impact: llmResult.career_impact
+          return {
+            ...stage1Rec,
+            stage1_score: stage1Rec.match_score,
+            stage2_score: llmResult.final_score,
+            match_score: llmResult.final_score,
+            llm_analysis: {
+              final_score: llmResult.final_score,
+              matching_reasons: llmResult.matching_reasons,
+              non_matching_points: llmResult.non_matching_points,
+              key_highlights: llmResult.key_highlights,
+              personalized_assessment: llmResult.personalized_assessment,
+              career_impact: llmResult.career_impact
+            }
           }
-        }
+        })
 
-        finalRecommendations.push(advancedRec)
-      }
-
-      // Sort by LLM score and return top recommendations
       return finalRecommendations
         .sort((a, b) => b.llm_analysis.final_score - a.llm_analysis.final_score)
         .slice(0, limit)
@@ -148,11 +164,10 @@ export class AdvancedJobMatchingService {
    */
   private buildCandidateSummary(candidateProfile: CandidateProfile): string {
     const educationText = candidateProfile.education && candidateProfile.education.length > 0 
-      ? candidateProfile.education.map((e: any) => {
-          // Handle different degree formats
-          const degree = e.study_type || e.degree || 'Degree'
-          const major = e.area || e.major || 'Unknown'
-          const institution = e.institution || 'Unknown Institution'
+      ? candidateProfile.education.map((educationItem) => {
+          const degree = educationItem.study_type || educationItem.degree || 'Degree'
+          const major = educationItem.area || educationItem.major || 'Unknown'
+          const institution = educationItem.institution || 'Unknown Institution'
           return `${degree} in ${major} from ${institution}`
         }).join(', ')
       : 'Not specified'
@@ -161,7 +176,7 @@ export class AdvancedJobMatchingService {
 CANDIDATE PROFILE:
 - Experience: ${candidateProfile.experience_years} years
 - Current/Previous Titles: ${candidateProfile.titles.join(', ')}
-- Key Skills: ${candidateProfile.skills.map((s: any) => s.name).join(', ')}
+- Key Skills: ${candidateProfile.skills.map(skill => skill.name).join(', ')}
 - Industries: ${candidateProfile.industries.join(', ')}
 - Salary Range: $${candidateProfile.salary_range_min?.toLocaleString()} - $${candidateProfile.salary_range_max?.toLocaleString()}
 - Education: ${educationText}
@@ -177,19 +192,9 @@ CANDIDATE PROFILE:
    */
   private async callLLMForBatchAnalysis(
     enhancedProfileJson: string,
-    jobSummaries: Array<{ id: number; job: any; stage1_score: number; stage1_reasons: string[] }>
-  ): Promise<{
-    job_analyses: Array<{
-      final_score: number
-      matching_reasons: string[]
-      non_matching_points: string[]
-      key_highlights: string[]
-      personalized_assessment: string
-      career_impact: string
-    }>
-  }> {
-    // Parse the enhanced profile JSON to get the object
-    const enhancedProfile = JSON.parse(enhancedProfileJson)
+    jobSummaries: Stage1JobSummary[]
+  ): Promise<LLMJobAnalysisResponse> {
+    const enhancedProfile = JSON.parse(enhancedProfileJson) as Record<string, unknown>
     
     try {
       console.log('🤖 Calling LLM for job analysis...')

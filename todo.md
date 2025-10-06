@@ -10,7 +10,7 @@
    1.2 Sweep for other unused exports and enable lint to fail on warnings – lint currently flags legacy scripts (require calls), `any` usage across APIs/lib, and unused React hooks; need cleanup plan
        1.2.1 ✅ Convert or archive unused Node scripts under `newsletter-app/scripts/` (CommonJS + unused vars)
        1.2.2 ✅ Fix `any` usage in API routes (`src/app/api/**`) and surface type gaps
-       1.2.3 Address lint in React pages/components (`jobs`, `saved-jobs`, `CandidateProfileManagement`, etc.)
+       1.2.3 ✅ Address lint in React pages/components (`jobs`, `saved-jobs`, `CandidateProfileManagement`, etc.)
        1.2.4 Tidy lib modules (`advanced-job-matching`, `auth`, `job-matching`, `llm-analysis`, etc.)
        1.2.5 Re-run ESLint with `--max-warnings=0` and confirm clean
 
