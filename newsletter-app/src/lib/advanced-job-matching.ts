@@ -50,9 +50,13 @@ export class AdvancedJobMatchingService {
         return []
       }
 
-      console.log(`✅ Stage 1 complete: ${stage1Recommendations.length} jobs selected`)
+      console.log('✅ Stage 1 complete:', stage1Recommendations.length, 'jobs selected')
+      console.log(
+        '📋 Stage 1 shortlist:',
+        stage1Recommendations.map((rec, index) => `${index + 1}. ${rec.job?.company || 'Unknown'} – ${rec.job?.title || 'Untitled'}`)
+      )
 
-      // Stage 2: Fine Ranking - LLM analysis of top 20 jobs using enhanced profile JSON
+      // Stage 2: Fine Ranking - LLM analysis of top jobs using enhanced profile JSON
       console.log('🤖 Stage 2: Fine ranking (LLM-powered)')
       const stage2Recommendations = await this.performLLMFineRankingWithEnhanced(
         enhancedProfileJson,
