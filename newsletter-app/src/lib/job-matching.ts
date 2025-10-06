@@ -1281,6 +1281,10 @@ export class JobMatchingService {
           salaryPenalty
         )
 
+        // Apply a discipline gate: if job family and title similarity are both weak, drop score drastically
+        const disciplineAlignment = Math.max(jobFamilyMatch.score, bestTitle.score)
+        const adjustedScore = disciplineAlignment < 40 ? Math.max(totalScore - 40, 0) : totalScore
+
         // Build match reasons
         const reasons: string[] = []
         if (bestTitle.tokens.length) {
@@ -1353,7 +1357,7 @@ export class JobMatchingService {
 
         return {
           job,
-          match_score: totalScore,
+          match_score: adjustedScore,
           match_reasons: reasons.length ? reasons : ['Basic match'],
           breakdown: {
             title_match: bestTitle.score,

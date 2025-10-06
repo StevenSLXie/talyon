@@ -12,12 +12,15 @@
 </regulation>
 
 <new_features>
-1. stage 1 - 10 jobs, stage -2 5 jobs
-2. for each job, the JD details shall be collapsable from main page
-3. in each job's JD list, the detailed JD seem incomplete. analyze the data and try to recover it from db
-4. when clicking into one specific job's page, and then when click back, the recommended job list will disappear. fix it 
-5. main page no need to have Filter Recommendations to choose, just output 5 jobs, no need to choose
-6. for each todo, commit git once done
+currently after uploading resume done, then it displays "Analyzing your profile..."
+
+for ths=is part, we need to do mjor revamp:
+1. when profiling the resume, it will output all sorts of json content
+2. casually dynamically display these into that field to give users a feel that AI is analyzing hard at backend
+3. should try to use natural language based on what json said
+4. since the waiting time currently is long for the whole process, we can repeatedly display these until job recd is out
+5. one sentence each time, such as "the candaiate has 10 YOE" "analyzing his experience at Lazada" "he has solid managemnt experience" "matching with NLP jobs" 
+5. output how you want to tackle it before actually do it
 </new_features>
 
 <other>
@@ -189,4 +192,11 @@
 4. detailed job page is still not correct -> the JD is not complete. 
 5. detailed job page "Apply Now" shall link to the url of the original mycareerfuture page
 6. detailed job page should also be black/white minimalist style
+
+1. stage 1 - 10 jobs, stage -2 5 jobs
+2. for each job, the JD details shall be collapsable from main page
+3. in each job's JD list, the detailed JD seem incomplete. analyze the data and try to recover it from db
+4. when clicking into one specific job's page, and then when click back, the recommended job list will disappear. fix it 
+5. main page no need to have Filter Recommendations to choose, just output 5 jobs, no need to choose
+6. for each todo, commit git once done
 

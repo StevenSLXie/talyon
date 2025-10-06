@@ -92,7 +92,7 @@ export class EnhancedCandidateProfileService {
         .insert({
           user_id: userId,
           resume_id: resumeId,
-          titles: profile.titles || [],
+          titles: profile.titles?.length ? profile.titles : [profile.current_title].filter(Boolean),
           current_title: profile.current_title || profile.titles?.[0] || 'Not specified',
           target_titles: profile.target_titles || [],
           work_auth: profile.work_auth || { citizen_or_pr: false, ep_needed: true, work_permit_type: null },
