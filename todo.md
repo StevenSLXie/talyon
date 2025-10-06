@@ -5,6 +5,10 @@
 </rules>
 
 <changes_needed>
+1.1 reduce hero heading size for mobile without losing impact
+1.2 ensure hero section spacing/line-height is responsive
+2.1 brainstorm 2-3 punchy taglines centred on targeted AI matching
+2.2 update hero subcopy with chosen line(s)
 </changes_needed>
 
 <regulation>
@@ -12,15 +16,12 @@
 </regulation>
 
 <new_features>
-currently after uploading resume done, then it displays "Analyzing your profile..."
+1. this font is too big and not mobile friendly "Stop Sending 1000+ Resumes
+Get Targeted Matches Instead"
 
-for ths=is part, we need to do mjor revamp:
-1. when profiling the resume, it will output all sorts of json content
-2. casually dynamically display these into that field to give users a feel that AI is analyzing hard at backend
-3. should try to use natural language based on what json said
-4. since the waiting time currently is long for the whole process, we can repeatedly display these until job recd is out
-5. one sentence each time, such as "the candaiate has 10 YOE" "analyzing his experience at Lazada" "he has solid managemnt experience" "matching with NLP jobs" 
-5. output how you want to tackle it before actually do it
+2. overall give the slogan a catchy feel. try to brain storm: sending 1000 resumes is hopeless and not a good idea. what is our value added? we use AI to give you the most suitable jobs out there with tailored analysis of strength and weakless. give me some short but impressive line
+
+
 </new_features>
 
 <other>
@@ -199,4 +200,19 @@ for ths=is part, we need to do mjor revamp:
 4. when clicking into one specific job's page, and then when click back, the recommended job list will disappear. fix it 
 5. main page no need to have Filter Recommendations to choose, just output 5 jobs, no need to choose
 6. for each todo, commit git once done
+
+
+currently after uploading resume done, then it displays "Analyzing your profile..."
+
+for ths=is part, we need to do mjor revamp:
+1. when profiling the resume, it will output all sorts of json content
+2. casually dynamically display these into that field to give users a feel that AI is analyzing hard at backend
+3. should try to use natural language based on what json said
+4. since the waiting time currently is long for the whole process, we can repeatedly display these until job recd is out
+5. one sentence each time, such as "the candaiate has 10 YOE" "analyzing his experience at Lazada" "he has solid managemnt experience" "matching with NLP jobs" 
+6. output how you want to tackle it before actually do it
+
+✅ 30. Adjusted hero headline sizing for mobile and tightened spacing (todo 1)
+✅ 31. Replaced hero slogan with AI-targeted shortlist messaging and refreshed subcopy (todo 2)
+
 

@@ -112,14 +112,13 @@ export default function Home() {
       </header>
       {/* Hero Section */}
       <div className="container mx-auto px-4 py-20">
-        <div className="text-center mb-20">
-          <h1 className="text-6xl font-light text-black mb-8 leading-tight">
-            Stop Sending 1000+ Resumes
-            <span className="block font-bold">Get Targeted Matches Instead</span>
+        <div className="text-center mb-16">
+          <h1 className="text-4xl md:text-6xl font-light text-black mb-6 leading-snug md:leading-tight">
+            Stop Spraying 1000 Resumes
+            <span className="block font-bold">Let AI Shortlist the Roles That Matter</span>
           </h1>
-          <p className="text-lg text-gray-600 mb-12 max-w-xl mx-auto leading-relaxed">
-            Why waste time sending the same resume everywhere? Upload once, 
-            get personalized job recommendations that actually fit your skills and career goals.
+          <p className="text-base md:text-lg text-gray-600 mb-10 max-w-xl mx-auto leading-relaxed">
+            Upload once and breathe easy—Talyon reads your resume, scores thousands of roles, and shows you the handful that match your strengths, goals, and salary expectations.
           </p>
           
           {user ? (

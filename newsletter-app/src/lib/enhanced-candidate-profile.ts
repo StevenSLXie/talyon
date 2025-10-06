@@ -92,9 +92,8 @@ export class EnhancedCandidateProfileService {
         .insert({
           user_id: userId,
           resume_id: resumeId,
-          titles: profile.titles?.length ? profile.titles : [profile.current_title].filter(Boolean),
           current_title: profile.current_title || profile.titles?.[0] || 'Not specified',
-          target_titles: profile.target_titles || [],
+          target_titles: profile.target_titles || profile.titles?.slice(1) || [],
           work_auth: profile.work_auth || { citizen_or_pr: false, ep_needed: true, work_permit_type: null },
           seniority_level: profile.seniority_level || 'Not specified',
           industries: profile.industries || [],
@@ -340,8 +339,8 @@ export class EnhancedCandidateProfileService {
 
       return {
         titles: basics.titles || [],
-        current_title: basics.current_title || '',
-        target_titles: basics.target_titles || [],
+        current_title: basics.current_title || basics.titles?.[0] || '',
+        target_titles: basics.target_titles || basics.titles?.slice(1) || [],
         work_auth: basics.work_auth || { citizen_or_pr: true, ep_needed: false, work_permit_type: null },
         seniority_level: basics.seniority_level || 'Mid',
         experience_years: Math.max(experienceYears, basics.experience_years || 0),

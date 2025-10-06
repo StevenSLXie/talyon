@@ -1,11 +1,46 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import type { EnhancedCandidateProfile } from '@/lib/enhanced-candidate-profile'
 import { validateResumeFile } from '@/lib/file-validation'
 
+type EnhancedProfileForMessages = Partial<
+  Omit<EnhancedCandidateProfile, 'skills' | 'management_experience'>
+> & {
+  skills?: Array<Partial<EnhancedCandidateProfile['skills'][number]>>
+  management_experience?: Partial<EnhancedCandidateProfile['management_experience']>
+  company_history?: string[] | null
+  experience?: Array<{ company?: string | null }> | null
+}
+
+type JsonResumeForMessages = {
+  work?: Array<{ name?: string | null }>
+} | null
+
+export interface ResumeUploadResponse {
+  enhancedProfile: EnhancedProfileForMessages | null
+  jsonResume: JsonResumeForMessages
+}
+
 interface ResumeUploadProps {
-  onUploadSuccess?: (resumeData: any) => void
+  onUploadSuccess?: (resumeData: ResumeUploadResponse) => void
   onUploadError?: (error: string) => void
+}
+
+const FALLBACK_MESSAGES = [
+  'Still crunching through your resume details…',
+  'Aligning your profile with top-market roles…',
+  'Cross-referencing leadership signals…',
+  'Highlighting signature achievements…',
+  'Calibrating recommendations for culture fit…'
+] as const
+
+type AnalysisTickerState = {
+  queue: string[]
+  isActive: boolean
+  queueTimer: ReturnType<typeof setInterval> | null
+  fallbackTimer: ReturnType<typeof setInterval> | null
+  fallbackIndex: number
 }
 
 export default function ResumeUpload({ onUploadSuccess, onUploadError }: ResumeUploadProps) {
@@ -16,89 +51,186 @@ export default function ResumeUpload({ onUploadSuccess, onUploadError }: ResumeU
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [salaryMin, setSalaryMin] = useState(9000)
   const [salaryMax, setSalaryMax] = useState(12000)
-  const [analysisMessages, setAnalysisMessages] = useState<string[]>([])
+  const [analysisMessage, setAnalysisMessage] = useState('')
+  const analysisTickerRef = useRef<AnalysisTickerState>({
+    queue: [],
+    isActive: false,
+    queueTimer: null,
+    fallbackTimer: null,
+    fallbackIndex: 0
+  })
   const fileInputRef = useRef<HTMLInputElement>(null)
-  const messageQueueRef = useRef<string[]>([])
-  const messageTimerRef = useRef<number | null>(null)
 
-  const pushMessage = (message: string) => {
-    setAnalysisMessages(prev => {
-      if (prev[prev.length - 1] === message) return prev
-      return [...prev, message]
-    })
-  }
-
-  const stopMessageLoop = () => {
-    if (messageTimerRef.current) {
-      window.clearInterval(messageTimerRef.current)
-      messageTimerRef.current = null
+  const clearTimers = (ticker: AnalysisTickerState) => {
+    if (ticker.queueTimer) {
+      clearInterval(ticker.queueTimer)
+      ticker.queueTimer = null
+    }
+    if (ticker.fallbackTimer) {
+      clearInterval(ticker.fallbackTimer)
+      ticker.fallbackTimer = null
     }
   }
 
-  const startMessageLoop = () => {
-    if (messageTimerRef.current || messageQueueRef.current.length === 0) return
-    messageTimerRef.current = window.setInterval(() => {
-      const next = messageQueueRef.current.shift()
+  const stopTimers = () => {
+    clearTimers(analysisTickerRef.current)
+  }
+
+  const showMessage = (message: string) => {
+    setAnalysisMessage(message)
+  }
+
+  const startFallbackLoop = () => {
+    const ticker = analysisTickerRef.current
+    if (!ticker.isActive || ticker.fallbackTimer) return
+    ticker.fallbackTimer = setInterval(() => {
+      if (FALLBACK_MESSAGES.length === 0) return
+      const idx = ticker.fallbackIndex % FALLBACK_MESSAGES.length
+      ticker.fallbackIndex += 1
+      showMessage(FALLBACK_MESSAGES[idx])
+    }, 4000)
+  }
+
+  const startQueueLoop = () => {
+    const ticker = analysisTickerRef.current
+    if (ticker.queueTimer) return
+    ticker.queueTimer = setInterval(() => {
+      const next = ticker.queue.shift()
       if (next) {
-        pushMessage(next)
+        showMessage(next)
       }
-      if (messageQueueRef.current.length === 0) {
-        stopMessageLoop()
+      if (!ticker.queue.length) {
+        clearInterval(ticker.queueTimer as ReturnType<typeof setInterval>)
+        ticker.queueTimer = null
+        startFallbackLoop()
       }
-    }, 1600)
+    }, 1800)
   }
 
-  const enqueueMessages = (messages: string[]) => {
+  const enqueueMessages = (messages: string[], options?: { reset?: boolean }) => {
     if (!messages.length) return
-    const [first, ...rest] = messages
-    pushMessage(first)
-    if (rest.length) {
-      messageQueueRef.current.push(...rest)
-      startMessageLoop()
+    const ticker = analysisTickerRef.current
+    const shouldReset = options?.reset ?? true
+    ticker.isActive = true
+    if (shouldReset) {
+      stopTimers()
+      ticker.queue = []
+      ticker.fallbackIndex = 0
     }
+    ticker.queue.push(...messages)
+    const immediate = ticker.queue.shift()
+    if (immediate) {
+      showMessage(immediate)
+    }
+    if (ticker.queue.length) {
+      startQueueLoop()
+    } else {
+      startFallbackLoop()
+    }
+  }
+
+  const showFinalMessage = (message: string) => {
+    const ticker = analysisTickerRef.current
+    clearTimers(ticker)
+    ticker.queue = []
+    ticker.fallbackIndex = 0
+    ticker.isActive = true
+    showMessage(message)
+    startFallbackLoop()
   }
 
   const resetAnalysis = () => {
-    stopMessageLoop()
-    messageQueueRef.current = []
-    setAnalysisMessages([])
+    const ticker = analysisTickerRef.current
+    ticker.isActive = false
+    ticker.queue = []
+    ticker.fallbackIndex = 0
+    stopTimers()
+    setAnalysisMessage('')
   }
 
-  const buildProfileMessages = (enhancedProfile: any, jsonResume: any) => {
+  const buildProfileMessages = (
+    enhancedProfile: EnhancedProfileForMessages | null,
+    jsonResume: JsonResumeForMessages
+  ) => {
     if (!enhancedProfile) return []
     const messages: string[] = []
-    if (enhancedProfile.titles?.length) {
-      messages.push(`Reviewing recent role: ${enhancedProfile.titles[0]}.`)
+    const recentTitle = enhancedProfile.current_title || enhancedProfile.titles?.[0]
+    if (recentTitle) {
+      messages.push(`Reviewing recent role: ${recentTitle}.`)
     }
     if (typeof enhancedProfile.experience_years === 'number') {
       messages.push(`Detected around ${enhancedProfile.experience_years} years of experience.`)
     }
-    const highlightedSkills = enhancedProfile.skills?.slice?.(0, 3)?.map((s: any) => s.name)?.filter(Boolean)
-    if (highlightedSkills?.length) {
+    const highlightedSkills = enhancedProfile.skills
+      ?.slice?.(0, 3)
+      ?.map(skill => skill?.name)
+      ?.filter((name): name is string => Boolean(name))
+    if (highlightedSkills && highlightedSkills.length > 0) {
       messages.push(`Highlighting core skills: ${highlightedSkills.join(', ')}.`)
     }
     if (enhancedProfile.management_experience?.has_management) {
       const yrs = enhancedProfile.management_experience.management_years
-      messages.push(
-        `Flagged strong team leadership${yrs ? ` with about ${yrs} years managing` : ''}.`
-      )
+      messages.push(`Flagged strong team leadership${yrs ? ` with about ${yrs} years managing` : ''}.`)
     }
-    const industries = enhancedProfile.intent?.target_industries || enhancedProfile.industries
-    if (industries && industries.length) {
+    const industries = enhancedProfile.intent?.target_industries?.length
+      ? enhancedProfile.intent.target_industries
+      : enhancedProfile.industries
+    if (industries && industries.length > 0) {
       messages.push(`Focusing on opportunities in ${industries.slice(0, 2).join(', ')}.`)
     }
-    const company = jsonResume?.work?.[0]?.name || enhancedProfile.company_history?.[0]
+    const company =
+      jsonResume?.work?.[0]?.name ||
+      enhancedProfile.company_history?.[0] ||
+      enhancedProfile.experience?.[0]?.company ||
+      null
     if (company) {
       messages.push(`Analyzing impact at ${company}.`)
     }
-    messages.push('Matching against 15 shortlisted roles…')
+    messages.push('Matching against 20 shortlisted roles…')
     messages.push('LLM fine-tuning the final recommendations…')
     return messages
   }
 
+  const buildCompletionMessage = (enhancedProfile: EnhancedProfileForMessages | null): string => {
+    if (!enhancedProfile) {
+      return 'Resume parsed. Generating job matches with AI…'
+    }
+
+    const highlights: string[] = []
+
+    if (enhancedProfile.current_title) {
+      highlights.push(`current role ${enhancedProfile.current_title}`)
+    }
+
+    if (typeof enhancedProfile.experience_years === 'number') {
+      highlights.push(`${Math.round(enhancedProfile.experience_years)} years experience`)
+    }
+
+    const topSkills = enhancedProfile.skills
+      ?.map(skill => skill?.name)
+      ?.filter((name): name is string => Boolean(name))
+      ?.slice(0, 2)
+
+    if (topSkills && topSkills.length > 0) {
+      highlights.push(`key skills ${topSkills.join(', ')}`)
+    }
+
+    if (enhancedProfile.leadership_level && enhancedProfile.leadership_level !== 'IC') {
+      highlights.push(`${enhancedProfile.leadership_level} leadership`)
+    }
+
+    const baseMessage = highlights.length > 0
+      ? `Resume parsed: ${highlights.join(' • ')}`
+      : 'Resume parsed successfully'
+
+    return `${baseMessage}. Generating tailored job matches…`
+  }
+
   useEffect(() => {
+    const ticker = analysisTickerRef.current
     return () => {
-      stopMessageLoop()
+      ticker.isActive = false
+      clearTimers(ticker)
     }
   }, [])
 
@@ -169,10 +301,10 @@ export default function ResumeUpload({ onUploadSuccess, onUploadError }: ResumeU
         throw new Error(errorData.error || 'Upload failed')
       }
 
-      const resumeData = await response.json()
-      enqueueMessages(buildProfileMessages(resumeData.enhancedProfile, resumeData.jsonResume))
+      const resumeData: ResumeUploadResponse = await response.json()
+      enqueueMessages(buildProfileMessages(resumeData.enhancedProfile, resumeData.jsonResume), { reset: true })
       onUploadSuccess?.(resumeData)
-      enqueueMessages(['Recommendations ready! Displaying personalized matches.'])
+      showFinalMessage(buildCompletionMessage(resumeData.enhancedProfile))
       
       // Reset after success
       setTimeout(() => {
@@ -263,19 +395,13 @@ export default function ResumeUpload({ onUploadSuccess, onUploadError }: ResumeU
         </div>
       )}
 
-      {analysisMessages.length > 0 && (
+      {analysisMessage && (
         <div className="mt-6 bg-gray-50 border border-gray-200 p-4">
           <div className="flex items-center text-xs font-semibold uppercase tracking-wide text-gray-500 mb-3">
             <span className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse" />
             Live AI Analysis
           </div>
-          <ul className="space-y-2">
-            {analysisMessages.map((msg, idx) => (
-              <li key={idx} className="text-sm text-gray-700 leading-relaxed">
-                {msg}
-              </li>
-            ))}
-          </ul>
+          <p className="text-sm text-gray-700 leading-relaxed">{analysisMessage}</p>
         </div>
       )}
 
