@@ -1,46 +1,11 @@
 'use client'
 
 import ResumeUpload from '@/components/ResumeUpload'
-import JobCard from '@/components/JobCard'
 import JobRecommendations from '@/components/JobRecommendations'
 import LoginForm from '@/components/LoginForm'
 import UserMenu from '@/components/UserMenu'
 import { useAuth } from '@/components/AuthProvider'
 import { useState, useEffect } from 'react'
-
-// Mockup jobs data from refined_jobs_20250918_222615.json
-const mockupJobs = [
-  {
-    company: "MICHAEL PAGE INTERNATIONAL PTE LTD",
-    title: "Product Reliability & Validation Director",
-    location: "Islandwide",
-    salary_low: 10000,
-    salary_high: 13000,
-    industry: "Engineering",
-    job_type: "Full Time",
-    experience_level: "Director"
-  },
-  {
-    company: "AEROSPEC SUPPLIES PTE LTD",
-    title: "Head of Production (Operation)",
-    location: "Islandwide",
-    salary_low: 10000,
-    salary_high: 15000,
-    industry: "Engineering",
-    job_type: "Full Time",
-    experience_level: "Senior Executive"
-  },
-  {
-    company: "RAINBOW HUES PTE. LTD.",
-    title: "Admin / Secretarial",
-    location: "Islandwide",
-    salary_low: 1500,
-    salary_high: 2500,
-    industry: "Admin",
-    job_type: "Part Time",
-    experience_level: "Executive"
-  }
-]
 
 export default function Home() {
   const { user, loading } = useAuth()

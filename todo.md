@@ -5,6 +5,45 @@
 </rules>
 
 <changes_needed>
+1. Pre-deployment repo hygiene
+   1.1 ✅ Remove unused imports/components (e.g., `JobCard`, `mockupJobs`) from `src/app/page.tsx`
+   1.2 Sweep for other unused exports and enable lint to fail on warnings – lint currently flags legacy scripts (require calls), `any` usage across APIs/lib, and unused React hooks; need cleanup plan
+       1.2.1 Convert or archive unused Node scripts under `newsletter-app/scripts/` (CommonJS + unused vars)
+       1.2.2 Fix `any` usage in API routes (`src/app/api/**`) and surface type gaps
+       1.2.3 Address lint in React pages/components (`jobs`, `saved-jobs`, `CandidateProfileManagement`, etc.)
+       1.2.4 Tidy lib modules (`advanced-job-matching`, `auth`, `job-matching`, `llm-analysis`, etc.)
+       1.2.5 Re-run ESLint with `--max-warnings=0` and confirm clean
+
+2. GitHub sync preparation
+   2.1 Verify git status is clean and commit history is up to date
+   2.2 Add README section summarising deployment prerequisites
+   2.3 Push main branch to GitHub once repo is ready **(requires user GitHub credentials)**
+
+3. Database & Supabase configuration
+   3.1 Export current Supabase schema/migrations and include under `supabase/`
+   3.2 Document candidate/job tables required columns in README
+   3.3 Confirm Supabase project has leadership/salary migrations applied **(requires user access to Supabase dashboard)**
+
+4. Environment variables
+   4.1 Create `.env.production.example` listing all required keys (OpenAI, Supabase, auth, etc.)
+   4.2 Double-check GPT-5 Mini parameter compatibility notes in README
+   4.3 Gather production secrets for Vercel env **(requires user to supply actual API keys)**
+
+5. Vercel deployment steps
+   5.1 Ensure `newsletter-app` build succeeds locally (`npm run build`)
+   5.2 Enable Next.js experimental/server features if needed in `next.config.js`
+   5.3 Connect GitHub repo to Vercel project **(user action via Vercel dashboard)**
+   5.4 Configure Vercel environment variables (Supabase, OpenAI, Resend, NEXT_PUBLIC_APP_URL) **(user action)**
+   5.5 Set Vercel build command (`npm install && npm run build`) and output directory (`.next`)
+   5.6 Verify Supabase REST URLs/network access from Vercel region **(user check)**
+   5.7 Trigger first deployment and monitor logs **(user action)**
+   5.8 Run post-deploy smoke test: resume upload, Stage 1/2 recommendations
+
+6. Post-deployment housekeeping
+   6.1 Enable error monitoring/log drains (Vercel, Supabase) **(optional, user action)**
+   6.2 Schedule job pipeline run or document manual trigger
+   6.3 Update todo.md with follow-up deployment learnings
+
 1.1 reduce hero heading size for mobile without losing impact
 1.2 ensure hero section spacing/line-height is responsive
 2.1 brainstorm 2-3 punchy taglines centred on targeted AI matching
