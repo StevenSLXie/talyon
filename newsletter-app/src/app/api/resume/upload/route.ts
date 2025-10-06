@@ -4,7 +4,104 @@ import { llmAnalysisService } from '@/lib/llm-analysis'
 import { supabaseAdmin } from '@/lib/supabase'
 import { EnhancedCandidateProfileService } from '@/lib/enhanced-candidate-profile'
 
-async function saveFlatJsonResume(userId: string, resumeId: string, jsonResume: any) {
+interface JsonResume {
+  basics?: {
+    name?: string
+    label?: string
+    image?: string
+    email?: string
+    phone?: string
+    url?: string
+    summary?: string
+    location?: {
+      address?: string
+      postalCode?: string
+      city?: string
+      countryCode?: string
+      region?: string
+    }
+    profiles?: Array<{
+      network?: string
+      username?: string
+      url?: string
+    }>
+  }
+  work?: Array<{
+    name?: string
+    position?: string
+    url?: string
+    startDate?: string
+    endDate?: string
+    summary?: string
+    highlights?: string[]
+  }>
+  volunteer?: Array<{
+    organization?: string
+    position?: string
+    url?: string
+    startDate?: string
+    endDate?: string
+    summary?: string
+    highlights?: string[]
+  }>
+  education?: Array<{
+    institution?: string
+    url?: string
+    area?: string
+    studyType?: string
+    startDate?: string
+    endDate?: string
+    score?: string
+    courses?: string[]
+  }>
+  awards?: Array<{
+    title?: string
+    date?: string
+    awarder?: string
+    summary?: string
+  }>
+  certificates?: Array<{
+    name?: string
+    date?: string
+    issuer?: string
+    url?: string
+  }>
+  publications?: Array<{
+    name?: string
+    publisher?: string
+    releaseDate?: string
+    url?: string
+    summary?: string
+  }>
+  skills?: Array<{
+    name?: string
+    level?: string
+    keywords?: string[]
+  }>
+  languages?: Array<{
+    language?: string
+    fluency?: string
+  }>
+  interests?: Array<{
+    name?: string
+    keywords?: string[]
+  }>
+  references?: Array<{
+    name?: string
+    reference?: string
+  }>
+  projects?: Array<{
+    name?: string
+    description?: string
+    startDate?: string
+    endDate?: string
+    url?: string
+    keywords?: string[]
+    highlights?: string[]
+  }>
+}
+
+async function saveFlatJsonResume(userId: string, resumeId: string, jsonResume: JsonResume | null) {
   const db = supabaseAdmin()
   const counts: Record<string, number> = {}
 
@@ -63,7 +160,7 @@ async function saveFlatJsonResume(userId: string, resumeId: string, jsonResume: 
   // Social profiles
   const profiles = basics?.profiles || []
   if (Array.isArray(profiles) && profiles.length) {
-    const rows = profiles.map((p: any) => ({
+    const rows = profiles.map((p) => ({
       user_id: userId,
       resume_id: resumeId,
       network: p?.network || null,
@@ -79,7 +176,7 @@ async function saveFlatJsonResume(userId: string, resumeId: string, jsonResume: 
   const work = jsonResume?.work || []
   console.debug('[Upload] work sample', JSON.stringify(work?.slice?.(0, 2) || [], null, 2))
   if (Array.isArray(work) && work.length) {
-    const rows = work.map((w: any) => ({
+    const rows = work.map((w) => ({
       user_id: userId,
       resume_id: resumeId,
       company: w?.name || null,
@@ -98,7 +195,7 @@ async function saveFlatJsonResume(userId: string, resumeId: string, jsonResume: 
   // Volunteer
   const volunteer = jsonResume?.volunteer || []
   if (Array.isArray(volunteer) && volunteer.length) {
-    const rows = volunteer.map((v: any) => ({
+    const rows = volunteer.map((v) => ({
       user_id: userId,
       resume_id: resumeId,
       organization: v?.organization || null,
@@ -117,7 +214,7 @@ async function saveFlatJsonResume(userId: string, resumeId: string, jsonResume: 
   // Education
   const education = jsonResume?.education || []
   if (Array.isArray(education) && education.length) {
-    const rows = education.map((e: any) => ({
+    const rows = education.map((e) => ({
       user_id: userId,
       resume_id: resumeId,
       institution: e?.institution || null,
@@ -137,7 +234,7 @@ async function saveFlatJsonResume(userId: string, resumeId: string, jsonResume: 
   // Awards
   const awards = jsonResume?.awards || []
   if (Array.isArray(awards) && awards.length) {
-    const rows = awards.map((a: any) => ({
+    const rows = awards.map((a) => ({
       user_id: userId,
       resume_id: resumeId,
       title: a?.title || null,
@@ -153,7 +250,7 @@ async function saveFlatJsonResume(userId: string, resumeId: string, jsonResume: 
   // Certificates
   const certificates = jsonResume?.certificates || []
   if (Array.isArray(certificates) && certificates.length) {
-    const rows = certificates.map((c: any) => ({
+    const rows = certificates.map((c) => ({
       user_id: userId,
       resume_id: resumeId,
       name: c?.name || null,
@@ -169,7 +266,7 @@ async function saveFlatJsonResume(userId: string, resumeId: string, jsonResume: 
   // Publications
   const publications = jsonResume?.publications || []
   if (Array.isArray(publications) && publications.length) {
-    const rows = publications.map((p: any) => ({
+    const rows = publications.map((p) => ({
       user_id: userId,
       resume_id: resumeId,
       name: p?.name || null,
@@ -186,7 +283,7 @@ async function saveFlatJsonResume(userId: string, resumeId: string, jsonResume: 
   // Skills
   const skills = jsonResume?.skills || []
   if (Array.isArray(skills) && skills.length) {
-    const rows = skills.map((s: any) => ({
+    const rows = skills.map((s) => ({
       user_id: userId,
       resume_id: resumeId,
       name: s?.name || null,
@@ -199,9 +296,9 @@ async function saveFlatJsonResume(userId: string, resumeId: string, jsonResume: 
   } else counts.skills = 0
 
   // Languages
-  const languages = jsonResume?.languages || []
-  if (Array.isArray(languages) && languages.length) {
-    const rows = languages.map((l: any) => ({
+  const languages = (jsonResume?.languages ?? []) as NonNullable<JsonResume['languages']>
+  if (languages.length) {
+    const rows = languages.map((l) => ({
       user_id: userId,
       resume_id: resumeId,
       language: l?.language || null,
@@ -213,9 +310,9 @@ async function saveFlatJsonResume(userId: string, resumeId: string, jsonResume: 
   } else counts.languages = 0
 
   // Interests
-  const interests = jsonResume?.interests || []
-  if (Array.isArray(interests) && interests.length) {
-    const rows = interests.map((i: any) => ({
+  const interests = (jsonResume?.interests ?? []) as NonNullable<JsonResume['interests']>
+  if (interests.length) {
+    const rows = interests.map((i) => ({
       user_id: userId,
       resume_id: resumeId,
       name: i?.name || null,
@@ -227,9 +324,9 @@ async function saveFlatJsonResume(userId: string, resumeId: string, jsonResume: 
   } else counts.interests = 0
 
   // References
-  const references = jsonResume?.references || []
-  if (Array.isArray(references) && references.length) {
-    const rows = references.map((r: any) => ({
+  const references = (jsonResume?.references ?? []) as NonNullable<JsonResume['references']>
+  if (references.length) {
+    const rows = references.map((r) => ({
       user_id: userId,
       resume_id: resumeId,
       name: r?.name || null,
@@ -241,9 +338,9 @@ async function saveFlatJsonResume(userId: string, resumeId: string, jsonResume: 
   } else counts.references = 0
 
   // Projects
-  const projects = jsonResume?.projects || []
-  if (Array.isArray(projects) && projects.length) {
-    const rows = projects.map((p: any) => ({
+  const projects = (jsonResume?.projects ?? []) as NonNullable<JsonResume['projects']>
+  if (projects.length) {
+    const rows = projects.map((p) => ({
       user_id: userId,
       resume_id: resumeId,
       name: p?.name || null,
@@ -311,7 +408,7 @@ export async function POST(request: NextRequest) {
 
     let usersId = existingUser?.id as string | undefined
 
-    if (findUserError && (findUserError as any).code === 'PGRST116') {
+    if (findUserError && findUserError.code === 'PGRST116') {
       const { data: createdUser, error: createUserError } = await supabaseAdmin()
         .from('users')
         .insert({ email: subscriber.email, status: 'active' })

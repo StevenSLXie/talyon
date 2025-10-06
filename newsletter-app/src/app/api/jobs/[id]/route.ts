@@ -1,13 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { SupabaseClient } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
+
+interface RouteContext {
+  params: { id: string }
+}
 
 export async function GET(
   request: NextRequest,
-  context: { params: { id: string } }
+  context: RouteContext
 ) {
   try {
     const params = await Promise.resolve(context.params)
-    const { data, error } = await supabase()
+    const client: SupabaseClient = supabase()
+    const { data, error } = await client
       .from('jobs')
       .select('*')
       .eq('job_hash', params.id)

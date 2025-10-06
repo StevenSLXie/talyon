@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { SupabaseClient } from '@supabase/supabase-js'
 import { supabase } from '@/lib/supabase'
 import { requireAuth } from '@/lib/auth'
 
@@ -27,7 +28,8 @@ export async function POST(req: NextRequest) {
     }
 
     // Check if job is already saved
-    const { data: existingJob } = await supabase
+    const client: SupabaseClient = supabase()
+    const { data: existingJob } = await client
       .from('saved_jobs')
       .select('id')
       .eq('user_id', user.id)
@@ -42,7 +44,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Save the job
-    const { data, error } = await supabase
+    const { data, error } = await client
       .from('saved_jobs')
       .insert({
         user_id: user.id,
@@ -103,7 +105,8 @@ export async function DELETE(req: NextRequest) {
       )
     }
 
-    const { error } = await supabase
+    const client: SupabaseClient = supabase()
+    const { error } = await client
       .from('saved_jobs')
       .delete()
       .eq('user_id', user.id)

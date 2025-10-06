@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { supabase } from '@/lib/supabase'
+import { supabaseAdmin } from '@/lib/supabase'
 
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
     // Get user from session (you'll need to implement session handling)
     const userId = 'temp-user-id' // Replace with actual user ID from session
@@ -14,30 +14,30 @@ export async function GET(request: NextRequest) {
       { data: education, error: educationError },
       { data: certifications, error: certError }
     ] = await Promise.all([
-      supabase()
+      supabaseAdmin()
         .from('candidate_basics')
         .select('*')
         .eq('user_id', userId)
         .single(),
       
-      supabase()
+      supabaseAdmin()
         .from('candidate_skills')
         .select('*')
         .eq('user_id', userId),
       
-      supabase()
+      supabaseAdmin()
         .from('candidate_work')
         .select('*')
         .eq('user_id', userId)
         .order('start_date', { ascending: false }),
       
-      supabase()
+      supabaseAdmin()
         .from('candidate_education')
         .select('*')
         .eq('user_id', userId)
         .order('start_date', { ascending: false }),
       
-      supabase()
+      supabaseAdmin()
         .from('candidate_certifications')
         .select('*')
         .eq('user_id', userId)
@@ -88,7 +88,7 @@ export async function PUT(request: NextRequest) {
 
     // Update candidate basics
     if (profile) {
-      const { error: profileError } = await supabase()
+      const { error: profileError } = await supabaseAdmin()
         .from('candidate_basics')
         .upsert({
           user_id: userId,
@@ -104,7 +104,7 @@ export async function PUT(request: NextRequest) {
     // Update skills
     if (skills && Array.isArray(skills)) {
       // Delete existing skills
-      await supabase()
+      await supabaseAdmin()
         .from('candidate_skills')
         .delete()
         .eq('user_id', userId)
@@ -116,7 +116,7 @@ export async function PUT(request: NextRequest) {
           user_id: userId
         }))
 
-        const { error: skillsError } = await supabase()
+        const { error: skillsError } = await supabaseAdmin()
           .from('candidate_skills')
           .insert(skillsWithUserId)
 
@@ -129,7 +129,7 @@ export async function PUT(request: NextRequest) {
     // Update work experience
     if (workExperience && Array.isArray(workExperience)) {
       // Delete existing work experience
-      await supabase()
+      await supabaseAdmin()
         .from('candidate_work')
         .delete()
         .eq('user_id', userId)
@@ -141,7 +141,7 @@ export async function PUT(request: NextRequest) {
           user_id: userId
         }))
 
-        const { error: workError } = await supabase()
+        const { error: workError } = await supabaseAdmin()
           .from('candidate_work')
           .insert(workWithUserId)
 
@@ -154,7 +154,7 @@ export async function PUT(request: NextRequest) {
     // Update education
     if (education && Array.isArray(education)) {
       // Delete existing education
-      await supabase()
+      await supabaseAdmin()
         .from('candidate_education')
         .delete()
         .eq('user_id', userId)
@@ -166,7 +166,7 @@ export async function PUT(request: NextRequest) {
           user_id: userId
         }))
 
-        const { error: educationError } = await supabase()
+        const { error: educationError } = await supabaseAdmin()
           .from('candidate_education')
           .insert(educationWithUserId)
 
@@ -179,7 +179,7 @@ export async function PUT(request: NextRequest) {
     // Update certifications
     if (certifications && Array.isArray(certifications)) {
       // Delete existing certifications
-      await supabase()
+      await supabaseAdmin()
         .from('candidate_certifications')
         .delete()
         .eq('user_id', userId)
@@ -191,7 +191,7 @@ export async function PUT(request: NextRequest) {
           user_id: userId
         }))
 
-        const { error: certError } = await supabase()
+        const { error: certError } = await supabaseAdmin()
           .from('candidate_certifications')
           .insert(certsWithUserId)
 
