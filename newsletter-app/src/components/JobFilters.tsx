@@ -66,7 +66,7 @@ const sortOptions = [
 ]
 
 export default function JobFilters({ onFiltersChange, loading }: JobFiltersProps) {
-  const [filters, setFilters] = useState<FilterState>({
+const [filters, setFilters] = useState<FilterState>({
     search: '',
     industry: 'All Industries',
     location: 'All Locations',
@@ -77,10 +77,10 @@ export default function JobFilters({ onFiltersChange, loading }: JobFiltersProps
     sortBy: 'newest'
   })
 
-  const [showAdvanced, setShowAdvanced] = useState(false)
+const [showAdvanced, setShowAdvanced] = useState(false)
 
-  const handleFilterChange = (key: keyof FilterState, value: any) => {
-    const newFilters = { ...filters, [key]: value }
+  const handleFilterChange = <Key extends keyof FilterState>(key: Key, value: FilterState[Key]) => {
+    const newFilters: FilterState = { ...filters, [key]: value }
     setFilters(newFilters)
     onFiltersChange(newFilters)
   }

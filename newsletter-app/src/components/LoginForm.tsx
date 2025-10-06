@@ -3,8 +3,16 @@
 import { useState } from 'react'
 import { validate } from 'email-validator'
 
+interface LoginResponse {
+  user?: {
+    id: string
+    email: string
+    name?: string | null
+  }
+}
+
 interface LoginFormProps {
-  onSuccess?: (user: any) => void
+  onSuccess?: (user: LoginResponse['user']) => void
   onClose?: () => void
 }
 
@@ -35,7 +43,7 @@ export default function LoginForm({ onSuccess, onClose }: LoginFormProps) {
         body: JSON.stringify({ email })
       })
 
-      const data = await response.json()
+      const data: { code?: string; error?: string } = await response.json()
 
       if (response.ok) {
         setStep('code')
@@ -49,7 +57,7 @@ export default function LoginForm({ onSuccess, onClose }: LoginFormProps) {
       } else {
         setError(data.error || 'Failed to send verification code')
       }
-    } catch (error) {
+    } catch {
       setError('Network error. Please try again.')
     } finally {
       setLoading(false)
@@ -74,17 +82,17 @@ export default function LoginForm({ onSuccess, onClose }: LoginFormProps) {
         body: JSON.stringify({ email, code })
       })
 
-      const data = await response.json()
+      const data: LoginResponse = await response.json()
 
       if (response.ok) {
         setSuccess('Login successful!')
-        onSuccess?.(data.user)
+        onSuccess?.(data.user ?? null)
         // Refresh the page to update the UI
         window.location.reload()
       } else {
         setError(data.error || 'Invalid verification code')
       }
-    } catch (error) {
+    } catch {
       setError('Network error. Please try again.')
     } finally {
       setLoading(false)

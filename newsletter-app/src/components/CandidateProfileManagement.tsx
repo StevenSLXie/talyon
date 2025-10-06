@@ -34,7 +34,7 @@ interface CandidateProfile {
     applications_count: number
   }
   profile_version: string
-  extraction_meta: any
+  extraction_meta: Record<string, unknown> | null
 }
 
 interface CandidateSkills {
@@ -137,7 +137,6 @@ export default function CandidateProfileManagement({ userId }: CandidateProfileM
         body: JSON.stringify({
           profile,
           skills,
-          workExperience,
           education,
           certifications
         })
@@ -260,16 +259,16 @@ export default function CandidateProfileManagement({ userId }: CandidateProfileM
       <div className="bg-white rounded-lg shadow-md mb-6">
         <div className="border-b border-gray-200">
           <nav className="flex space-x-8 px-6">
-            {[
+            {([
               { key: 'overview', label: 'Overview' },
               { key: 'skills', label: 'Skills' },
               { key: 'experience', label: 'Experience' },
               { key: 'education', label: 'Education' },
               { key: 'preferences', label: 'Preferences' }
-            ].map((tab) => (
+            ] as const).map((tab) => (
               <button
                 key={tab.key}
-                onClick={() => setActiveTab(tab.key as any)}
+                onClick={() => setActiveTab(tab.key)}
                 className={`py-4 px-1 border-b-2 font-medium text-sm ${
                   activeTab === tab.key
                     ? 'border-blue-500 text-blue-600'
@@ -412,7 +411,7 @@ export default function CandidateProfileManagement({ userId }: CandidateProfileM
                       <p className="text-xs text-gray-500">Last used: {skill.last_used}</p>
                     )}
                     {skill.evidence && (
-                      <p className="text-xs text-gray-600 mt-2 italic">"{skill.evidence}"</p>
+                      <p className="text-xs text-gray-600 mt-2 italic">&quot;{skill.evidence}&quot;</p>
                     )}
                   </div>
                 ))}

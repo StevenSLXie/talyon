@@ -3,7 +3,7 @@
 import ProtectedRoute from '@/components/ProtectedRoute'
 import UserMenu from '@/components/UserMenu'
 import { useAuth } from '@/components/AuthProvider'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 
 interface Job {
@@ -32,22 +32,14 @@ export default function JobDetailPage() {
   const [saving, setSaving] = useState(false)
   const [saved, setSaved] = useState(false)
 
-  useEffect(() => {
-    if (params.id) {
-      loadJob(params.id as string)
-    }
-  }, [params.id])
-
-  const loadJob = async (jobId: string) => {
+  const loadJob = useCallback(async (jobId: string) => {
     setLoading(true)
     try {
-      // Fetch job by ID from API
       const response = await fetch(`/api/jobs/${jobId}`)
       if (response.ok) {
         const data = await response.json()
         setJob(data.job)
       } else {
-        // Fallback to mock data
         setJob(getMockJob(jobId))
       }
     } catch (error) {
@@ -56,7 +48,13 @@ export default function JobDetailPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    if (params.id) {
+      loadJob(params.id as string)
+    }
+  }, [params.id, loadJob])
 
   const getMockJob = (jobId: string): Job => {
     return {
@@ -138,7 +136,7 @@ export default function JobDetailPage() {
         <div className="min-h-screen bg-white flex items-center justify-center">
           <div className="text-center">
             <h1 className="text-2xl font-bold text-black mb-4">Job Not Found</h1>
-            <p className="text-gray-600 mb-6">The job you're looking for doesn't exist or has been removed.</p>
+            <p className="text-gray-600 mb-6">The job you&apos;re looking for doesn&apos;t exist or has been removed.</p>
             <button
               onClick={() => router.push('/')}
               className="bg-black text-white px-6 py-3 rounded-none hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"

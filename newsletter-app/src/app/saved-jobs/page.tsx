@@ -4,7 +4,7 @@ import ProtectedRoute from '@/components/ProtectedRoute'
 import UserMenu from '@/components/UserMenu'
 import JobCard from '@/components/JobCard'
 import { useAuth } from '@/components/AuthProvider'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 
 interface SavedJob {
   id: string
@@ -34,17 +34,13 @@ export default function SavedJobsPage() {
   const [statusFilter, setStatusFilter] = useState('all')
   const jobsPerPage = 12
 
-  useEffect(() => {
-    loadSavedJobs()
-  }, [currentPage, statusFilter])
-
-  const loadSavedJobs = async () => {
+  const loadSavedJobs = useCallback(async (page: number, status: string) => {
     setLoading(true)
     try {
       const params = new URLSearchParams({
-        page: currentPage.toString(),
+        page: page.toString(),
         limit: jobsPerPage.toString(),
-        status: statusFilter
+        status
       })
 
       const response = await fetch(`/api/jobs/saved?${params}`)
@@ -60,7 +56,11 @@ export default function SavedJobsPage() {
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    loadSavedJobs(currentPage, statusFilter)
+  }, [currentPage, statusFilter, loadSavedJobs])
 
   const handleRemoveJob = async (jobHash: string) => {
     try {
@@ -179,13 +179,13 @@ export default function SavedJobsPage() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
               </svg>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">No Saved Jobs</h3>
-              <p className="text-gray-600 mb-6">Start browsing jobs and save the ones you're interested in.</p>
-              <a
-                href="/jobs"
+              <p className="text-gray-600 mb-6">Start browsing jobs and save the ones you&apos;re interested in.</p>
+              <button
+                onClick={() => router.push('/jobs')}
                 className="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
               >
                 Browse Jobs
-              </a>
+              </button>
             </div>
           ) : (
             <>

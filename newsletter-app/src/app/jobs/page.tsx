@@ -5,7 +5,7 @@ import UserMenu from '@/components/UserMenu'
 import JobCard from '@/components/JobCard'
 import JobFilters, { FilterState } from '@/components/JobFilters'
 import { useAuth } from '@/components/AuthProvider'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 
 interface Job {
   company: string
@@ -40,44 +40,27 @@ export default function JobsPage() {
   })
   const jobsPerPage = 12
 
-  useEffect(() => {
-    loadJobs()
-  }, [])
-
-  useEffect(() => {
-    applyFilters()
-  }, [jobs, filters])
-
-  useEffect(() => {
-    setCurrentPage(1) // Reset to first page when filters change
-  }, [filters])
-
-  const loadJobs = async () => {
+  const loadJobs = useCallback(async () => {
     setLoading(true)
     try {
-      // In a real app, this would be an API call
-      // For now, we'll simulate loading from the refined JSON
       const response = await fetch('/api/jobs')
       if (response.ok) {
         const data = await response.json()
         setJobs(data.jobs || [])
       } else {
-        // Fallback to mock data if API fails
         setJobs(getMockJobs())
       }
     } catch (error) {
       console.error('Error loading jobs:', error)
-      // Fallback to mock data
       setJobs(getMockJobs())
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
 
-  const applyFilters = () => {
+  const applyFilters = useCallback(() => {
     let filtered = [...jobs]
 
-    // Search filter
     if (filters.search) {
       const searchLower = filters.search.toLowerCase()
       filtered = filtered.filter(job =>
@@ -87,43 +70,37 @@ export default function JobsPage() {
       )
     }
 
-    // Industry filter
     if (filters.industry !== 'All Industries') {
       filtered = filtered.filter(job =>
         job.industry?.toLowerCase().includes(filters.industry.toLowerCase())
       )
     }
 
-    // Location filter
     if (filters.location !== 'All Locations') {
       filtered = filtered.filter(job =>
         job.location?.toLowerCase().includes(filters.location.toLowerCase())
       )
     }
 
-    // Salary filters
     if (filters.salaryMin !== null) {
-      filtered = filtered.filter(job => job.salary_low >= filters.salaryMin!)
+      filtered = filtered.filter(job => job.salary_low >= filters.salaryMin)
     }
     if (filters.salaryMax !== null) {
-      filtered = filtered.filter(job => job.salary_high <= filters.salaryMax!)
+      filtered = filtered.filter(job => job.salary_high <= filters.salaryMax)
     }
 
-    // Job type filter
     if (filters.jobType !== 'All Types') {
       filtered = filtered.filter(job =>
         job.job_type?.toLowerCase().includes(filters.jobType.toLowerCase())
       )
     }
 
-    // Experience level filter
     if (filters.experienceLevel !== 'All Levels') {
       filtered = filtered.filter(job =>
         job.experience_level?.toLowerCase().includes(filters.experienceLevel.toLowerCase())
       )
     }
 
-    // Sort
     filtered.sort((a, b) => {
       switch (filters.sortBy) {
         case 'newest':
@@ -143,7 +120,19 @@ export default function JobsPage() {
 
     setFilteredJobs(filtered)
     setTotalPages(Math.ceil(filtered.length / jobsPerPage))
-  }
+  }, [filters, jobs, jobsPerPage])
+
+  useEffect(() => {
+    loadJobs()
+  }, [loadJobs])
+
+  useEffect(() => {
+    applyFilters()
+  }, [applyFilters])
+
+  useEffect(() => {
+    setCurrentPage(1) // Reset to first page when filters change
+  }, [filters])
 
   const handleFiltersChange = (newFilters: FilterState) => {
     setFilters(newFilters)

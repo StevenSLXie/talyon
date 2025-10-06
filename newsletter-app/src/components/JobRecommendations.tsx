@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import EnhancedJobRecommendationCard from './EnhancedJobRecommendationCard'
 import { AdvancedJobRecommendation } from '@/lib/advanced-job-matching'
 
@@ -16,38 +16,7 @@ export default function JobRecommendations({ userId, refreshTrigger = 0 }: JobRe
 
   const storageKey = typeof window !== 'undefined' && userId ? `talyon_recommendations_${userId}` : null
 
-  useEffect(() => {
-    if (!userId) return
-
-    let cacheUsed = false
-    if (storageKey) {
-      const cached = window.sessionStorage.getItem(storageKey)
-      if (cached) {
-        try {
-          const parsed = JSON.parse(cached)
-          if (Array.isArray(parsed) && parsed.length > 0) {
-            setRecommendations(parsed)
-            setLoading(false)
-            cacheUsed = true
-          }
-        } catch (error) {
-          console.warn('Failed to parse cached recommendations', error)
-        }
-      }
-    }
-
-    const silent = cacheUsed && refreshTrigger === 0
-    loadRecommendations(silent)
-  }, [userId, refreshTrigger])
-
-  const limitedRecommendations = useMemo(() => {
-    return recommendations
-      .slice()
-      .sort((a, b) => b.match_score - a.match_score)
-      .slice(0, 8)
-  }, [recommendations])
-
-  const loadRecommendations = async (silent: boolean = false) => {
+  const loadRecommendations = useCallback(async (silent: boolean = false) => {
     if (!userId) {
       setError('User ID is required')
       return
@@ -88,7 +57,39 @@ export default function JobRecommendations({ userId, refreshTrigger = 0 }: JobRe
     } finally {
       setLoading(false)
     }
-  }
+  }, [storageKey, userId])
+
+  useEffect(() => {
+    if (!userId) return
+
+    let cacheUsed = false
+    if (storageKey) {
+      const cached = window.sessionStorage.getItem(storageKey)
+      if (cached) {
+        try {
+          const parsed = JSON.parse(cached)
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            setRecommendations(parsed)
+            setLoading(false)
+            cacheUsed = true
+          }
+        } catch (error) {
+          console.warn('Failed to parse cached recommendations', error)
+        }
+      }
+    }
+
+    const silent = cacheUsed && refreshTrigger === 0
+    loadRecommendations(silent)
+  }, [userId, refreshTrigger, storageKey, loadRecommendations])
+
+  const limitedRecommendations = useMemo(() => {
+    return recommendations
+      .slice()
+      .sort((a, b) => b.match_score - a.match_score)
+      .slice(0, 8)
+  }, [recommendations])
+
 
   if (loading) {
     return (
