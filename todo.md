@@ -11,8 +11,8 @@
        1.2.1 ✅ Convert or archive unused Node scripts under `newsletter-app/scripts/` (CommonJS + unused vars)
        1.2.2 ✅ Fix `any` usage in API routes (`src/app/api/**`) and surface type gaps
        1.2.3 ✅ Address lint in React pages/components (`jobs`, `saved-jobs`, `CandidateProfileManagement`, etc.)
-       1.2.4 Tidy lib modules (`advanced-job-matching`, `auth`, `job-matching`, `llm-analysis`, etc.)
-       1.2.5 Re-run ESLint with `--max-warnings=0` and confirm clean
+       1.2.4 ✅ Tidy lib modules (`advanced-job-matching`, `auth`, `job-matching`, `llm-analysis`, etc.)
+       1.2.5 ✅ Re-run ESLint with `--max-warnings=0` and confirm clean
 
 2. GitHub sync preparation
    2.1 Verify git status is clean and commit history is up to date

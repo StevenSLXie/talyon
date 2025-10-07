@@ -124,7 +124,7 @@ export async function POST(req: NextRequest) {
     const sessionToken = randomBytes(32).toString('hex')
     const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000) // 30 days
 
-    const { data: sessionData, error: sessionError } = await supabase()
+    const { error: sessionError } = await supabase()
       .from('user_sessions')
       .insert({
         user_id: subscriber.id,
@@ -133,8 +133,6 @@ export async function POST(req: NextRequest) {
         user_agent: req.headers.get('user-agent'),
         ip_address: req.headers.get('x-forwarded-for') || req.headers.get('x-real-ip')
       })
-      .select()
-      .single()
 
     if (sessionError) {
       console.error('Error creating session:', sessionError)

@@ -23,18 +23,6 @@ export default function JobCard({ job }: JobCardProps) {
     return <div>Error: No job data</div>;
   }
 
-  const formatSalary = (low: number, high: number) => {
-    return `$${low.toLocaleString()} - $${high.toLocaleString()}`
-  }
-
-  const getIndustryColor = (industry: string) => {
-    return 'bg-gray-100 text-gray-800'
-  }
-
-  const getJobTypeColor = (jobType: string) => {
-    return 'bg-gray-100 text-gray-800'
-  }
-
   return (
     <div className="bg-white border border-gray-200 hover:border-black transition-colors duration-200 p-6">
       {/* Company & Title */}
@@ -50,7 +38,7 @@ export default function JobCard({ job }: JobCardProps) {
       {/* Salary */}
       <div className="mb-6">
         <div className="text-xl font-light text-black">
-          {formatSalary(job.salary_low, job.salary_high)}
+          {`$${job.salary_low.toLocaleString()} - $${job.salary_high.toLocaleString()}`}
         </div>
         <div className="text-sm text-gray-500">per month</div>
       </div>
@@ -68,10 +56,10 @@ export default function JobCard({ job }: JobCardProps) {
 
       {/* Tags */}
       <div className="flex flex-wrap gap-2 mb-6">
-        <span className={`px-3 py-1 text-xs font-medium ${getIndustryColor(job.industry)}`}>
+        <span className="px-3 py-1 text-xs font-medium bg-gray-100 text-gray-800">
           {job.industry}
         </span>
-        <span className={`px-3 py-1 text-xs font-medium ${getJobTypeColor(job.job_type)}`}>
+        <span className="px-3 py-1 text-xs font-medium bg-gray-100 text-gray-800">
           {job.job_type}
         </span>
         <span className="px-3 py-1 text-xs font-medium bg-gray-100 text-gray-800">

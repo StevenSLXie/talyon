@@ -2,6 +2,7 @@
 
 
 import { useMemo, useState } from 'react'
+import type { JobRecommendation } from '@/lib/job-matching'
 
 const formatSalaryRange = (low?: number, high?: number) => {
   if (typeof low === 'number' && typeof high === 'number') {
@@ -16,10 +17,7 @@ const formatSalaryRange = (low?: number, high?: number) => {
   return null
 }
 
-interface JobRecommendation {
-  job: any
-  match_score: number
-  match_reasons: string[]
+interface EnhancedJobRecommendation extends JobRecommendation {
   llm_analysis: {
     final_score: number
     matching_reasons: string[]
@@ -29,7 +27,7 @@ interface JobRecommendation {
   }
 }
 
-export default function EnhancedJobRecommendationCard({ recommendation }: { recommendation: JobRecommendation }) {
+export default function EnhancedJobRecommendationCard({ recommendation }: { recommendation: EnhancedJobRecommendation }) {
   const [showDetails, setShowDetails] = useState(false)
 
   const jobDescription = useMemo(() => {

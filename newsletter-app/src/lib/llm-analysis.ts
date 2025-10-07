@@ -1,37 +1,79 @@
 // LLM Analysis Service for Resume Processing
 import { RESUME_ANALYSIS_PROMPTS, JOB_ANALYSIS_PROMPTS, SYSTEM_PROMPTS } from './prompts'
 import { EnhancedCandidateProfile } from './enhanced-candidate-profile'
+import type { CandidateJob } from './job-matching'
 
-export type JsonResume = {
-  basics?: any
-  work?: any[]
-  volunteer?: any[]
-  education?: any[]
-  awards?: any[]
-  certificates?: any[]
-  publications?: any[]
-  skills?: any[]
-  languages?: any[]
-  interests?: any[]
-  references?: any[]
-  projects?: any[]
+interface ResumeBasics {
+  name?: string
+  label?: string
+  email?: string
+  phone?: string
+  url?: string
+  summary?: string
+  location?: {
+    address?: string
+    postalCode?: string
+    city?: string
+    countryCode?: string
+    region?: string
+  }
+  profiles?: Array<{
+    network?: string
+    username?: string
+    url?: string
+  }>
 }
 
-export interface CandidateProfile {
-  strengths: string[]
-  weaknesses: string[]
-  skills: string[]
-  companies: string[]
-  experience_years: number
-  salary_range_min: number
-  salary_range_max: number
-  industry_tags: string[]
-  role_tags: string[]
+interface ResumeWorkEntry {
+  name?: string
+  position?: string
+  url?: string
+  startDate?: string
+  endDate?: string
+  summary?: string
+  highlights?: string[]
 }
 
-export interface JobMatch {
-  match_score: number
-  match_reasons: string[]
+interface ResumeEducationEntry {
+  institution?: string
+  url?: string
+  area?: string
+  studyType?: string
+  startDate?: string
+  endDate?: string
+  score?: string
+  courses?: string[]
+}
+
+interface ResumeCertification {
+  name?: string
+  date?: string
+  issuer?: string
+  url?: string
+}
+
+export interface JsonResume {
+  basics?: ResumeBasics
+  work?: ResumeWorkEntry[]
+  volunteer?: ResumeWorkEntry[]
+  education?: ResumeEducationEntry[]
+  awards?: Array<{ title?: string; date?: string; awarder?: string; summary?: string }>
+  certificates?: ResumeCertification[]
+  publications?: Array<{ name?: string; publisher?: string; releaseDate?: string; url?: string; summary?: string }>
+  skills?: Array<{ name?: string; level?: string; keywords?: string[] }>
+  languages?: Array<{ language?: string; fluency?: string }>
+  interests?: Array<{ name?: string; keywords?: string[] }>
+  references?: Array<{ name?: string; reference?: string }>
+  projects?: Array<{ name?: string; description?: string; startDate?: string; endDate?: string; url?: string; keywords?: string[]; highlights?: string[] }>
+}
+
+interface LLMJobAnalysis {
+  final_score: number
+  matching_reasons: string[]
+  non_matching_points: string[]
+  key_highlights: string[]
+  personalized_assessment: string
+  career_impact: string
 }
 
 export class LLMAnalysisService {
@@ -44,43 +86,39 @@ export class LLMAnalysisService {
   }
 
   // Robust JSON parsing helper to handle code fences or extra text
-  private parseJsonResponse(raw: string): any {
+  private parseJsonResponse<T = unknown>(raw: string): T {
     try {
-      return JSON.parse(raw)
-    } catch (_e) {
-      // Strip markdown fences like ```json ... ```
+      return JSON.parse(raw) as T
+    } catch {
       const fenceMatch = raw.match(/```(?:json)?[\r\n]+([\s\S]*?)```/i)
       const candidate = fenceMatch ? fenceMatch[1] : raw
-      
-      // Clean up common issues
+
       const cleaned = candidate
         .trim()
-        .replace(/^[^{[]*/, '') // Remove text before first { or [
-        .replace(/[^}\]]*$/, '') // Remove text after last } or ]
-      
+        .replace(/^[^{\[]*/, '')
+        .replace(/[^}\]]*$/, '')
+
       try {
-        return JSON.parse(cleaned)
-      } catch (_e2) {
-        // Extract the first balanced JSON object as a last resort
+        return JSON.parse(cleaned) as T
+      } catch {
         const start = cleaned.indexOf('{')
         const end = cleaned.lastIndexOf('}')
         if (start !== -1 && end !== -1 && end > start) {
           const slice = cleaned.slice(start, end + 1)
           try {
-            return JSON.parse(slice)
-          } catch (_e3) {
-            // Try to fix truncated JSON by adding missing closing brackets
+            return JSON.parse(slice) as T
+          } catch {
             try {
               const fixedJson = this.fixTruncatedJson(slice)
-              return JSON.parse(fixedJson)
-            } catch (_e4) {
+              return JSON.parse(fixedJson) as T
+            } catch {
               console.log('❌ Failed to parse JSON slice:', slice.substring(0, 200) + '...')
-              return {}
+              return {} as T
             }
           }
         }
         console.log('❌ No valid JSON found in response:', raw.substring(0, 200) + '...')
-        return {}
+        return {} as T
       }
     }
   }
@@ -232,7 +270,7 @@ export class LLMAnalysisService {
 
   // New: Generate enhanced candidate profile from file
   // Combined method: Generate both enhanced profile and JSON resume in one OpenAI call
-  async generateCombinedProfileFromFile(file: File): Promise<{ enhancedProfile: any, jsonResume: JsonResume }> {
+  async generateCombinedProfileFromFile(file: File): Promise<{ enhancedProfile: EnhancedCandidateProfile; jsonResume: JsonResume }> {
     try {
       console.debug('[LLMAnalysis] generateCombinedProfileFromFile start', { fileName: file.name, fileType: file.type })
       
@@ -240,7 +278,14 @@ export class LLMAnalysisService {
       const combinedPrompt = RESUME_ANALYSIS_PROMPTS.combinedProfile
 
       const response = await this.callOpenAIWithFile(file, combinedPrompt, SYSTEM_PROMPTS.resumeAnalysis)
-      const parsed = this.parseJsonResponse(response)
+      const parsed = this.parseJsonResponse(response) as { job_analyses?: Array<{
+        final_score: number
+        matching_reasons: string[]
+        non_matching_points: string[]
+        key_highlights: string[]
+        personalized_assessment: string
+        career_impact: string
+      }>; }
       
       console.debug('[LLMAnalysis] generateCombinedProfileFromFile done', { 
         enhancedKeys: Object.keys(parsed.enhancedProfile || {}),
@@ -248,8 +293,8 @@ export class LLMAnalysisService {
       })
       
       return {
-        enhancedProfile: parsed.enhancedProfile || {},
-        jsonResume: parsed.jsonResume || {}
+        enhancedProfile: (parsed.enhancedProfile || {}) as EnhancedCandidateProfile,
+        jsonResume: (parsed.jsonResume || {}) as JsonResume
       }
     } catch (error) {
       console.error('Generate combined profile from file failed:', error)
@@ -258,7 +303,7 @@ export class LLMAnalysisService {
   }
 
   // Legacy: Generate enhanced candidate profile from file
-  async generateEnhancedProfileFromFile(file: File): Promise<any> {
+  async generateEnhancedProfileFromFile(file: File): Promise<EnhancedCandidateProfile> {
     try {
       console.debug('[LLMAnalysis] generateEnhancedProfileFromFile start', { fileName: file.name, fileType: file.type })
       
@@ -267,10 +312,10 @@ export class LLMAnalysisService {
       const parsed = this.parseJsonResponse(response)
       
       console.debug('[LLMAnalysis] generateEnhancedProfileFromFile done', { keys: Object.keys(parsed) })
-      return parsed
+      return parsed as EnhancedCandidateProfile
     } catch (error) {
       console.error('Generate enhanced profile from file failed:', error)
-      return {}
+      return {} as EnhancedCandidateProfile
     }
   }
 
@@ -287,7 +332,7 @@ export class LLMAnalysisService {
       return parsed as JsonResume
     } catch (error) {
       console.error('Generate JSON Resume from file failed:', error)
-      return {}
+      return {} as JsonResume
     }
   }
 
@@ -301,7 +346,7 @@ export class LLMAnalysisService {
       return parsed as JsonResume
     } catch (error) {
       console.error('Generate JSON Resume failed:', error)
-      return {}
+      return {} as JsonResume
     }
   }
 
@@ -398,7 +443,17 @@ export class LLMAnalysisService {
   /**
    * Comprehensive resume analysis - all aspects in one call
    */
-  async analyzeResumeComprehensive(resumeText: string): Promise<CandidateProfile> {
+  async analyzeResumeComprehensive(resumeText: string): Promise<{
+    strengths: string[]
+    weaknesses: string[]
+    skills: string[]
+    companies: string[]
+    experience_years: number
+    salary_range_min: number
+    salary_range_max: number
+    industry_tags: string[]
+    role_tags: string[]
+  }> {
     try {
       const prompt = RESUME_ANALYSIS_PROMPTS.comprehensiveAnalysis.replace('{resumeText}', resumeText)
 
@@ -437,7 +492,17 @@ export class LLMAnalysisService {
   /**
    * Complete resume analysis (optimized - single LLM call)
    */
-  async analyzeResume(resumeText: string): Promise<CandidateProfile> {
+  async analyzeResume(resumeText: string): Promise<{
+    strengths: string[]
+    weaknesses: string[]
+    skills: string[]
+    companies: string[]
+    experience_years: number
+    salary_range_min: number
+    salary_range_max: number
+    industry_tags: string[]
+    role_tags: string[]
+  }> {
     try {
       console.log('[LLMAnalysis] analyzeResume start - using comprehensive single call')
       const result = await this.analyzeResumeComprehensive(resumeText)
@@ -454,17 +519,8 @@ export class LLMAnalysisService {
    */
   async batchAnalyzeJobs(
     enhancedProfile: EnhancedCandidateProfile,
-    jobSummaries: Array<{ id: number; job: any; stage1_score: number; stage1_reasons: string[] }>
-  ): Promise<{
-    job_analyses: Array<{
-      final_score: number
-      matching_reasons: string[]
-      non_matching_points: string[]
-      key_highlights: string[]
-      personalized_assessment: string
-      career_impact: string
-    }>
-  }> {
+    jobSummaries: Array<{ id: number; job: CandidateJob; stage1_score: number; stage1_reasons: string[] }>
+  ): Promise<{ job_analyses: LLMJobAnalysis[] }> {
     // Build comprehensive candidate profile from enhanced profile object
     const educationText = enhancedProfile.education?.length > 0 
       ? enhancedProfile.education.map(e => `${e.degree} in ${e.major} from ${e.institution}`).join(', ')
@@ -502,6 +558,8 @@ Job ${job.id}: ${job.job.title} at ${job.job.company}
 - Post Date: ${job.job.post_date}
 - URL: ${job.job.url || 'N/A'}
 - Job Category: ${job.job.job_category || 'N/A'}
+- Leadership Level: ${job.job.leadership_level || 'Not specified'}
+- Company Tier: ${job.job.company_tier || 'Not specified'}
 
 FULL JOB DESCRIPTION:
 ${job.job.job_description || job.job.raw_text || 'No description available'}
@@ -518,30 +576,23 @@ ${job.job.job_description || job.job.raw_text || 'No description available'}
       const response = await this.callOpenAI(prompt, 'You are an expert career advisor who provides detailed, personalized job analysis. Always respond with valid JSON format as requested.')
       console.log('🔍 Raw LLM response length:', response.length)
       console.log('🔍 Raw LLM response preview:', response.substring(0, 1000) + '...')
-      
-      const parsed = this.parseJsonResponse(response)
+
+      const parsed = this.parseJsonResponse<{ job_analyses?: LLMJobAnalysis[] }>(response)
       console.log('🔍 Parsed response keys:', Object.keys(parsed))
-      console.log('🔍 Parsed response type:', typeof parsed)
-      
-      if (!parsed || typeof parsed !== 'object') {
-        console.log('❌ Invalid response: not an object, got:', typeof parsed, parsed)
-        throw new Error('Invalid LLM response format')
-      }
-      
+
       if (!parsed.job_analyses || !Array.isArray(parsed.job_analyses)) {
         console.log('❌ Invalid response format. Expected job_analyses array, got:', parsed)
-        console.log('🔍 Available keys:', Object.keys(parsed))
         throw new Error('Invalid LLM response format')
       }
 
-      return parsed
+      return { job_analyses: parsed.job_analyses }
     } catch (error) {
       console.error('Batch job analysis failed:', error)
       console.log('🔄 Falling back to mock response...')
       
       // Return fallback data
       return {
-        job_analyses: jobSummaries.map((job, index) => ({
+        job_analyses: jobSummaries.map(job => ({
           final_score: Math.max(job.stage1_score + Math.floor(Math.random() * 20) - 10, 0),
           matching_reasons: job.stage1_reasons,
           non_matching_points: ['Consider skill gaps', 'Review experience requirements'],

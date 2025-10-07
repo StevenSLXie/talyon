@@ -2,36 +2,67 @@
 import { supabase } from './supabase'
 import { EnhancedCandidateProfileService } from './enhanced-candidate-profile'
 import { LLMActionSuggestionsService } from './llm-action-suggestions'
+import type { Database } from './database.types'
+
+type JobRow = Database['public']['Tables']['jobs']['Row']
+
+export type CandidateJob = JobRow & {
+  skills_required?: Array<{ name: string; level: number }>
+  skills_optional?: string[]
+  job_family?: string
+  experience_years_req?: ExperienceRequirement | null
+  education_req?: string[]
+  certifications_req?: string[]
+  remote_policy?: string
+  company_tier?: string
+  visa_requirement?: VisaRequirement | null
+  leadership_level?: 'IC' | 'Team Lead' | 'Team Lead++' | null
+}
+
+interface VisaRequirement {
+  local_only?: boolean
+  ep_ok?: boolean
+}
+
+interface ExperienceRequirement {
+  min: number
+  max: number
+}
 
 export interface JobRecommendation {
   job: CandidateJob
   match_score: number
   match_reasons: string[]
-  breakdown: {
-    title_match: number
-    salary_match: number
-    skills_match: number
-    experience_match: number
-    education_match: number
-    certification_match: number
-    job_family_match: number
-    work_prefs_match: number
-    industry_match: number
-    leadership_match: number
-  }
-  why_match: {
-    strengths: string[]
-    concerns: string[]
-    overall_assessment: string
-  }
-  gaps_and_actions: {
-    skill_gaps: Array<{ skill: string; current_level: number; required_level: number; action: string }>
-    experience_gap?: { gap_years: number; action: string }
-    education_gaps: Array<{ requirement: string; action: string }>
-    certification_gaps: Array<{ requirement: string; action: string }>
-    interview_prep: string[]
-  }
+  breakdown: RecommendationBreakdown
+  why_match: MatchNarrative
+  gaps_and_actions: GapAnalysis
   personalized_suggestions?: ReturnType<typeof LLMActionSuggestionsService.generateActionSuggestions> extends Promise<infer R> ? R : unknown
+}
+export interface RecommendationBreakdown {
+  title_match: number
+  salary_match: number
+  skills_match: number
+  experience_match: number
+  education_match: number
+  certification_match: number
+  job_family_match: number
+  work_prefs_match: number
+  industry_match: number
+  leadership_match: number
+}
+
+export interface MatchNarrative {
+  strengths: string[]
+  concerns: string[]
+  overall_assessment: string
+}
+
+export interface GapAnalysis {
+  skill_gaps: Array<{ skill: string; current_level: number; required_level: number; action: string }>
+  experience_gap?: { gap_years: number; action: string }
+  education_gaps: Array<{ requirement: string; action: string }>
+  certification_gaps: Array<{ requirement: string; action: string }>
+  interview_prep: string[]
 }
 
 export interface CandidateProfile {
@@ -755,13 +786,11 @@ function calculateWorkPrefsMatch(
 // Explanation and action generation functions
 function generateWhyMatch(
   candidateProfile: CandidateProfile,
-  job: any,
+  job: CandidateJob,
   breakdown: RecommendationBreakdown,
   skillsMatch: SkillsMatchResult,
-  experienceMatch: ExperienceMatchResult,
-  educationMatch: EducationMatchResult,
-  certificationMatch: CertificationMatchResult
-): { strengths: string[]; concerns: string[]; overall_assessment: string } {
+  experienceMatch: ExperienceMatchResult
+): MatchNarrative {
   const strengths: string[] = []
   const concerns: string[] = []
 
@@ -793,12 +822,12 @@ function generateWhyMatch(
     concerns.push(`Salary expectations not aligned`)
   }
   if (breakdown.education_match < 50 && job.education_req?.length > 0) {
-    concerns.push(`Education requirements not fully met`)
+    concerns.push('Education requirements not fully met')
   }
 
   // Overall assessment
   let overallAssessment = ''
-  const totalScore = Object.values(breakdown).reduce((sum: number, score: any) => sum + score, 0) / Object.keys(breakdown).length
+  const totalScore = Object.values(breakdown).reduce((sum, score) => sum + score, 0) / Object.keys(breakdown).length
   
   if (totalScore >= 80) {
     overallAssessment = 'Excellent match with strong alignment across all criteria'
@@ -820,13 +849,7 @@ function generateGapsAndActions(
   experienceMatch: ExperienceMatchResult,
   educationMatch: EducationMatchResult,
   certificationMatch: CertificationMatchResult
-): {
-  skill_gaps: Array<{ skill: string; current_level: number; required_level: number; action: string }>
-  experience_gap?: { gap_years: number; action: string }
-  education_gaps: Array<{ requirement: string; action: string }>
-  certification_gaps: Array<{ requirement: string; action: string }>
-  interview_prep: string[]
-} {
+): GapAnalysis {
   const skill_gaps: Array<{ skill: string; current_level: number; required_level: number; action: string }> = []
   const education_gaps: Array<{ requirement: string; action: string }> = []
   const certification_gaps: Array<{ requirement: string; action: string }> = []
@@ -922,12 +945,12 @@ function generateGapsAndActions(
 }
 
 // Hard filtering functions
-function checkWorkAuthFilter(candidate: CandidateProfile, job: any): { passed: boolean; reason: string } {
+function checkWorkAuthFilter(candidate: CandidateProfile, job: CandidateJob): { passed: boolean; reason: string } {
   if (!candidate.work_auth || !job.visa_requirement) {
     return { passed: true, reason: 'Work auth info not available' }
   }
 
-  const { citizen_or_pr, ep_needed } = candidate.work_auth
+  const { ep_needed } = candidate.work_auth
   const { local_only, ep_ok } = job.visa_requirement
 
   // If job requires locals only and candidate needs EP
@@ -943,7 +966,7 @@ function checkWorkAuthFilter(candidate: CandidateProfile, job: any): { passed: b
   return { passed: true, reason: 'Work authorization compatible' }
 }
 
-function checkBlacklistFilter(candidate: CandidateProfile, job: any): { passed: boolean; reason: string } {
+function checkBlacklistFilter(candidate: CandidateProfile, job: CandidateJob): { passed: boolean; reason: string } {
   if (!candidate.blacklist_companies || !candidate.blacklist_companies.length) {
     return { passed: true, reason: 'No blacklisted companies' }
   }
@@ -960,7 +983,7 @@ function checkBlacklistFilter(candidate: CandidateProfile, job: any): { passed: 
   return { passed: true, reason: 'Company not blacklisted' }
 }
 
-function checkWorkPrefsFilter(candidate: CandidateProfile, job: any): { passed: boolean; reason: string } {
+function checkWorkPrefsFilter(candidate: CandidateProfile, job: CandidateJob): { passed: boolean; reason: string } {
   if (!candidate.work_prefs || !job.remote_policy) {
     return { passed: true, reason: 'Work preferences not specified' }
   }
@@ -986,7 +1009,7 @@ function checkWorkPrefsFilter(candidate: CandidateProfile, job: any): { passed: 
   return { passed: true, reason: 'Work preferences compatible' }
 }
 
-function applyHardFilters(candidate: CandidateProfile, job: any): { passed: boolean; reasons: string[] } {
+function applyHardFilters(candidate: CandidateProfile, job: CandidateJob): { passed: boolean; reasons: string[] } {
   const reasons: string[] = []
   
   // Check work authorization
@@ -1098,11 +1121,6 @@ export class JobMatchingService {
         .eq('user_id', usersId)
 
       // Get education for experience calculation
-      const { data: educationData } = await supabase()
-        .from('candidate_education')
-        .select('start_date, end_date, study_type')
-        .eq('user_id', usersId)
-
       // Calculate experience years
       let experienceYears = 0
       if (workData && workData.length > 0) {
@@ -1376,7 +1394,7 @@ export class JobMatchingService {
           certificationMatch
         )
 
-        const gapsAndActions = generateGapsAndActions(
+      const gapsAndActions = generateGapsAndActions(
           candidateProfile,
           job,
           skillsMatch,
@@ -1614,7 +1632,7 @@ export class JobMatchingService {
    */
   private calculateLeadershipMatch(
     candidateProfile: CandidateProfile,
-    job: any
+    job: CandidateJob
   ): { score: number; reason: string; penalty: number } {
     const candidateLeadership = candidateProfile.leadership_level || 'IC'
     const jobLeadership = job.leadership_level
@@ -1642,7 +1660,7 @@ export class JobMatchingService {
   /**
    * Infer job leadership level from title and description
    */
-  private inferJobLeadershipLevel(job: any): string | null {
+  private inferJobLeadershipLevel(job: CandidateJob): string | null {
     const title = (job.title || '').toLowerCase()
     const description = (job.job_description || job.raw_text || '').toLowerCase()
     const combinedText = `${title} ${description}`
@@ -1739,7 +1757,7 @@ export class JobMatchingService {
    */
   private calculateSalaryPenalty(
     candidateProfile: CandidateProfile,
-    job: any
+    job: CandidateJob
   ): number {
     // If candidate doesn't have salary expectations, no penalty
     if (!candidateProfile.salary_range_min || !candidateProfile.salary_range_max) {
@@ -1773,30 +1791,28 @@ export class JobMatchingService {
    * Simple keyword-based matching as fallback
    */
   private calculateSimpleMatch(
-    candidateProfile: any, // This parameter is no longer used in the new fuzzy matching logic
-    job: any
+    candidateProfile: CandidateProfile,
+    job: CandidateJob
   ): number {
     let score = 0
     const maxScore = 100
 
-    // Industry match
-    if (candidateProfile.industry_tags.some((tag: string) => 
-      job.industry?.toLowerCase().includes(tag.toLowerCase())
-    )) {
-      score += 20
+    if (candidateProfile.industries.length && job.industry) {
+      const jobIndustry = job.industry.toLowerCase()
+      if (candidateProfile.industries.some(industry => industry.toLowerCase() === jobIndustry)) {
+        score += 20
+      }
     }
 
-    // Salary range match
-    if (job.salary_low && job.salary_high) {
+    if (job.salary_low && job.salary_high && candidateProfile.salary_range_min && candidateProfile.salary_range_max) {
       const jobSalaryMid = (job.salary_low + job.salary_high) / 2
       const candidateSalaryMid = (candidateProfile.salary_range_min + candidateProfile.salary_range_max) / 2
-      
+
       if (Math.abs(jobSalaryMid - candidateSalaryMid) < candidateSalaryMid * 0.2) {
         score += 20
       }
     }
 
-    // Experience level match
     if (job.experience_level && candidateProfile.experience_years) {
       const experienceMatch = this.matchExperienceLevel(
         candidateProfile.experience_years,
@@ -1805,12 +1821,11 @@ export class JobMatchingService {
       score += experienceMatch * 20
     }
 
-    // Skills match (basic keyword matching)
     const jobText = (job.job_description || '').toLowerCase()
-    const skillMatches = candidateProfile.skills.filter((skill: string) =>
-      jobText.includes(skill.toLowerCase())
+    const skillMatches = candidateProfile.skills.filter(skill =>
+      jobText.includes(skill.name.toLowerCase())
     ).length
-    
+
     score += Math.min(skillMatches * 5, 20)
 
     return Math.min(score, maxScore)

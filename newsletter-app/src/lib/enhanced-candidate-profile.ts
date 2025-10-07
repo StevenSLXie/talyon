@@ -1,6 +1,5 @@
 // Enhanced Candidate Profile Service
 import { supabaseAdmin } from './supabase'
-import { currencyConverter } from './currency-converter'
 
 export interface EnhancedCandidateProfile {
   titles?: string[]
@@ -54,6 +53,12 @@ export interface EnhancedCandidateProfile {
 }
 
 export class EnhancedCandidateProfileService {
+  private static readonly DEFAULT_WORK_AUTH: EnhancedCandidateProfile['work_auth'] = {
+    citizen_or_pr: false,
+    ep_needed: true,
+    work_permit_type: null,
+  }
+
   /**
    * Save enhanced candidate profile to database
    */
@@ -61,12 +66,12 @@ export class EnhancedCandidateProfileService {
     userId: string,
     resumeId: string,
     profile: EnhancedCandidateProfile
-  ): Promise<{ success: boolean; counts: any }> {
+  ): Promise<{ success: boolean; counts: SaveCounts }> {
     try {
       console.debug('[EnhancedProfile] saveEnhancedProfile start', { userId, resumeId })
 
       const supabaseClient = supabaseAdmin()
-      const counts = {
+      const counts: SaveCounts = {
         basics: 0,
         skills: 0,
         education: 0,
@@ -94,7 +99,7 @@ export class EnhancedCandidateProfileService {
           resume_id: resumeId,
           current_title: profile.current_title || profile.titles?.[0] || 'Not specified',
           target_titles: profile.target_titles || profile.titles?.slice(1) || [],
-          work_auth: profile.work_auth || { citizen_or_pr: false, ep_needed: true, work_permit_type: null },
+          work_auth: profile.work_auth || EnhancedCandidateProfileService.DEFAULT_WORK_AUTH,
           seniority_level: profile.seniority_level || 'Not specified',
           industries: profile.industries || [],
           company_tiers: profile.company_tiers || [],

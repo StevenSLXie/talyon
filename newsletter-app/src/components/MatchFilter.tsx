@@ -3,17 +3,19 @@
 import { useState } from 'react'
 
 interface MatchFilterProps {
-  onFilterChange: (filters: {
-    minScore: number
-    maxScore: number
-    showHighProbability: boolean
-    showMediumProbability: boolean
-    showLowProbability: boolean
-  }) => void
+  onFilterChange: (filters: MatchFilters) => void
+}
+
+interface MatchFilters {
+  minScore: number
+  maxScore: number
+  showHighProbability: boolean
+  showMediumProbability: boolean
+  showLowProbability: boolean
 }
 
 export default function MatchFilter({ onFilterChange }: MatchFilterProps) {
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<MatchFilters>({
     minScore: 0,
     maxScore: 100,
     showHighProbability: true,
@@ -21,7 +23,7 @@ export default function MatchFilter({ onFilterChange }: MatchFilterProps) {
     showLowProbability: false
   })
 
-  const handleFilterChange = (newFilters: any) => {
+  const handleFilterChange = (newFilters: Partial<MatchFilters>) => {
     const updatedFilters = { ...filters, ...newFilters }
     setFilters(updatedFilters)
     onFilterChange(updatedFilters)
