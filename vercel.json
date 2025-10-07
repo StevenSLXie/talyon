@@ -1,7 +1,7 @@
 {
-  "buildCommand": "cd newsletter-app && npm install && npm run build",
-  "outputDirectory": "newsletter-app/.next",
-  "installCommand": "cd newsletter-app && npm install",
-  "framework": null
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "installCommand": "npm install",
+  "framework": "nextjs"
 }
 
