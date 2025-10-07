@@ -5,6 +5,12 @@
       "src": "newsletter-app/package.json",
       "use": "@vercel/next"
     }
+  ],
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/newsletter-app/$1"
+    }
   ]
 }
 
