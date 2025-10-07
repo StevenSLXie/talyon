@@ -277,20 +277,13 @@ export class LLMAnalysisService {
       const combinedPrompt = RESUME_ANALYSIS_PROMPTS.combinedProfile
 
       const response = await this.callOpenAIWithFile(file, combinedPrompt, SYSTEM_PROMPTS.resumeAnalysis)
-      const parsed = this.parseJsonResponse(response) as { job_analyses?: Array<{
-        final_score: number
-        matching_reasons: string[]
-        non_matching_points: string[]
-        key_highlights: string[]
-        personalized_assessment: string
-        career_impact: string
-      }>; }
+      const parsed = this.parseJsonResponse(response) as { enhancedProfile: EnhancedCandidateProfile; jsonResume: JsonResume }
       
       console.info('[LLMAnalysis] Combined profile generation complete')
       
       return {
-        enhancedProfile: (parsed.enhancedProfile || {}) as EnhancedCandidateProfile,
-        jsonResume: (parsed.jsonResume || {}) as JsonResume
+        enhancedProfile: parsed.enhancedProfile,
+        jsonResume: parsed.jsonResume
       }
     } catch (error) {
       console.error('Generate combined profile from file failed:', error)
@@ -343,96 +336,6 @@ export class LLMAnalysisService {
     } catch (error) {
       console.error('Generate JSON Resume failed:', error)
       return {} as JsonResume
-    }
-  }
-
-  /**
-   * Analyze resume for strengths and weaknesses
-   */
-  async analyzeStrengthsWeaknesses(resumeText: string): Promise<{
-    strengths: string[]
-    weaknesses: string[]
-  }> {
-    try {
-      const prompt = RESUME_ANALYSIS_PROMPTS.strengthsWeaknesses.replace('{resumeText}', resumeText)
-      const response = await this.callOpenAI(prompt, SYSTEM_PROMPTS.resumeAnalysis)
-      
-      const parsed = this.parseJsonResponse(response)
-      return {
-        strengths: parsed.strengths || [],
-        weaknesses: parsed.weaknesses || []
-      }
-    } catch (error) {
-      console.error('Strengths/weaknesses analysis failed:', error)
-      // Return fallback data
-      return {
-        strengths: ['Strong technical background', 'Good communication skills', 'Team player'],
-        weaknesses: ['Limited leadership experience', 'Could improve project management', 'Needs more industry-specific knowledge']
-      }
-    }
-  }
-
-  /**
-   * Analyze suitable salary range
-   */
-  async analyzeSalaryRange(resumeText: string): Promise<{
-    salary_min: number
-    salary_max: number
-    reasoning: string
-  }> {
-    try {
-      const prompt = RESUME_ANALYSIS_PROMPTS.salaryRange.replace('{resumeText}', resumeText)
-      const response = await this.callOpenAI(prompt, SYSTEM_PROMPTS.resumeAnalysis)
-      
-      const parsed = this.parseJsonResponse(response)
-      return {
-        salary_min: parsed.salary_min || 5000,
-        salary_max: parsed.salary_max || 10000,
-        reasoning: parsed.reasoning || 'Based on experience and skills'
-      }
-    } catch (error) {
-      console.error('Salary analysis failed:', error)
-      // Return fallback data
-      return {
-        salary_min: 5000,
-        salary_max: 10000,
-        reasoning: 'Default range based on general market rates'
-      }
-    }
-  }
-
-  /**
-   * Extract profile tags and information
-   */
-  async extractProfileTags(resumeText: string): Promise<{
-    skills: string[]
-    companies: string[]
-    experience_years: number
-    industry_tags: string[]
-    role_tags: string[]
-  }> {
-    try {
-      const prompt = RESUME_ANALYSIS_PROMPTS.profileTags.replace('{resumeText}', resumeText)
-      const response = await this.callOpenAI(prompt, SYSTEM_PROMPTS.resumeAnalysis)
-      
-      const parsed = this.parseJsonResponse(response)
-      return {
-        skills: parsed.skills || [],
-        companies: parsed.companies || [],
-        experience_years: parsed.experience_years || 0,
-        industry_tags: parsed.industry_tags || [],
-        role_tags: parsed.role_tags || []
-      }
-    } catch (error) {
-      console.error('Profile tags extraction failed:', error)
-      // Return fallback data
-      return {
-        skills: ['Communication', 'Problem Solving', 'Teamwork'],
-        companies: ['Previous Employer'],
-        experience_years: 2,
-        industry_tags: ['Technology'],
-        role_tags: ['Software Developer']
-      }
     }
   }
 
