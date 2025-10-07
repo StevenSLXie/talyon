@@ -56,20 +56,20 @@ export default function EnhancedJobRecommendationCard({ recommendation }: { reco
             <div>
               <div className={`inline-block px-3 py-1 text-xs uppercase tracking-wide ${matchBadgeColor}`}>
                 {recommendation.match_score}% match
-              </div>
+        </div>
               <h3 className="text-xl font-semibold text-black mt-3 mb-1 sm:max-w-md">
                 {recommendation.job?.title}
               </h3>
               <p className="text-sm text-gray-500 font-medium uppercase tracking-wide">
                 {recommendation.job?.company}
               </p>
-            </div>
+      </div>
             <div className="text-sm text-gray-600 sm:text-right">
               {salaryDisplay && <div className="font-medium">{salaryDisplay}</div>}
               <div>{recommendation.job?.location}</div>
-            </div>
+      </div>
           </div>
-
+          
           <div className="space-y-4 text-sm text-gray-700">
             <div className="bg-gray-50 p-4 border border-gray-200">
               <div className="font-semibold uppercase tracking-wide text-xs text-gray-500 mb-2">Why it fits</div>
@@ -117,15 +117,15 @@ export default function EnhancedJobRecommendationCard({ recommendation }: { reco
           <div className="bg-gray-50 p-4 border border-gray-200 text-sm text-gray-700 leading-relaxed">
             <div className="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">Summary</div>
             {recommendation.llm_analysis.personalized_assessment}
-          </div>
+      </div>
 
           <div className="flex flex-col sm:flex-row gap-2">
-            <button
+                <button
               onClick={() => setShowDetails((prev) => !prev)}
               className="flex-1 border border-black text-black py-2 text-sm uppercase tracking-wide hover:bg-black hover:text-white transition"
             >
               {showDetails ? 'Hide Details' : 'View Details'}
-            </button>
+                </button>
             <a
               href={externalUrl}
               target="_blank"
@@ -135,8 +135,8 @@ export default function EnhancedJobRecommendationCard({ recommendation }: { reco
               Apply Now
             </a>
           </div>
-        </div>
-      </div>
+                </div>
+              </div>
 
       {showDetails && (
         <div className="border-t border-gray-200 bg-gray-50">
