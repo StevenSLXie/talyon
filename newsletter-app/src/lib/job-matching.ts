@@ -272,6 +272,7 @@ function calculateSkillsMatch(
   // Check required skills
   let requiredSkillsScore = 0
   for (const requiredSkill of jobRequiredSkills) {
+    if (!requiredSkill?.name) continue // Skip if name is null/undefined
     const skillName = requiredSkill.name.toLowerCase()
     const candidateLevel = candidateSkillsMap.get(skillName)
     
@@ -294,6 +295,7 @@ function calculateSkillsMatch(
   // Check optional skills (bonus points)
   let optionalSkillsScore = 0
   for (const optionalSkill of jobOptionalSkills) {
+    if (!optionalSkill) continue // Skip if null/undefined
     const skillName = optionalSkill.toLowerCase()
     if (candidateSkillsMap.has(skillName)) {
       matchedSkills.push(optionalSkill)
