@@ -16,7 +16,7 @@
 
 2. GitHub sync preparation
    2.1 Verify git status is clean and commit history is up to date
-   2.2 Add README section summarising deployment prerequisites
+   2.2 ✅ Add README section summarising deployment prerequisites
    2.3 Push main branch to GitHub once repo is ready **(requires user GitHub credentials)**
 
 3. Database & Supabase configuration

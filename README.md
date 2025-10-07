@@ -2,6 +2,38 @@
 
 A robust Python web scraper built with Playwright that successfully extracts job listings from MyCareersFuture.sg search results, handling the React-based Single Page Application architecture.
 
+## Deployment Prerequisites
+
+Before syncing this repository to GitHub or deploying to Vercel, make sure the following requirements are satisfied:
+
+- **Runtime**
+  - Node.js 18 LTS or newer (matches Next.js 14 requirements)
+  - npm (project uses `package-lock.json`)
+
+- **Environment Variables** – create `.env.local` for local dev and `.env.production.example` for Vercel/GitHub reference. Required keys:
+  - `NEXT_PUBLIC_APP_URL` – Base URL of the deployed site
+  - `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+  - `SUPABASE_SERVICE_ROLE_KEY` – Stored only in server/Vercel env
+  - `OPENAI_API_KEY` – GPT‑5 Mini with `reasoning_effort`/`verbosity` params
+  - `RESEND_API_KEY` – For login emails
+  - Optional integrations (e.g. analytics) should also be listed here
+
+- **Supabase**
+  - Apply the SQL migrations under `newsletter-app/*.sql` (leadership/salary, candidate profile tables)
+  - Confirm Supabase REST access is enabled and `candidate_*`, `jobs` tables exist
+
+- **Local Setup**
+  - Install dependencies: `npm install`
+  - Run lint/build locally: `npm run lint`, `npm run build`
+  - Seed or sync job/candidate data as needed using the pipeline scripts
+
+- **Vercel / GitHub**
+  - Git history clean (`git status` shows no changes)
+  - GitHub repository prepared (ignore `.env*`, add README changes)
+  - Vercel project linked to GitHub repo with above env vars configured
+
+With these prerequisites in place, the app can be pushed to GitHub and deployed to Vercel confidently.
+
 ## ✅ Successfully Working Solution
 
 This scraper successfully extracts job data from MyCareersFuture.sg by:
