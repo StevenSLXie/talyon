@@ -31,7 +31,7 @@ export async function POST(req: NextRequest) {
           content: prompt
         }
       ],
-      reasoning_effort: "medium",
+      reasoning_effort: "low",
       verbosity: "low",
       // max_output_tokens: 4000,
     })
