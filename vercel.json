@@ -1,6 +1,10 @@
 {
-  "installCommand": "cd newsletter-app && npm install",
-  "buildCommand": "cd newsletter-app && npx next build",
-  "outputDirectory": "newsletter-app/.next"
+  "version": 2,
+  "builds": [
+    {
+      "src": "newsletter-app/package.json",
+      "use": "@vercel/next"
+    }
+  ]
 }
 
