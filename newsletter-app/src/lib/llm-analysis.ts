@@ -219,7 +219,6 @@ export class LLMAnalysisService {
     try {
       // Upload file first
       const fileId = await this.uploadFileToOpenAI(file)
-      console.debug('[LLMAnalysis] File uploaded to OpenAI:', fileId)
 
       // Use the file in chat completion
       const response = await fetch(`${this.baseUrl}/chat/completions`, {
@@ -272,7 +271,7 @@ export class LLMAnalysisService {
   // Combined method: Generate both enhanced profile and JSON resume in one OpenAI call
   async generateCombinedProfileFromFile(file: File): Promise<{ enhancedProfile: EnhancedCandidateProfile; jsonResume: JsonResume }> {
     try {
-      console.debug('[LLMAnalysis] generateCombinedProfileFromFile start', { fileName: file.name, fileType: file.type })
+      console.info('[LLMAnalysis] Generating combined profile from resume')
       
       // Create a combined prompt that asks for both formats
       const combinedPrompt = RESUME_ANALYSIS_PROMPTS.combinedProfile
@@ -287,10 +286,7 @@ export class LLMAnalysisService {
         career_impact: string
       }>; }
       
-      console.debug('[LLMAnalysis] generateCombinedProfileFromFile done', { 
-        enhancedKeys: Object.keys(parsed.enhancedProfile || {}),
-        jsonResumeKeys: Object.keys(parsed.jsonResume || {})
-      })
+      console.info('[LLMAnalysis] Combined profile generation complete')
       
       return {
         enhancedProfile: (parsed.enhancedProfile || {}) as EnhancedCandidateProfile,
@@ -305,13 +301,13 @@ export class LLMAnalysisService {
   // Legacy: Generate enhanced candidate profile from file
   async generateEnhancedProfileFromFile(file: File): Promise<EnhancedCandidateProfile> {
     try {
-      console.debug('[LLMAnalysis] generateEnhancedProfileFromFile start', { fileName: file.name, fileType: file.type })
+      console.info('[LLMAnalysis] Generating enhanced profile from resume')
       
       const prompt = RESUME_ANALYSIS_PROMPTS.enhancedProfile.replace('{resumeText}', 'Please analyze the attached resume file and extract comprehensive candidate profile information.')
       const response = await this.callOpenAIWithFile(file, prompt, SYSTEM_PROMPTS.resumeAnalysis)
       const parsed = this.parseJsonResponse(response)
       
-      console.debug('[LLMAnalysis] generateEnhancedProfileFromFile done', { keys: Object.keys(parsed) })
+      console.info('[LLMAnalysis] Enhanced profile generation complete')
       return parsed as EnhancedCandidateProfile
     } catch (error) {
       console.error('Generate enhanced profile from file failed:', error)
@@ -322,13 +318,13 @@ export class LLMAnalysisService {
   // Legacy: Generate JSON Resume object from file
   async generateResumeJsonFromFile(file: File): Promise<JsonResume> {
     try {
-      console.debug('[LLMAnalysis] generateResumeJsonFromFile start', { fileName: file.name, fileType: file.type })
+      console.info('[LLMAnalysis] Generating JSON resume from file')
       
       const prompt = RESUME_ANALYSIS_PROMPTS.jsonResume.replace('{resumeText}', 'Please analyze the attached resume file and extract all information into the JSON Resume format.')
       const response = await this.callOpenAIWithFile(file, prompt, SYSTEM_PROMPTS.resumeAnalysis)
       const parsed = this.parseJsonResponse(response)
       
-      console.debug('[LLMAnalysis] generateResumeJsonFromFile done', { keys: Object.keys(parsed) })
+      console.info('[LLMAnalysis] JSON resume generation complete')
       return parsed as JsonResume
     } catch (error) {
       console.error('Generate JSON Resume from file failed:', error)
@@ -504,9 +500,9 @@ export class LLMAnalysisService {
     role_tags: string[]
   }> {
     try {
-      console.log('[LLMAnalysis] analyzeResume start - using comprehensive single call')
+      console.info('[LLMAnalysis] analyzeResume start - using comprehensive single call')
       const result = await this.analyzeResumeComprehensive(resumeText)
-      console.log('[LLMAnalysis] analyzeResume done - single call completed')
+      console.info('[LLMAnalysis] analyzeResume done - single call completed')
       return result
     } catch (error) {
       console.error('Complete resume analysis failed:', error)
@@ -574,14 +570,14 @@ ${job.job.job_description || job.job.raw_text || 'No description available'}
 
     try {
       const response = await this.callOpenAI(prompt, 'You are an expert career advisor who provides detailed, personalized job analysis. Always respond with valid JSON format as requested.')
-      console.log('🔍 Raw LLM response length:', response.length)
-      console.log('🔍 Raw LLM response preview:', response.substring(0, 1000) + '...')
+      console.debug('🔍 Raw LLM response length:', response.length)
+      console.debug('🔍 Raw LLM response preview:', response.substring(0, 1000) + '...')
 
       const parsed = this.parseJsonResponse<{ job_analyses?: LLMJobAnalysis[] }>(response)
-      console.log('🔍 Parsed response keys:', Object.keys(parsed))
+      console.debug('🔍 Parsed response keys:', Object.keys(parsed))
 
       if (!parsed.job_analyses || !Array.isArray(parsed.job_analyses)) {
-        console.log('❌ Invalid response format. Expected job_analyses array, got:', parsed)
+            console.warn('❌ Invalid response format. Expected job_analyses array, got:', parsed)
         throw new Error('Invalid LLM response format')
       }
 

@@ -54,10 +54,11 @@ export class AdvancedJobMatchingService {
     userId?: string
   ): Promise<AdvancedJobRecommendation[]> {
     try {
-      console.log('🚀 Starting Two-Stage Job Recommendation System')
+      console.info('🚀 Starting Two-Stage Job Recommendation System')
+      const stage1Start = Date.now()
       
       // Stage 1: Coarse Ranking - Get top 20 jobs using current logic
-      console.log('📊 Stage 1: Coarse ranking (rules-based)')
+      console.info('📊 Stage 1: Coarse ranking (rules-based)')
       const stage1Limit = Math.max(limit * 4, 20)
       const stage1Recommendations = await this.jobMatchingService.getEnhancedRecommendations(
         candidateProfile,
@@ -66,25 +67,29 @@ export class AdvancedJobMatchingService {
       )
 
       if (stage1Recommendations.length === 0) {
-        console.log('❌ No jobs passed Stage 1 filtering')
+        console.warn('❌ No jobs passed Stage 1 filtering')
         return []
       }
 
-      console.log('✅ Stage 1 complete:', stage1Recommendations.length, 'jobs selected')
-      console.log(
-        '📋 Stage 1 shortlist:',
-        stage1Recommendations.map((rec, index) => `${index + 1}. ${rec.job?.company || 'Unknown'} – ${rec.job?.title || 'Untitled'}`)
-      )
+      console.info('✅ Stage 1 complete', {
+        count: stage1Recommendations.length,
+        durationMs: Date.now() - stage1Start,
+        shortlist: stage1Recommendations.map((rec, index) => `${index + 1}. ${rec.job?.company || 'Unknown'} – ${rec.job?.title || 'Untitled'}`)
+      })
 
       // Stage 2: Fine Ranking - LLM analysis of top jobs using enhanced profile JSON
-      console.log('🤖 Stage 2: Fine ranking (LLM-powered)')
+      console.info('🤖 Stage 2: Fine ranking (LLM-powered)')
+      const stage2Start = Date.now()
       const stage2Recommendations = await this.performLLMFineRankingWithEnhanced(
         enhancedProfileJson,
         stage1Recommendations,
         limit
       )
 
-      console.log(`✅ Stage 2 complete: ${stage2Recommendations.length} final recommendations`)
+      console.info('✅ Stage 2 complete', {
+        count: stage2Recommendations.length,
+        durationMs: Date.now() - stage2Start
+      })
       return stage2Recommendations
       
     } catch (error) {
@@ -112,7 +117,9 @@ export class AdvancedJobMatchingService {
       }))
 
       // Call LLM for batch analysis with enhanced profile JSON
+      const llmStart = Date.now()
       const llmAnalysis = await this.callLLMForBatchAnalysis(enhancedProfileJson, jobSummaries)
+      console.info('[Timing] Stage 2 LLM batch analysis (ms)', Date.now() - llmStart)
 
       // Process LLM results and create final recommendations
       const finalRecommendations: AdvancedJobRecommendation[] = stage1Jobs
@@ -197,12 +204,12 @@ CANDIDATE PROFILE:
     const enhancedProfile = JSON.parse(enhancedProfileJson) as Record<string, unknown>
     
     try {
-      console.log('🤖 Calling LLM for job analysis...')
+      console.debug('🤖 Calling LLM for job analysis...')
 
       // Use the new batch analysis method
       const response = await llmAnalysisService.batchAnalyzeJobs(enhancedProfile, jobSummaries)
 
-      console.log('✅ LLM API call successful')
+      console.debug('✅ LLM API call successful')
 
       return response
 
@@ -224,7 +231,7 @@ CANDIDATE PROFILE:
       const enhancedProfile = await EnhancedCandidateProfileService.getEnhancedProfile(userId)
       
       if (!enhancedProfile) {
-        console.log('[AdvancedJobMatching] No enhanced profile found, falling back to legacy method')
+        console.warn('[AdvancedJobMatching] No enhanced profile found, falling back to legacy method')
         // Fallback to legacy method
         const candidateProfile = await this.jobMatchingService.buildCandidateProfile(userId)
         return await this.getTwoStageRecommendationsWithEnhanced(candidateProfile, JSON.stringify(candidateProfile), limit, userId)

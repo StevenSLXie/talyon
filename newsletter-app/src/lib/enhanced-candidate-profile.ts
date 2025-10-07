@@ -68,7 +68,7 @@ export class EnhancedCandidateProfileService {
     profile: EnhancedCandidateProfile
   ): Promise<{ success: boolean; counts: SaveCounts }> {
     try {
-      console.debug('[EnhancedProfile] saveEnhancedProfile start', { userId, resumeId })
+      console.info('[EnhancedProfile] saveEnhancedProfile start', { userId, resumeId })
 
       const supabaseClient = supabaseAdmin()
       const counts: SaveCounts = {
@@ -80,13 +80,13 @@ export class EnhancedCandidateProfileService {
       }
 
       // 1. Save to candidate_basics (enhanced)
-      console.log('[EnhancedProfile] Saving salary data:', {
+      console.debug('[EnhancedProfile] Saving salary data', {
         salary_expect_min: profile.salary_expect?.min ? Math.round(Number(profile.salary_expect.min)) : 0,
         salary_expect_max: profile.salary_expect?.max ? Math.round(Number(profile.salary_expect.max)) : 0,
         salary_currency: profile.salary_expect?.currency || 'SGD'
       })
       
-      console.log('[EnhancedProfile] About to save basics with salary:', {
+      console.debug('[EnhancedProfile] About to save basics with salary', {
         salary_expect_min: profile.salary_expect?.min ? Math.round(Number(profile.salary_expect.min)) : 0,
         salary_expect_max: profile.salary_expect?.max ? Math.round(Number(profile.salary_expect.max)) : 0,
         salary_currency: profile.salary_expect?.currency || 'SGD'
@@ -127,7 +127,7 @@ export class EnhancedCandidateProfileService {
       }
       counts.basics = 1
       
-      console.log('[EnhancedProfile] Basics save successful, verifying data...')
+      console.debug('[EnhancedProfile] Basics save successful, verifying data...')
       
       // Verify the data was saved correctly
       const { data: verifyData, error: verifyError } = await supabaseClient
@@ -141,7 +141,7 @@ export class EnhancedCandidateProfileService {
       if (verifyError) {
         console.error('[EnhancedProfile] Verify query failed:', verifyError)
       } else {
-        console.log('[EnhancedProfile] Verified saved data:', verifyData?.[0])
+        console.debug('[EnhancedProfile] Verified saved data', verifyData?.[0])
       }
 
       // 2. Save skills with levels

@@ -361,6 +361,7 @@ async function saveFlatJsonResume(userId: string, resumeId: string, jsonResume: 
 
 export async function POST(request: NextRequest) {
   try {
+    const pipelineStart = Date.now()
     const formData = await request.formData()
     const file = formData.get('resume') as File
     
@@ -426,7 +427,9 @@ export async function POST(request: NextRequest) {
     const userId = usersId as string
 
     // Process the resume (upload to storage + save metadata)
+    const parseStart = Date.now()
     const { resumeId, filePath } = await ResumeParser.processResume(userId, file)
+    console.info('[Timing] Resume parsing (ms)', Date.now() - parseStart)
 
     // Extract salary expectations from form data (optional)
     const salaryMinInput = formData.get('salaryMin') as string
@@ -434,15 +437,12 @@ export async function POST(request: NextRequest) {
     const salaryMin = salaryMinInput ? parseInt(salaryMinInput) : null
     const salaryMax = salaryMaxInput ? parseInt(salaryMaxInput) : null
 
-    console.log('[Upload] Salary input received:', {
-      salaryMinInput,
-      salaryMaxInput,
-      salaryMin,
-      salaryMax
-    })
+    console.info('[Upload] Salary input received', { salaryMinInput, salaryMaxInput })
 
     // Generate both enhanced profile and JSON resume in one OpenAI call
+    const llmStart = Date.now()
     const { enhancedProfile, jsonResume } = await llmAnalysisService.generateCombinedProfileFromFile(file)
+    console.info('[Timing] LLM combined profile (ms)', Date.now() - llmStart)
     
     // Override salary expectations with user input (golden standard)
     // User input always takes precedence over LLM inference
@@ -453,14 +453,15 @@ export async function POST(request: NextRequest) {
         currency: 'SGD',
         source: 'user_input' // Mark as user-provided
       }
-      console.log(`[Upload] Using user salary input: $${salaryMin} - $${salaryMax}`)
+      console.info('[Upload] Using user salary input override', { salaryMin, salaryMax })
     } else {
-      console.log('[Upload] Using LLM-inferred salary range')
+      console.info('[Upload] Using LLM-inferred salary range')
     }
     
-    console.debug('[Upload] Enhanced Profile', JSON.stringify(enhancedProfile, null, 2))
+    // console.debug('[Upload] Enhanced Profile', JSON.stringify(enhancedProfile, null, 2))
     
     // Save enhanced profile to database
+    const persistenceStart = Date.now()
     const { success, counts } = await EnhancedCandidateProfileService.saveEnhancedProfile(userId, resumeId, enhancedProfile)
     
     if (!success) {
@@ -469,6 +470,9 @@ export async function POST(request: NextRequest) {
 
     // Save legacy JSON Resume for backward compatibility
     const legacyCounts = await saveFlatJsonResume(userId, resumeId, jsonResume)
+    console.info('[Timing] Profile persistence (ms)', Date.now() - persistenceStart)
+
+    console.info('[Timing] Resume upload pipeline complete (ms)', Date.now() - pipelineStart)
 
     return NextResponse.json({
       success: true,

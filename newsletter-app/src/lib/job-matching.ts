@@ -1042,13 +1042,13 @@ export class JobMatchingService {
    */
   async buildCandidateProfile(usersId: string): Promise<CandidateProfile> {
     try {
-      console.log('[JobMatching] buildCandidateProfile start', { usersId })
+      console.info('[JobMatching] buildCandidateProfile start', { usersId })
       
       // First try to get enhanced profile data
       const enhancedProfile = await EnhancedCandidateProfileService.getEnhancedProfile(usersId)
       
       if (enhancedProfile) {
-        console.log('[JobMatching] Using enhanced profile data')
+        console.info('[JobMatching] Using enhanced profile data')
         
         // Convert enhanced profile to CandidateProfile format
         const candidateProfile: CandidateProfile = {
@@ -1079,7 +1079,7 @@ export class JobMatchingService {
           management_experience: enhancedProfile.management_experience
         }
         
-        console.log('[JobMatching] buildCandidateProfile done (enhanced)', { 
+        console.info('[JobMatching] buildCandidateProfile done (enhanced)', { 
           experience_years: candidateProfile.experience_years,
           education_count: candidateProfile.education?.length || 0,
           skills_count: candidateProfile.skills.length,
@@ -1090,7 +1090,7 @@ export class JobMatchingService {
       }
       
       // Fallback to legacy method if enhanced profile not available
-      console.log('[JobMatching] Enhanced profile not found, using legacy method')
+      console.warn('[JobMatching] Enhanced profile not found, using legacy method')
       return await this.buildCandidateProfileLegacy(usersId)
       
     } catch (error) {
