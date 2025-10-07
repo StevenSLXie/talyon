@@ -1,0 +1,14 @@
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "newsletter-app/package.json",
+      "use": "@vercel/next"
+    }
+  ],
+  "framework": "nextjs",
+  "installCommand": "npm install --prefix newsletter-app",
+  "buildCommand": "npm run build --prefix newsletter-app",
+  "outputDirectory": "newsletter-app/.next"
+}
+
