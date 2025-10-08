@@ -1427,7 +1427,7 @@ export class JobMatchingService {
       })
 
       const top = matches
-        .filter(m => m.match_score > 20) // Filter out very low matches
+        .filter(m => m.match_score > 10) // Filter out very low matches (lowered threshold for better coverage)
         .sort((a, b) => b.match_score - a.match_score)
         .slice(0, limit)
 
