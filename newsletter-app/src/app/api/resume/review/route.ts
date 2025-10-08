@@ -2,6 +2,10 @@ import { NextRequest } from 'next/server'
 import { supabaseAdmin } from '@/lib/supabase'
 import OpenAI from 'openai'
 
+// Configure route for streaming
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
+
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 })
