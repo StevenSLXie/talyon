@@ -10,7 +10,7 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY
 })
 
-const RESUME_REVIEW_PROMPT = `You are an experienced career advisor in Singapore. Analyze this resume critically and provide exactly 10 bullet points.
+const RESUME_REVIEW_PROMPT = `You are an experienced career advisor in Singapore. Analyze this candidate profile critically and provide exactly 10 bullet points.
 
 Context: Singapore job market expectations, local hiring practices, and regional career standards.
 
@@ -22,15 +22,15 @@ Provide a balanced mix covering:
 Guidelines:
 - Be objective and sharp, but constructive
 - Reference Singapore market context (e.g., "Most SG employers expect...", "For the local market...")
-- Be specific with examples from the resume
+- Be specific with examples from the profile data
 - Avoid generic advice - make it personal to THIS candidate
 - Each bullet should be 1-2 sentences max
 - Use clear, direct language
 
 Format: Return exactly 10 bullets, one per line, starting with "• "
 
-Resume:
-{resumeText}`
+Candidate Profile:
+{profileData}`
 
 export async function POST(request: NextRequest) {
   console.info('[ResumeReview] POST request received')
@@ -112,36 +112,57 @@ export async function POST(request: NextRequest) {
     const userId = userRow.id as string
     console.info('[ResumeReview] User ID resolved:', userId)
 
-    // Get the most recent resume
-    console.info('[ResumeReview] Fetching most recent resume')
-    const { data: resume, error: resumeError } = await supabaseAdmin()
-      .from('resumes')
-      .select('raw_text')
+    // Get the enhanced profile data instead of raw resume text
+    console.info('[ResumeReview] Fetching enhanced profile')
+    const { data: profile, error: profileError } = await supabaseAdmin()
+      .from('candidate_basics')
+      .select('*')
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
       .limit(1)
       .single()
 
-    if (resumeError) {
-      console.error('[ResumeReview] Resume query error:', resumeError)
+    if (profileError) {
+      console.error('[ResumeReview] Profile query error:', profileError)
     }
 
-    if (!resume?.raw_text) {
-      console.warn('[ResumeReview] No resume found for user:', userId)
-      return new Response(JSON.stringify({ error: 'No resume found' }), { 
+    if (!profile) {
+      console.warn('[ResumeReview] No enhanced profile found for user:', userId)
+      return new Response(JSON.stringify({ error: 'No profile found. Please upload a resume first.' }), { 
         status: 404,
         headers: { 'Content-Type': 'application/json' }
       })
     }
 
-    console.info('[ResumeReview] Resume found, length:', resume.raw_text.length)
-    console.info('[ResumeReview] Starting streaming review for user:', userId)
+    console.info('[ResumeReview] Enhanced profile found')
+    
+    // Build a comprehensive profile summary for LLM analysis
+    const profileSummary = {
+      name: profile.name,
+      current_title: profile.current_title,
+      target_titles: profile.target_titles,
+      seniority_level: profile.seniority_level,
+      industries: profile.industries,
+      company_tiers: profile.company_tiers,
+      salary_expect_min: profile.salary_expect_min,
+      salary_expect_max: profile.salary_expect_max,
+      work_auth: profile.work_auth,
+      work_prefs: profile.work_prefs,
+      intent: profile.intent,
+      leadership_level: profile.leadership_level,
+      has_management: profile.has_management,
+      direct_reports_count: profile.direct_reports_count,
+      management_years: profile.management_years,
+      management_evidence: profile.management_evidence
+    }
+
+    console.info('[ResumeReview] Profile summary built, starting streaming review for user:', userId)
 
     // Create streaming response
     const stream = new ReadableStream({
       async start(controller) {
         try {
-          const prompt = RESUME_REVIEW_PROMPT.replace('{resumeText}', resume.raw_text)
+          const prompt = RESUME_REVIEW_PROMPT.replace('{profileData}', JSON.stringify(profileSummary, null, 2))
 
           const completion = await openai.chat.completions.create({
             model: 'gpt-4o-mini',
