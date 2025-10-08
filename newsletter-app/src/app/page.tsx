@@ -135,19 +135,37 @@ export default function Home() {
 
         {/* Resume Upload Form */}
         <div className="max-w-md mx-auto mb-16" id="upload">
-          <ResumeUpload 
-            onUploadSuccess={(resumeData) => {
-              console.log('Resume uploaded successfully:', resumeData)
-              // Refresh job recommendations by changing the key
-              setRefreshKey(prev => prev + 1)
-              // Dispatch custom event for dashboard to listen
-              window.dispatchEvent(new CustomEvent('resumeUploaded'))
-            }}
-            onUploadError={(error) => {
-              console.error('Resume upload error:', error)
-              // You can add error handling here
-            }}
-          />
+          {user ? (
+            <ResumeUpload 
+              onUploadSuccess={(resumeData) => {
+                console.log('Resume uploaded successfully:', resumeData)
+                // Refresh job recommendations by changing the key
+                setRefreshKey(prev => prev + 1)
+                // Dispatch custom event for dashboard to listen
+                window.dispatchEvent(new CustomEvent('resumeUploaded'))
+              }}
+              onUploadError={(error) => {
+                console.error('Resume upload error:', error)
+                // You can add error handling here
+              }}
+            />
+          ) : (
+            <div className="bg-white border border-gray-200 p-8 text-center">
+              <div className="mb-6">
+                <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+                <h3 className="text-xl font-medium text-black mb-2">Sign In Required</h3>
+                <p className="text-gray-600 mb-6">Please sign in to upload your resume and get personalized job recommendations</p>
+              </div>
+              <button
+                onClick={() => setShowLogin(true)}
+                className="bg-black text-white px-8 py-3 font-medium hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors"
+              >
+                Sign In to Continue
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Job Recommendations for logged-in users */}
