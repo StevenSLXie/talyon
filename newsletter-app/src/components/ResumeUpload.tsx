@@ -51,6 +51,7 @@ export default function ResumeUpload({ onUploadSuccess, onUploadError }: ResumeU
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
   const [salaryMin, setSalaryMin] = useState(9000)
   const [salaryMax, setSalaryMax] = useState(12000)
+  const [termsAccepted, setTermsAccepted] = useState(false)
   const [analysisMessage, setAnalysisMessage] = useState('')
   const analysisTickerRef = useRef<AnalysisTickerState>({
     queue: [],
@@ -405,43 +406,78 @@ export default function ResumeUpload({ onUploadSuccess, onUploadError }: ResumeU
         </div>
       )}
 
+      {/* Salary Expectation Range */}
       {selectedFile && !isUploading && (
-        <div className="mt-6">
-          <button onClick={handleUpload} className="w-full bg-black text-white py-3 px-6 font-medium hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors">Upload & Analyze Resume</button>
+        <div className="mt-6 p-4 border border-gray-200">
+          <h3 className="text-sm font-medium text-black mb-3">Monthly Salary Expectation (SGD) - Optional</h3>
+          <div className="flex items-center space-x-4">
+            <div className="flex-1">
+              <label className="block text-xs text-gray-600 mb-1">Min Salary</label>
+              <input
+                type="number"
+                min="0"
+                step="500"
+                value={salaryMin}
+                onChange={(e) => setSalaryMin(Number(e.target.value) || 0)}
+                placeholder="9000"
+                className="w-full px-3 py-2 border border-gray-300 text-black focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+              />
+            </div>
+            <div className="flex-1">
+              <label className="block text-xs text-gray-600 mb-1">Max Salary</label>
+              <input
+                type="number"
+                min="0"
+                step="500"
+                value={salaryMax}
+                onChange={(e) => setSalaryMax(Number(e.target.value) || 0)}
+                placeholder="12000"
+                className="w-full px-3 py-2 border border-gray-300 text-black focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+              />
+            </div>
+          </div>
+          <p className="text-xs text-gray-500 mt-2">Your input will override AI inference. Leave blank to use AI-estimated range.</p>
         </div>
       )}
 
-      {/* Salary Expectation Range */}
-      <div className="mt-6 p-4 border border-gray-200">
-        <h3 className="text-sm font-medium text-black mb-3">Monthly Salary Expectation (SGD) - Optional</h3>
-        <div className="flex items-center space-x-4">
-          <div className="flex-1">
-            <label className="block text-xs text-gray-600 mb-1">Min Salary</label>
-            <input
-              type="number"
-              min="0"
-              step="500"
-              value={salaryMin}
-              onChange={(e) => setSalaryMin(Number(e.target.value) || 0)}
-              placeholder="9000"
-              className="w-full px-3 py-2 border border-gray-300 text-black focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
-            />
-          </div>
-          <div className="flex-1">
-            <label className="block text-xs text-gray-600 mb-1">Max Salary</label>
-            <input
-              type="number"
-              min="0"
-              step="500"
-              value={salaryMax}
-              onChange={(e) => setSalaryMax(Number(e.target.value) || 0)}
-              placeholder="12000"
-              className="w-full px-3 py-2 border border-gray-300 text-black focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
-            />
+      {/* Terms and Consent */}
+      {selectedFile && !isUploading && (
+        <div className="mt-6 p-4 border border-gray-200 bg-gray-50">
+          <div className="space-y-3">
+            <label className="flex items-start space-x-3 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={termsAccepted}
+                onChange={(e) => setTermsAccepted(e.target.checked)}
+                className="mt-1 h-4 w-4 border-gray-300 text-black focus:ring-gray-500"
+              />
+              <span className="text-sm text-gray-700">
+                I understand and agree that:
+                <ul className="mt-2 space-y-1 text-xs text-gray-600 list-disc list-inside">
+                  <li><strong>Talyon will NEVER share your contact information</strong> with employers or recruiters without your explicit consent</li>
+                  <li>Talyon may use my resume data to analyze my profile and recommend relevant job opportunities that match my skills and experience</li>
+                </ul>
+              </span>
+            </label>
           </div>
         </div>
-        <p className="text-xs text-gray-500 mt-2">Your input will override AI inference. Leave blank to use AI-estimated range.</p>
-      </div>
+      )}
+
+      {selectedFile && !isUploading && (
+        <div className="mt-6">
+          <button 
+            onClick={handleUpload} 
+            disabled={!termsAccepted}
+            className={`w-full py-3 px-6 font-medium focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition-colors ${
+              termsAccepted 
+                ? 'bg-black text-white hover:bg-gray-800' 
+                : 'bg-gray-300 text-gray-500 cursor-not-allowed'
+            }`}
+          >
+            Upload & Analyze Resume
+          </button>
+        </div>
+      )}
 
       <div className="mt-6 text-center">
         <p className="text-sm text-gray-500">Supported formats: PDF, DOC, DOCX (max 10MB)</p>

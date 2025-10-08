@@ -87,7 +87,7 @@ export default function JobRecommendations({ userId, refreshTrigger = 0 }: JobRe
     return recommendations
       .slice()
       .sort((a, b) => b.match_score - a.match_score)
-      .slice(0, 8)
+      .slice(0, 6)
   }, [recommendations])
 
 

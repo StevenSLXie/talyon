@@ -50,7 +50,7 @@ export class AdvancedJobMatchingService {
   async getTwoStageRecommendationsWithEnhanced(
     candidateProfile: CandidateProfile,
     enhancedProfileJson: string,
-    limit: number = 5,
+    limit: number = 6,
     userId?: string
   ): Promise<AdvancedJobRecommendation[]> {
     try {
@@ -224,7 +224,7 @@ CANDIDATE PROFILE:
    */
   async getEnhancedJobRecommendations(
     userId: string,
-    limit: number = 5
+    limit: number = 6
   ): Promise<AdvancedJobRecommendation[]> {
     try {
       // Get enhanced profile from database
