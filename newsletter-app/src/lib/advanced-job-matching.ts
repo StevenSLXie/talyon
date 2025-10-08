@@ -57,9 +57,9 @@ export class AdvancedJobMatchingService {
       console.info('🚀 Starting Two-Stage Job Recommendation System')
       const stage1Start = Date.now()
       
-      // Stage 1: Coarse Ranking - Get top 20 jobs using current logic
+      // Stage 1: Coarse Ranking - Always get top 20 jobs using current logic
       console.info('📊 Stage 1: Coarse ranking (rules-based)')
-      const stage1Limit = Math.max(limit * 4, 20)
+      const stage1Limit = 20
       const stage1Recommendations = await this.jobMatchingService.getEnhancedRecommendations(
         candidateProfile,
         stage1Limit,
