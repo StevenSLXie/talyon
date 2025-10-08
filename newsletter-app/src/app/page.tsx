@@ -169,8 +169,8 @@ export default function Home() {
           )}
         </div>
 
-        {/* Resume Review - appears after upload */}
-        {user && refreshKey > 0 && (
+        {/* Resume Review - appears after upload (HIDDEN - not mature yet) */}
+        {false && user && refreshKey > 0 && (
           <ResumeReview userId={user.id} triggerReview={refreshKey} />
         )}
 
