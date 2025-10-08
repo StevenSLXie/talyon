@@ -33,9 +33,14 @@ Resume:
 {resumeText}`
 
 export async function POST(request: NextRequest) {
+  console.info('[ResumeReview] POST request received')
+  
   try {
     const sessionToken = request.cookies.get('session_token')?.value
+    console.info('[ResumeReview] Session token present:', !!sessionToken)
+    
     if (!sessionToken) {
+      console.warn('[ResumeReview] No session token found')
       return new Response(JSON.stringify({ error: 'Not authenticated' }), { 
         status: 401,
         headers: { 'Content-Type': 'application/json' }
@@ -43,40 +48,61 @@ export async function POST(request: NextRequest) {
     }
 
     const nowIso = new Date().toISOString()
-    const { data: session } = await supabaseAdmin()
+    console.info('[ResumeReview] Checking session validity')
+    
+    const { data: session, error: sessionError } = await supabaseAdmin()
       .from('user_sessions')
       .select('user_id')
       .eq('session_token', sessionToken)
       .gt('expires_at', nowIso)
       .single()
 
+    if (sessionError) {
+      console.error('[ResumeReview] Session query error:', sessionError)
+    }
+
     if (!session?.user_id) {
+      console.warn('[ResumeReview] Invalid or expired session')
       return new Response(JSON.stringify({ error: 'Invalid session' }), { 
         status: 401,
         headers: { 'Content-Type': 'application/json' }
       })
     }
 
-    const { data: subscriber } = await supabaseAdmin()
+    console.info('[ResumeReview] Session valid, user_id:', session.user_id)
+
+    const { data: subscriber, error: subscriberError } = await supabaseAdmin()
       .from('subscribers')
       .select('email')
       .eq('id', session.user_id)
       .single()
 
+    if (subscriberError) {
+      console.error('[ResumeReview] Subscriber query error:', subscriberError)
+    }
+
     if (!subscriber?.email) {
+      console.warn('[ResumeReview] Subscriber not found for user_id:', session.user_id)
       return new Response(JSON.stringify({ error: 'User not found' }), { 
         status: 401,
         headers: { 'Content-Type': 'application/json' }
       })
     }
 
-    const { data: userRow } = await supabaseAdmin()
+    console.info('[ResumeReview] Subscriber found:', subscriber.email)
+
+    const { data: userRow, error: userError } = await supabaseAdmin()
       .from('users')
       .select('id')
       .eq('email', subscriber.email)
       .single()
 
+    if (userError) {
+      console.error('[ResumeReview] User query error:', userError)
+    }
+
     if (!userRow?.id) {
+      console.warn('[ResumeReview] User profile not found for email:', subscriber.email)
       return new Response(JSON.stringify({ error: 'User profile not found' }), { 
         status: 404,
         headers: { 'Content-Type': 'application/json' }
@@ -84,9 +110,11 @@ export async function POST(request: NextRequest) {
     }
 
     const userId = userRow.id as string
+    console.info('[ResumeReview] User ID resolved:', userId)
 
     // Get the most recent resume
-    const { data: resume } = await supabaseAdmin()
+    console.info('[ResumeReview] Fetching most recent resume')
+    const { data: resume, error: resumeError } = await supabaseAdmin()
       .from('resumes')
       .select('raw_text')
       .eq('user_id', userId)
@@ -94,13 +122,19 @@ export async function POST(request: NextRequest) {
       .limit(1)
       .single()
 
+    if (resumeError) {
+      console.error('[ResumeReview] Resume query error:', resumeError)
+    }
+
     if (!resume?.raw_text) {
+      console.warn('[ResumeReview] No resume found for user:', userId)
       return new Response(JSON.stringify({ error: 'No resume found' }), { 
         status: 404,
         headers: { 'Content-Type': 'application/json' }
       })
     }
 
+    console.info('[ResumeReview] Resume found, length:', resume.raw_text.length)
     console.info('[ResumeReview] Starting streaming review for user:', userId)
 
     // Create streaming response

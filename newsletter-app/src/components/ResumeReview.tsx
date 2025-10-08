@@ -23,6 +23,7 @@ export default function ResumeReview({ userId, triggerReview }: ResumeReviewProp
       setCurrentBuffer('')
 
       try {
+        console.log('[ResumeReview] Fetching review...')
         const response = await fetch('/api/resume/review', {
           method: 'POST',
           headers: {
@@ -30,8 +31,18 @@ export default function ResumeReview({ userId, triggerReview }: ResumeReviewProp
           }
         })
 
+        console.log('[ResumeReview] Response status:', response.status)
+        
         if (!response.ok) {
-          throw new Error('Failed to load resume review')
+          const errorText = await response.text()
+          console.error('[ResumeReview] Error response:', errorText)
+          
+          try {
+            const errorJson = JSON.parse(errorText)
+            throw new Error(errorJson.error || 'Failed to load resume review')
+          } catch {
+            throw new Error(`Failed to load resume review (${response.status})`)
+          }
         }
 
         const reader = response.body?.getReader()
@@ -101,10 +112,11 @@ export default function ResumeReview({ userId, triggerReview }: ResumeReviewProp
           }
         }
 
+        console.log('[ResumeReview] Streaming complete')
         setIsStreaming(false)
 
       } catch (err) {
-        console.error('Resume review error:', err)
+        console.error('[ResumeReview] Error:', err)
         setError(err instanceof Error ? err.message : 'Failed to load review')
         setIsStreaming(false)
       }
