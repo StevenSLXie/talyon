@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabase'
 import { validate } from 'email-validator'
 import { randomInt } from 'crypto'
 import { Resend } from 'resend'
+import nodemailer from 'nodemailer'
 
 export async function POST(req: NextRequest) {
   try {
@@ -46,22 +47,59 @@ export async function POST(req: NextRequest) {
 
     // Send email with login code
     try {
+      // Try Gmail first (no domain required), then fall back to Resend
+      const gmailUser = process.env.GMAIL_USER
+      const gmailPass = process.env.GMAIL_APP_PASSWORD
       const resendApiKey = process.env.RESEND_API_KEY
       
-      if (!resendApiKey || resendApiKey === 'your_resend_api_key_here') {
-        // No API key configured, fallback to console logging
-        console.log(`Login code for ${email}: ${code}`)
-        return NextResponse.json({
-          message: 'Login code generated successfully (email not configured, check console)',
-          email,
-          expiresIn: 10 * 60,
-          code: code // Include code in response for development
-        })
+      // Option 1: Use Gmail (recommended for production without domain)
+      if (gmailUser && gmailPass) {
+        try {
+          const transporter = nodemailer.createTransport({
+            service: 'gmail',
+            auth: {
+              user: gmailUser,
+              pass: gmailPass
+            }
+          })
+
+          await transporter.sendMail({
+            from: `"Talyon" <${gmailUser}>`,
+            to: email,
+            subject: 'Your Login Code - Talyon',
+            html: `
+              <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                <h2 style="color: #000000;">Talyon</h2>
+                <p>Hello!</p>
+                <p>Your login code is:</p>
+                <div style="background-color: #f3f4f6; padding: 20px; text-align: center; margin: 20px 0; border-radius: 8px;">
+                  <h1 style="color: #1f2937; font-size: 32px; margin: 0; letter-spacing: 4px;">${code}</h1>
+                </div>
+                <p>This code will expire in 10 minutes.</p>
+                <p>If you didn't request this code, please ignore this email.</p>
+                <hr style="margin: 30px 0; border: none; border-top: 1px solid #e5e7eb;">
+                <p style="color: #6b7280; font-size: 14px;">Talyon - AI-powered job matching for Singapore</p>
+              </div>
+            `
+          })
+
+          console.log(`✅ Login code sent via Gmail to ${email}`)
+          return NextResponse.json({
+            message: 'Login code sent successfully via email',
+            email,
+            expiresIn: 10 * 60
+          })
+        } catch (gmailError) {
+          console.error('Gmail sending error:', gmailError)
+          // Fall through to try Resend or console fallback
+        }
       }
       
-      const resend = new Resend(resendApiKey)
-      
-      const { error: emailError } = await resend.emails.send({
+      // Option 2: Use Resend (requires domain verification)
+      if (resendApiKey && resendApiKey !== 'your_resend_api_key_here') {
+        const resend = new Resend(resendApiKey)
+        
+        const { error: emailError } = await resend.emails.send({
         from: 'Talyon <onboarding@resend.dev>',
         to: [email],
         subject: 'Your Login Code - Talyon',
@@ -94,22 +132,32 @@ export async function POST(req: NextRequest) {
           console.warn('⚠️  Resend domain not verified. Email sent to console only.')
         }
         
+          return NextResponse.json({
+            message: isDomainError 
+              ? 'Login code generated (domain verification required for email delivery)' 
+              : 'Login code generated successfully (email failed, check console)',
+            email,
+            expiresIn: 10 * 60,
+            code: code // Include code in response for development/testing
+          })
+        }
+
+        console.log(`✅ Login code sent via Resend to ${email}`)
+        
         return NextResponse.json({
-          message: isDomainError 
-            ? 'Login code generated (domain verification required for email delivery)' 
-            : 'Login code generated successfully (email failed, check console)',
+          message: 'Login code sent successfully via email',
           email,
-          expiresIn: 10 * 60,
-          code: code // Include code in response for development/testing
+          expiresIn: 10 * 60 // 10 minutes in seconds
         })
       }
-
-      console.log(`Login code sent via email to ${email}: ${code}`)
       
+      // Option 3: No email service configured - fallback to console
+      console.log(`⚠️  No email service configured. Login code for ${email}: ${code}`)
       return NextResponse.json({
-        message: 'Login code sent successfully via email',
+        message: 'Login code generated (email service not configured, check console)',
         email,
-        expiresIn: 10 * 60 // 10 minutes in seconds
+        expiresIn: 10 * 60,
+        code: code // Include code in response for development
       })
     } catch (emailError) {
       console.error('Email service error:', emailError)
