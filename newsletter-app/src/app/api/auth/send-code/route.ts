@@ -83,13 +83,24 @@ export async function POST(req: NextRequest) {
 
       if (emailError) {
         console.error('Email sending error:', emailError)
-        // Still log to console as fallback
-        console.log(`Login code for ${email}: ${code}`)
+        
+        // Check if it's a domain verification error (403)
+        const isDomainError = emailError && typeof emailError === 'object' && 'statusCode' in emailError && emailError.statusCode === 403
+        
+        // Log to console as fallback
+        console.log(`⚠️  Login code for ${email}: ${code}`)
+        
+        if (isDomainError) {
+          console.warn('⚠️  Resend domain not verified. Email sent to console only.')
+        }
+        
         return NextResponse.json({
-          message: 'Login code generated successfully (email failed, check console)',
+          message: isDomainError 
+            ? 'Login code generated (domain verification required for email delivery)' 
+            : 'Login code generated successfully (email failed, check console)',
           email,
           expiresIn: 10 * 60,
-          code: code // Include code in response for development
+          code: code // Include code in response for development/testing
         })
       }
 
