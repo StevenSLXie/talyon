@@ -62,12 +62,12 @@ export async function POST(req: NextRequest) {
       const resend = new Resend(resendApiKey)
       
       const { error: emailError } = await resend.emails.send({
-        from: 'Singapore Job Portal <onboarding@resend.dev>',
+        from: 'Talyon <onboarding@resend.dev>',
         to: [email],
-        subject: 'Your Login Code - Singapore Job Portal',
+        subject: 'Your Login Code - Talyon',
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-            <h2 style="color: #2563eb;">Singapore Job Portal</h2>
+            <h2 style="color: #000000;">Talyon</h2>
             <p>Hello!</p>
             <p>Your login code is:</p>
             <div style="background-color: #f3f4f6; padding: 20px; text-align: center; margin: 20px 0; border-radius: 8px;">
@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
             <p>This code will expire in 10 minutes.</p>
             <p>If you didn't request this code, please ignore this email.</p>
             <hr style="margin: 30px 0; border: none; border-top: 1px solid #e5e7eb;">
-            <p style="color: #6b7280; font-size: 14px;">Singapore Job Portal - Find your next career opportunity</p>
+            <p style="color: #6b7280; font-size: 14px;">Talyon - AI-powered job matching for Singapore</p>
           </div>
         `
       })
