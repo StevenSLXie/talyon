@@ -2,6 +2,7 @@
 
 import ResumeUpload from '@/components/ResumeUpload'
 import JobRecommendations from '@/components/JobRecommendations'
+import ResumeReview from '@/components/ResumeReview'
 import LoginForm from '@/components/LoginForm'
 import UserMenu from '@/components/UserMenu'
 import { useAuth } from '@/components/AuthProvider'
@@ -168,10 +169,15 @@ export default function Home() {
           )}
         </div>
 
+        {/* Resume Review - appears after upload */}
+        {user && refreshKey > 0 && (
+          <ResumeReview userId={user.id} triggerReview={refreshKey} />
+        )}
+
         {/* Job Recommendations for logged-in users */}
         {user && refreshKey > 0 && (
           <div className="max-w-6xl mx-auto">
-            <JobRecommendations key={refreshKey} limit={6} refreshTrigger={refreshKey} userId={user?.id} />
+            <JobRecommendations key={refreshKey} refreshTrigger={refreshKey} userId={user?.id} />
           </div>
         )}
       </div>
