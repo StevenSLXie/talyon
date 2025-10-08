@@ -25,7 +25,7 @@ export const RESUME_ANALYSIS_PROMPTS = {
 
 2. "jsonResume": Extract information in JSON Resume format including:
    - basics: { name, email, phone, location, summary, profiles }
-   - work: [{ company, position, startDate, endDate, summary, highlights }]
+   - work: [{ name, position, startDate, endDate, summary, highlights }]  (note: use "name" for company name)
    - education: [{ institution, area, studyType, startDate, endDate, gpa }]
    - awards: [{ title, date, awarder, summary }]
    - certificates: [{ name, date, issuer, url }]
@@ -90,7 +90,7 @@ Return ONLY valid JSON without code fences.`,
 
 Extract all information into the JSON Resume format. Return JSON with:
 - basics: { name, email, phone, location, summary, profiles }
-- work: [{ company, position, startDate, endDate, summary, highlights }]
+- work: [{ name, position, startDate, endDate, summary, highlights }]  (note: use "name" for company name)
 - education: [{ institution, area, studyType, startDate, endDate, gpa }]
 - awards: [{ title, date, awarder, summary }]
 - certificates: [{ name, date, issuer, url }]
