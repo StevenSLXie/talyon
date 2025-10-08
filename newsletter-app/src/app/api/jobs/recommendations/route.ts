@@ -4,7 +4,7 @@ import { supabaseAdmin } from '@/lib/supabase'
 
 export async function POST(request: NextRequest) {
   try {
-    const { limit = 3 } = await request.json().catch(() => ({ limit: 3 }))
+    const { limit = 8 } = await request.json().catch(() => ({ limit: 8 }))
 
     const sessionToken = request.cookies.get('session_token')?.value
     if (!sessionToken) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 })

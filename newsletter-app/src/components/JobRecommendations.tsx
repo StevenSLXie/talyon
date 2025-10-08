@@ -32,7 +32,8 @@ export default function JobRecommendations({ userId, refreshTrigger = 0 }: JobRe
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          userId
+          userId,
+          limit: 8
         })
       })
 
@@ -87,7 +88,7 @@ export default function JobRecommendations({ userId, refreshTrigger = 0 }: JobRe
     return recommendations
       .slice()
       .sort((a, b) => b.match_score - a.match_score)
-      .slice(0, 6)
+      .slice(0, 8)
   }, [recommendations])
 
 
