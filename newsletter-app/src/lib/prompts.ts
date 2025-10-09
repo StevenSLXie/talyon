@@ -176,46 +176,47 @@ Guidelines:
 }
 
 export const JOB_ANALYSIS_PROMPTS = {
-  batchAnalyzeJobs: `You are an expert career advisor analyzing job matches for a candidate. 
+  batchAnalyzeJobs: `You are an expert evaluator specializing in candidate-job fit scoring.
+Your task is to quantitatively assess each job's fit to the candidate's core discipline, skills, and salary expectations, based strictly on the given criteria.
+Be concise, consistent, and deterministic — avoid generic career advice.
 
 CANDIDATE PROFILE:
 {enhancedProfile}
 
-ANALYZE THESE JOBS:
+EVALUATE THESE JOBS:
 {jobSummaries}
 
-SCORING PRIORITIES (in order of importance):
-1. DISCIPLINE ALIGNMENT - Most critical factor. Ensure job role matches candidate's core discipline (software, finance, marketing, etc.). Apply heavy penalties for cross-discipline mismatches.
-2. SALARY ALIGNMENT - Second most important. Compare job salary range with candidate's expectations. Apply significant penalties for jobs below expectations.
-3. SKILL MATCH - Third priority. Evaluate how well candidate's skills align with job requirements, considering proficiency levels.
+SCORING CRITERIA (strict priority order):
+1. DISCIPLINE ALIGNMENT (40% weight) - Core role function match. Heavy penalties for cross-discipline jobs.
+2. SALARY ALIGNMENT (35% weight) - Job salary vs candidate expectations. Significant penalties for below-expectation roles.
+3. SKILL MATCH (25% weight) - Required skills vs candidate proficiency levels.
 
-For each job, provide:
-- final_score: number (0-100) - overall match quality (prioritize discipline + salary alignment)
-- matching_reasons: string[] - why this job fits the candidate (highlight discipline and salary alignment first)
-- non_matching_points: string[] - potential concerns or gaps (emphasize discipline mismatches and salary gaps)
+SCORING RULES:
+- Discipline mismatch: -30 to -50 points
+- Salary below expectation: -20 to -40 points  
+- Skill gaps: -10 to -20 points
+- Leadership level mismatch: -15 points
+
+For each job, provide ONLY:
+- final_score: number (0-100) - strict quantitative assessment
+- matching_reasons: string[] - specific factual matches (discipline, salary, skills)
+- non_matching_points: string[] - concrete gaps (discipline, salary, skills)
 - key_highlights: string[] - 2-3 most important job aspects
-- personalized_assessment: string - 2-3 sentences explaining why this job is good/bad for THIS specific candidate
-- career_impact: string - 2-3 sentences about how this role would advance their career
-- leadership_match: boolean - does the job's leadership level match candidate's experience?
+- personalized_assessment: string - 1-2 sentences on fit quality
+- career_impact: string - 1-2 sentences on career progression
+- leadership_match: boolean - exact leadership level match
 
-LEADERSHIP LEVEL MATCHING:
-- IC roles: Individual contributor positions, no management required
-- Team Lead roles: Managing 1-5 people, team coordination
-- Team Lead++ roles: Managing 6+ people, senior management, strategic leadership
-
-For jobs without explicit leadership level, infer from:
-- Job title keywords (Director, Manager, Lead, etc.)
-- Job description mentions of team management
-- Responsibilities involving people management
-
-Consider the candidate's leadership_level and match appropriately. Apply penalties for mismatched leadership expectations.
+LEADERSHIP LEVELS:
+- IC: Individual contributor, no management
+- Team Lead: Managing 1-5 people
+- Team Lead++: Managing 6+ people, senior management
 
 DISCIPLINE ALIGNMENT EXAMPLES:
-- Software Engineer → Software Developer: Perfect alignment (high score)
-- Software Engineer → Data Analyst: Moderate alignment (medium score)
-- Software Engineer → Finance Manager: Poor alignment (low score)
-- Finance Manager → Accounting Manager: Perfect alignment (high score)
-- Finance Manager → Software Engineer: Poor alignment (low score)
+- Software Engineer → Software Developer: Perfect (90-100)
+- Software Engineer → Data Analyst: Moderate (60-70)
+- Software Engineer → Finance Manager: Poor (20-30)
+- Finance Manager → Accounting Manager: Perfect (90-100)
+- Finance Manager → Software Engineer: Poor (20-30)
 
 Return ONLY valid JSON in this format:
 {
