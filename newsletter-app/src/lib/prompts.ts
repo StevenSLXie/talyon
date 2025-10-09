@@ -18,12 +18,6 @@ Analyze this resume and extract information in TWO formats:
 1. "enhancedProfile": Extract detailed candidate profile including:
    - titles: string[] (job titles they've held)
    - skills: [{ name: string, level: number (1-5), last_used: string, evidence: string }]
-
-Skill extraction rules:
-- Derive level strictly from resume wording (e.g., "expert"=5, "intermediate"=3, "basic"=2)
-- If level is not stated, assign 3 (moderate proficiency)
-- For last_used, if not found, estimate from most recent related job and use that end date
-- Evidence must quote or paraphrase exact text supporting the skill
    - education: [{ degree: string, major: string, institution: string, grad_year: number }]
    - certifications: [{ name: string, issuer: string, date: string }]
    - industries: string[]
@@ -39,6 +33,12 @@ Skill extraction rules:
        management_years: number,
        management_evidence: string[]
      }
+
+Skill extraction rules:
+- Derive level strictly from resume wording (e.g., "expert"=5, "intermediate"=3, "basic"=2)
+- If level is not stated, assign 3 (moderate proficiency)
+- For last_used, if not found, estimate from most recent related job and use that end date
+- Evidence must quote or paraphrase exact text supporting the skill
 
 2. "jsonResume": Extract information in JSON Resume format including:
    - basics: { name, email, phone, location, summary, profiles }

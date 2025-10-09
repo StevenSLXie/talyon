@@ -1060,7 +1060,7 @@ function checkDisciplineCompatibility(candidate: CandidateProfile, job: Candidat
   }
   
   // Extract candidate's primary discipline from titles
-  const candidateTitles = candidate.titles.map(t => t.toLowerCase())
+  const candidateTitles = candidate.titles.filter(t => t && typeof t === 'string').map(t => t.toLowerCase())
   let candidateDiscipline = ''
   
   for (const title of candidateTitles) {
