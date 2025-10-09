@@ -452,10 +452,10 @@ export default function ResumeUpload({ onUploadSuccess, onUploadError }: ResumeU
                 className="mt-1 h-4 w-4 border-gray-300 text-black focus:ring-gray-500"
               />
               <span className="text-sm text-gray-700">
-                I understand and agree that:
+                You understand and agree that:
                 <ul className="mt-2 space-y-1 text-xs text-gray-600 list-disc list-inside">
                   <li><strong>Talyon will NEVER share your contact information</strong> with employers or recruiters without your explicit consent</li>
-                  <li>Talyon may use my resume data to analyze my profile and recommend relevant job opportunities that match my skills and experience</li>
+                  <li>Talyon may use your resume data to analyze your profile and recommend relevant job opportunities that match your skills and experience</li>
                 </ul>
               </span>
             </label>
