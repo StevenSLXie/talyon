@@ -186,6 +186,12 @@ CANDIDATE PROFILE:
 EVALUATE THESE JOBS:
 {jobSummaries}
 
+ANALYSIS INSTRUCTIONS:
+- Analyze jobs sequentially, one by one, and never mix attributes across jobs
+- Each job block (=== JOB X START === to === JOB X END ===) is completely independent
+- Focus on the specific job_id, title, and details within each block only
+- Do not reference or compare with other jobs in your analysis
+
 SCORING CRITERIA (strict priority order):
 1. DISCIPLINE ALIGNMENT (40% weight) - Core role function match. Heavy penalties for cross-discipline jobs.
 2. SALARY ALIGNMENT (35% weight) - Job salary vs candidate expectations. Significant penalties for below-expectation roles.

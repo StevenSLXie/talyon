@@ -448,23 +448,27 @@ CANDIDATE PROFILE:
 `
 
     const jobDetails = jobSummaries.map(job => `
-Job ${job.id}: ${job.job.title} at ${job.job.company}
-- Location: ${job.job.location}
-- Salary: $${job.job.salary_low?.toLocaleString()} - $${job.job.salary_high?.toLocaleString()}
-- Industry: ${job.job.industry}
-- Experience Level: ${job.job.experience_level}
-- Job Type: ${job.job.job_type}
-- Post Date: ${job.job.post_date}
-- URL: ${job.job.url || 'N/A'}
-- Job Category: ${job.job.job_category || 'N/A'}
-- Leadership Level: ${job.job.leadership_level || 'Not specified'}
-- Company Tier: ${job.job.company_tier || 'Not specified'}
+=== JOB ${job.id} START ===
+job_id: "${job.id}"
+title: "${job.job.title}"
+company: "${job.job.company}"
+location: "${job.job.location}"
+salary: "$${job.job.salary_low?.toLocaleString()} - $${job.job.salary_high?.toLocaleString()}"
+industry: "${job.job.industry}"
+experience_level: "${job.job.experience_level}"
+job_type: "${job.job.job_type}"
+post_date: "${job.job.post_date}"
+url: "${job.job.url || 'N/A'}"
+job_category: "${job.job.job_category || 'N/A'}"
+leadership_level: "${job.job.leadership_level || 'Not specified'}"
+company_tier: "${job.job.company_tier || 'Not specified'}"
 
 FULL JOB DESCRIPTION:
 ${job.job.job_description || job.job.raw_text || 'No description available'}
 
-- Stage 1 Score: ${job.stage1_score}/100
-- Stage 1 Reasons: ${job.stage1_reasons.join(', ')}
+stage1_score: ${job.stage1_score}/100
+stage1_reasons: ${job.stage1_reasons.join(', ')}
+=== JOB ${job.id} END ===
 `).join('\n')
 
     const prompt = JOB_ANALYSIS_PROMPTS.batchAnalyzeJobs
