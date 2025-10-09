@@ -9,7 +9,7 @@ Follow the exact order and key names. Do not mix fields from one section into th
 Use the candidate's resume text as the only source of truth; do not invent information.
 
 For every inferred field, ensure there is textual evidence in the resume.
-If uncertain, leave the field empty or null instead of guessing.
+If uncertain, use reasonable defaults instead of null values.
 
 Date normalization takes priority over all other transformations. Ensure all dates comply exactly with the required format before returning the final JSON.
 
@@ -74,8 +74,11 @@ IMPORTANT DATE FORMAT REQUIREMENTS:
 - For "last_used" in skills, use YYYY-MM format (e.g., "2023-12")
 
 Formatting constraints:
-- Use [] for empty arrays and null for missing scalar fields
-- Never use placeholders like "N/A", "Unknown", or "Not specified"
+- Use [] for empty arrays and reasonable defaults for missing scalar fields
+- Never use null, "N/A", "Unknown", or "Not specified" values
+- For missing strings, use empty string ""
+- For missing numbers, use 0
+- For missing booleans, use false
 - Maintain consistent key order as defined above
 
 The final output must be a single JSON object in this exact format:

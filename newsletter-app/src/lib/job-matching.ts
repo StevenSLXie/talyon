@@ -584,6 +584,7 @@ function calculateJobFamilyMatch(
   let bestMatch = { score: 0, reason: '' }
 
   for (const title of candidateTitles) {
+    if (!title || typeof title !== 'string') continue
     const titleLower = title.toLowerCase()
     
     // Check direct job family match
@@ -1342,6 +1343,7 @@ export class JobMatchingService {
         // 5. Title matching (15% weight)
         let bestTitle = { score: 0, tokens: [] as string[], title: '' }
         for (const candidateTitle of candidateProfile.titles) {
+          if (!candidateTitle || typeof candidateTitle !== 'string') continue
           const { score, tokens } = tokenOverlapScore(candidateTitle.toLowerCase(), job.title || '')
           if (score > bestTitle.score) bestTitle = { score, tokens, title: candidateTitle }
         }
