@@ -1032,10 +1032,80 @@ function applyHardFilters(candidate: CandidateProfile, job: CandidateJob): { pas
     reasons.push(workPrefsCheck.reason)
   }
 
+  // NEW: Check job family compatibility (strict discipline matching)
+  const disciplineCheck = checkDisciplineCompatibility(candidate, job)
+  if (!disciplineCheck.passed) {
+    reasons.push(disciplineCheck.reason)
+  }
+
   return {
     passed: reasons.length === 0,
     reasons
   }
+}
+
+function checkDisciplineCompatibility(candidate: CandidateProfile, job: CandidateJob): { passed: boolean; reason: string } {
+  const jobTitle = (job.title || '').toLowerCase()
+  const jobFamily = (job.job_family || '').toLowerCase()
+  
+  // Define incompatible discipline pairs
+  const incompatiblePairs: { [key: string]: string[] } = {
+    'software': ['finance', 'accounting', 'marketing', 'sales', 'hr', 'legal'],
+    'finance': ['software', 'engineering', 'data science', 'product management'],
+    'marketing': ['software', 'engineering', 'finance', 'accounting'],
+    'sales': ['software', 'engineering', 'finance', 'accounting'],
+    'hr': ['software', 'engineering', 'finance', 'accounting'],
+    'data_science': ['finance', 'accounting', 'marketing', 'sales', 'hr'],
+    'product_management': ['finance', 'accounting', 'marketing', 'sales', 'hr']
+  }
+  
+  // Extract candidate's primary discipline from titles
+  const candidateTitles = candidate.titles.map(t => t.toLowerCase())
+  let candidateDiscipline = ''
+  
+  for (const title of candidateTitles) {
+    if (title.includes('software') || title.includes('engineer') || title.includes('developer')) {
+      candidateDiscipline = 'software'
+      break
+    } else if (title.includes('finance') || title.includes('accounting') || title.includes('financial')) {
+      candidateDiscipline = 'finance'
+      break
+    } else if (title.includes('marketing') || title.includes('growth')) {
+      candidateDiscipline = 'marketing'
+      break
+    } else if (title.includes('sales') || title.includes('business development')) {
+      candidateDiscipline = 'sales'
+      break
+    } else if (title.includes('hr') || title.includes('human resources')) {
+      candidateDiscipline = 'hr'
+      break
+    } else if (title.includes('data') || title.includes('analyst') || title.includes('scientist')) {
+      candidateDiscipline = 'data_science'
+      break
+    } else if (title.includes('product') || title.includes('pm')) {
+      candidateDiscipline = 'product_management'
+      break
+    }
+  }
+  
+  // If we can't determine candidate discipline, allow through
+  if (!candidateDiscipline) {
+    return { passed: true, reason: 'Candidate discipline unclear' }
+  }
+  
+  // Check if job is in incompatible discipline
+  const incompatibleDisciplines = incompatiblePairs[candidateDiscipline] || []
+  
+  for (const incompatible of incompatibleDisciplines) {
+    if (jobTitle.includes(incompatible) || jobFamily.includes(incompatible)) {
+      return { 
+        passed: false, 
+        reason: `Incompatible discipline: ${candidateDiscipline} candidate matched with ${incompatible} role` 
+      }
+    }
+  }
+  
+  return { passed: true, reason: 'Discipline compatible' }
 }
 
 export class JobMatchingService {
@@ -1331,9 +1401,9 @@ export class JobMatchingService {
           salaryPenalty
         )
 
-        // Apply a discipline gate: if job family and title similarity are both weak, drop score drastically
+        // Apply a strict discipline gate: if job family and title similarity are both weak, drop score drastically
         const disciplineAlignment = Math.max(jobFamilyMatch.score, bestTitle.score)
-        const adjustedScore = disciplineAlignment < 40 ? Math.max(totalScore - 40, 0) : totalScore
+        const adjustedScore = disciplineAlignment < 60 ? Math.max(totalScore - 60, 0) : totalScore
 
         // Build match reasons
         const reasons: string[] = []
@@ -1427,7 +1497,7 @@ export class JobMatchingService {
       })
 
       const top = matches
-        .filter(m => m.match_score > 10) // Filter out very low matches (lowered threshold for better coverage)
+        .filter(m => m.match_score > 30) // Strict threshold: only high-quality matches
         .sort((a, b) => b.match_score - a.match_score)
         .slice(0, limit)
 
