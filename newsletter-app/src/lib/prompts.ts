@@ -2,11 +2,28 @@
 // All LLM prompts should be kept in this separate templates file
 
 export const RESUME_ANALYSIS_PROMPTS = {
-  combinedProfile: `Analyze this resume and extract information in TWO formats:
+  combinedProfile: `You are a professional resume parser and HR data extraction engine. Do not write commentary or analysis — only structured data according to the schema.
+
+You must complete this task in two separate structured outputs — first enhancedProfile, then jsonResume.
+Follow the exact order and key names. Do not mix fields from one section into the other.
+Use the candidate's resume text as the only source of truth; do not invent information.
+
+For every inferred field, ensure there is textual evidence in the resume.
+If uncertain, leave the field empty or null instead of guessing.
+
+Date normalization takes priority over all other transformations. Ensure all dates comply exactly with the required format before returning the final JSON.
+
+Analyze this resume and extract information in TWO formats:
 
 1. "enhancedProfile": Extract detailed candidate profile including:
    - titles: string[] (job titles they've held)
    - skills: [{ name: string, level: number (1-5), last_used: string, evidence: string }]
+
+Skill extraction rules:
+- Derive level strictly from resume wording (e.g., "expert"=5, "intermediate"=3, "basic"=2)
+- If level is not stated, assign 3 (moderate proficiency)
+- For last_used, if not found, estimate from most recent related job and use that end date
+- Evidence must quote or paraphrase exact text supporting the skill
    - education: [{ degree: string, major: string, institution: string, grad_year: number }]
    - certifications: [{ name: string, issuer: string, date: string }]
    - industries: string[]
@@ -56,7 +73,19 @@ IMPORTANT DATE FORMAT REQUIREMENTS:
 - For year-only dates like "2019", convert to "2019-01-01"
 - For "last_used" in skills, use YYYY-MM format (e.g., "2023-12")
 
-Return ONLY valid JSON without code fences.`
+Formatting constraints:
+- Use [] for empty arrays and null for missing scalar fields
+- Never use placeholders like "N/A", "Unknown", or "Not specified"
+- Maintain consistent key order as defined above
+
+The final output must be a single JSON object in this exact format:
+
+{
+  "enhancedProfile": { ... },
+  "jsonResume": { ... }
+}
+
+Do not include comments, markdown, or explanations.`
 }
 
 export const JOB_ANALYSIS_PROMPTS = {
