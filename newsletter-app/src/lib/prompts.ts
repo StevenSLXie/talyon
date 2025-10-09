@@ -90,6 +90,17 @@ SCORING GUIDELINES:
   * >80% skill overlap + good scope match: +50–60 (most required skills match + appropriate job scope)
   * 50–80% skill overlap + moderate scope: +30–40 (some required skills match + reasonable scope)
   * <50% skill overlap + poor scope: +0–20 (few required skills match + mismatched scope)
+
+SKILL MATCH EXAMPLES:
+- Frontend: React + TypeScript + CSS → Frontend Developer (Perfect: +60)
+- Backend: Node.js + Python + SQL → Backend Engineer (Perfect: +60)
+- Full-stack: React + Node.js + MongoDB → Full-stack Developer (Perfect: +60)
+- Data Science: Python + ML + TensorFlow → Data Scientist (Perfect: +60)
+- DevOps: AWS + Docker + Kubernetes → DevOps Engineer (Perfect: +60)
+- Product: Figma + Analytics + User Research → Product Manager (Perfect: +60)
+- Cross-domain: React + Python → Full-stack role (Good: +40-50)
+- Partial match: Only React → Full-stack role requiring React+Node.js (Moderate: +30-40)
+- Poor match: Only SQL → Frontend role requiring React+CSS (Poor: +10-20)
 - Salary penalty (subtract from total)
   * Within expectation: 0 penalty
   * Slightly below (10-20%): -5 to -10 points
