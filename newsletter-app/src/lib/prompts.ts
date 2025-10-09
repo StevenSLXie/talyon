@@ -193,15 +193,26 @@ ANALYSIS INSTRUCTIONS:
 - Do not reference or compare with other jobs in your analysis
 
 SCORING CRITERIA (strict priority order):
-1. DISCIPLINE ALIGNMENT (40% weight) - Core role function match. Heavy penalties for cross-discipline jobs.
-2. SALARY ALIGNMENT (35% weight) - Job salary vs candidate expectations. Significant penalties for below-expectation roles.
-3. SKILL MATCH (25% weight) - Required skills vs candidate proficiency levels.
+1. DISCIPLINE ALIGNMENT (50 points baseline) - Core role function match
+2. SALARY ALIGNMENT (30 points baseline) - Job salary vs candidate expectations  
+3. SKILL MATCH (20 points baseline) - Required skills vs candidate proficiency levels
 
-SCORING RULES:
-- Discipline mismatch: -30 to -50 points
-- Salary below expectation: -20 to -40 points  
-- Skill gaps: -10 to -20 points
-- Leadership level mismatch: -15 points
+SCORING GUIDELINES:
+- Discipline alignment = 50 points baseline
+  * Perfect same-discipline: +50 (Software Engineer → Software Developer)
+  * Adjacent disciplines: +25~35 (Software Engineer → Data Analyst)
+  * Cross-discipline: 0–10 (Software Engineer → Finance Manager)
+- Salary alignment = 30 points baseline
+  * Within expectation: +25–30 (job salary overlaps with candidate range)
+  * Slightly below: +15–20 (job salary 10-20% below candidate min)
+  * Significantly below: 0–10 (job salary >20% below candidate min)
+- Skill match = 20 points baseline
+  * >80% overlap: +15–20 (most required skills match)
+  * 50–80% overlap: +8–12 (some required skills match)
+  * <50% overlap: +0–5 (few required skills match)
+- Leadership level mismatch: -10 points penalty
+
+Sum all partial scores for final_score (0–100).
 
 For each job, provide ONLY:
 - final_score: number (0-100) - strict quantitative assessment
