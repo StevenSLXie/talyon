@@ -184,10 +184,15 @@ CANDIDATE PROFILE:
 ANALYZE THESE JOBS:
 {jobSummaries}
 
+SCORING PRIORITIES (in order of importance):
+1. DISCIPLINE ALIGNMENT - Most critical factor. Ensure job role matches candidate's core discipline (software, finance, marketing, etc.). Apply heavy penalties for cross-discipline mismatches.
+2. SALARY ALIGNMENT - Second most important. Compare job salary range with candidate's expectations. Apply significant penalties for jobs below expectations.
+3. SKILL MATCH - Third priority. Evaluate how well candidate's skills align with job requirements, considering proficiency levels.
+
 For each job, provide:
-- final_score: number (0-100) - overall match quality
-- matching_reasons: string[] - why this job fits the candidate
-- non_matching_points: string[] - potential concerns or gaps
+- final_score: number (0-100) - overall match quality (prioritize discipline + salary alignment)
+- matching_reasons: string[] - why this job fits the candidate (highlight discipline and salary alignment first)
+- non_matching_points: string[] - potential concerns or gaps (emphasize discipline mismatches and salary gaps)
 - key_highlights: string[] - 2-3 most important job aspects
 - personalized_assessment: string - 2-3 sentences explaining why this job is good/bad for THIS specific candidate
 - career_impact: string - 2-3 sentences about how this role would advance their career
@@ -204,6 +209,13 @@ For jobs without explicit leadership level, infer from:
 - Responsibilities involving people management
 
 Consider the candidate's leadership_level and match appropriately. Apply penalties for mismatched leadership expectations.
+
+DISCIPLINE ALIGNMENT EXAMPLES:
+- Software Engineer → Software Developer: Perfect alignment (high score)
+- Software Engineer → Data Analyst: Moderate alignment (medium score)
+- Software Engineer → Finance Manager: Poor alignment (low score)
+- Finance Manager → Accounting Manager: Perfect alignment (high score)
+- Finance Manager → Software Engineer: Poor alignment (low score)
 
 Return ONLY valid JSON in this format:
 {
