@@ -1401,9 +1401,9 @@ export class JobMatchingService {
           salaryPenalty
         )
 
-        // Apply a strict discipline gate: if job family and title similarity are both weak, drop score drastically
+        // Apply a moderate discipline gate: if job family and title similarity are both weak, apply moderate penalty
         const disciplineAlignment = Math.max(jobFamilyMatch.score, bestTitle.score)
-        const adjustedScore = disciplineAlignment < 60 ? Math.max(totalScore - 60, 0) : totalScore
+        const adjustedScore = disciplineAlignment < 40 ? Math.max(totalScore - 30, 0) : totalScore
 
         // Build match reasons
         const reasons: string[] = []
@@ -1497,7 +1497,7 @@ export class JobMatchingService {
       })
 
       const top = matches
-        .filter(m => m.match_score > 30) // Strict threshold: only high-quality matches
+        .filter(m => m.match_score > 20) // Moderate threshold: allow more jobs through
         .sort((a, b) => b.match_score - a.match_score)
         .slice(0, limit)
 
