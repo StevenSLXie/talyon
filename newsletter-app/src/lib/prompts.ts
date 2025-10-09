@@ -83,6 +83,7 @@ Formatting constraints:
 
 The final output must be a single JSON object in this exact format:
 
+
 {
   "enhancedProfile": { ... },
   "jsonResume": { ... }
