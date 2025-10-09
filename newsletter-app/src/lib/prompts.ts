@@ -228,6 +228,12 @@ LEADERSHIP LEVELS:
 - Team Lead: Managing 1-5 people
 - Team Lead++: Managing 6+ people, senior management
 
+LEADERSHIP MATCH RULES:
+- If candidate's leadership level is not explicitly stated, assume they are IC unless otherwise inferred from the profile
+- Never output null or uncertain; must return true or false
+- Infer candidate leadership from: management experience, team size, direct reports count
+- Apply -10 points penalty only for clear mismatches (e.g., IC candidate for Team Lead++ role)
+
 DISCIPLINE ALIGNMENT EXAMPLES:
 - Software Engineer → Software Developer: Perfect (90-100)
 - Software Engineer → Data Analyst: Moderate (60-70)
