@@ -110,7 +110,7 @@ export class EnhancedCandidateProfileService {
           resume_id: resumeId,
           current_title: profile.current_title || profile.titles?.[0] || 'Not specified',
           target_titles: profile.target_titles || profile.titles?.slice(1) || [],
-          job_family: profile.job_family || this.inferJobFamily(profile.current_title || profile.titles?.[0] || ''),
+          job_family: profile.job_family,
           work_auth: profile.work_auth || EnhancedCandidateProfileService.DEFAULT_WORK_AUTH,
           seniority_level: profile.seniority_level || 'Not specified',
           industries: profile.industries || [],
@@ -252,52 +252,6 @@ export class EnhancedCandidateProfileService {
   }
 
   /**
-   * Infer job family from job title
-   */
-  private static inferJobFamily(title: string): string {
-    if (!title) return 'Other'
-    
-    const titleLower = title.toLowerCase()
-    
-    // Engineering keywords
-    if (['engineer', 'developer', 'programmer', 'architect', 'technical', 'software', 'algorithm'].some(keyword => titleLower.includes(keyword))) {
-      return 'Engineering'
-    }
-    
-    // IT keywords
-    if (['it', 'system', 'network', 'database', 'infrastructure', 'devops', 'cloud'].some(keyword => titleLower.includes(keyword))) {
-      return 'IT'
-    }
-    
-    // Finance keywords
-    if (['finance', 'accounting', 'financial', 'treasury', 'audit', 'banking', 'investment', 'analyst'].some(keyword => titleLower.includes(keyword))) {
-      return 'Finance'
-    }
-    
-    // Marketing keywords
-    if (['marketing', 'growth', 'digital', 'content', 'social', 'advertising', 'brand', 'product'].some(keyword => titleLower.includes(keyword))) {
-      return 'Marketing'
-    }
-    
-    // Operations keywords
-    if (['operations', 'ops', 'process', 'efficiency', 'logistics', 'supply', 'management'].some(keyword => titleLower.includes(keyword))) {
-      return 'Operations'
-    }
-    
-    // Sales keywords
-    if (['sales', 'business development', 'account', 'revenue', 'client', 'customer', 'partnership'].some(keyword => titleLower.includes(keyword))) {
-      return 'Sales'
-    }
-    
-    // HR keywords
-    if (['hr', 'human resources', 'talent', 'recruitment', 'people', 'training', 'learning'].some(keyword => titleLower.includes(keyword))) {
-      return 'HR'
-    }
-    
-    return 'Other'
-  }
-
-  /**
    * Categorize skill into skill category
    */
   private static categorizeSkill(skillName: string): string {
@@ -404,7 +358,7 @@ export class EnhancedCandidateProfileService {
         titles: basics.titles || [],
         current_title: basics.current_title || basics.titles?.[0] || '',
         target_titles: basics.target_titles || basics.titles?.slice(1) || [],
-        job_family: basics.job_family || this.inferJobFamily(basics.current_title || basics.titles?.[0] || ''),
+        job_family: basics.job_family,
         work_auth: basics.work_auth || { citizen_or_pr: true, ep_needed: false, work_permit_type: null },
         seniority_level: basics.seniority_level || 'Mid',
         experience_years: Math.max(experienceYears, basics.experience_years || 0),
