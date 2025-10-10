@@ -50,10 +50,12 @@ export class LLMAnalysisService {
     })
 
     // Listen for custom events from ResumeUpload component
-    window.addEventListener('llm-analysis-completed', (event: CustomEvent) => {
-      console.log('[LLMAnalysisService] Foreground analysis completed')
-      this.handleAnalysisCompleted('foreground', event.detail)
-    })
+    if (typeof window !== 'undefined') {
+      window.addEventListener('llm-analysis-completed', (event: CustomEvent) => {
+        console.log('[LLMAnalysisService] Foreground analysis completed')
+        this.handleAnalysisCompleted('foreground', event.detail)
+      })
+    }
   }
 
   /**
@@ -65,9 +67,9 @@ export class LLMAnalysisService {
     try {
       // Check if we should use background analysis
       const shouldUseBackground = useBackground || 
-        !document.visibilityState || 
+        (typeof window !== 'undefined' && !document.visibilityState) || 
         (backgroundUploadService.isBackgroundSyncSupported() && 
-         (navigator as any).connection?.effectiveType === 'slow-2g')
+         typeof navigator !== 'undefined' && (navigator as any).connection?.effectiveType === 'slow-2g')
 
       if (shouldUseBackground) {
         return await this.startBackgroundAnalysis(userId, limit)
@@ -126,7 +128,9 @@ export class LLMAnalysisService {
       const result = await response.json()
       
       // Trigger completion event
-      window.dispatchEvent(new CustomEvent('llm-analysis-completed', { detail: result }))
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('llm-analysis-completed', { detail: result }))
+      }
       
       return 'foreground'
       

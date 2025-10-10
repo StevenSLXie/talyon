@@ -49,7 +49,7 @@ class BackgroundUploadServiceImpl implements BackgroundUploadService {
   }
 
   async registerServiceWorker(): Promise<void> {
-    if (!('serviceWorker' in navigator)) {
+    if (typeof window === 'undefined' || !('serviceWorker' in navigator)) {
       console.warn('[BackgroundUpload] Service Worker not supported')
       return
     }
@@ -223,7 +223,8 @@ class BackgroundUploadServiceImpl implements BackgroundUploadService {
   }
 
   isBackgroundSyncSupported(): boolean {
-    return 'serviceWorker' in navigator && 
+    return typeof window !== 'undefined' &&
+           'serviceWorker' in navigator && 
            'sync' in window.ServiceWorkerRegistration.prototype &&
            this.swRegistration !== null
   }
@@ -257,6 +258,11 @@ class BackgroundUploadServiceImpl implements BackgroundUploadService {
   }
 
   private setupMessageListener(): void {
+    // Check if we're in browser environment
+    if (typeof window === 'undefined' || !('serviceWorker' in navigator)) {
+      return
+    }
+
     navigator.serviceWorker.addEventListener('message', (event) => {
       const { type, data } = event.data
       
@@ -377,7 +383,7 @@ class BackgroundUploadServiceImpl implements BackgroundUploadService {
 
   private notifyUser(message: string): void {
     // Use browser notification if available
-    if ('Notification' in window && Notification.permission === 'granted') {
+    if (typeof window !== 'undefined' && 'Notification' in window && Notification.permission === 'granted') {
       new Notification('Resume Upload', {
         body: message,
         icon: '/favicon.ico'
@@ -423,7 +429,7 @@ class BackgroundUploadServiceImpl implements BackgroundUploadService {
 
   // Request notification permission
   async requestNotificationPermission(): Promise<boolean> {
-    if (!('Notification' in window)) {
+    if (typeof window === 'undefined' || !('Notification' in window)) {
       return false
     }
 

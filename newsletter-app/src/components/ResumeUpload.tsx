@@ -276,7 +276,9 @@ export default function ResumeUpload({ onUploadSuccess, onUploadError, onLLMAnal
           setIsBackgroundAnalysis(false)
           setLlmAnalysisId(null)
           // Trigger job recommendations refresh
-          window.dispatchEvent(new CustomEvent('llm-analysis-completed', { detail: data.result }))
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('llm-analysis-completed', { detail: data.result }))
+          }
         })
         
         backgroundUploadService.onLLMAnalysisFailed((data) => {
@@ -337,6 +339,7 @@ export default function ResumeUpload({ onUploadSuccess, onUploadError, onLLMAnal
     
     // Page Visibility API setup
     const handleVisibilityChange = () => {
+      if (typeof document === 'undefined') return
       const isVisible = !document.hidden
       setIsPageVisible(isVisible)
       
@@ -411,12 +414,16 @@ export default function ResumeUpload({ onUploadSuccess, onUploadError, onLLMAnal
     initializeBackgroundUpload()
     checkPendingUploads()
     checkPendingAnalyses()
-    document.addEventListener('visibilitychange', handleVisibilityChange)
+    if (typeof document !== 'undefined') {
+      document.addEventListener('visibilitychange', handleVisibilityChange)
+    }
     
     return () => {
       ticker.isActive = false
       clearTimers(ticker)
-      document.removeEventListener('visibilitychange', handleVisibilityChange)
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('visibilitychange', handleVisibilityChange)
+      }
     }
   }, [backgroundUploadId, onUploadSuccess, onUploadError])
 
@@ -453,7 +460,7 @@ export default function ResumeUpload({ onUploadSuccess, onUploadError, onLLMAnal
     // Check if we should use background upload
     const shouldUseBackground = !isPageVisible || 
       (backgroundUploadService.isBackgroundSyncSupported() && 
-       (navigator as any).connection?.effectiveType === 'slow-2g')
+       typeof navigator !== 'undefined' && (navigator as any).connection?.effectiveType === 'slow-2g')
     
     if (shouldUseBackground) {
       await handleBackgroundUpload()
@@ -604,7 +611,7 @@ export default function ResumeUpload({ onUploadSuccess, onUploadError, onLLMAnal
       // Check if we should use background analysis
       const shouldUseBackground = !isPageVisible || 
         (backgroundUploadService.isBackgroundSyncSupported() && 
-         (navigator as any).connection?.effectiveType === 'slow-2g')
+         typeof navigator !== 'undefined' && (navigator as any).connection?.effectiveType === 'slow-2g')
       
       if (shouldUseBackground) {
         await handleBackgroundLLMAnalysis(userId, limit)
@@ -678,7 +685,9 @@ export default function ResumeUpload({ onUploadSuccess, onUploadError, onLLMAnal
       setIsLLMAnalyzing(false)
       
       // Trigger job recommendations refresh
-      window.dispatchEvent(new CustomEvent('llm-analysis-completed', { detail: result }))
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('llm-analysis-completed', { detail: result }))
+      }
       
     } catch (error) {
       console.error('Foreground LLM analysis error:', error)

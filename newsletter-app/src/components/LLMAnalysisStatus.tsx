@@ -44,8 +44,8 @@ export default function LLMAnalysisStatus({ userId, onAnalysisComplete, onAnalys
       setAnalysisStage('Starting LLM analysis...')
       
       // Check if we should use background mode
-      const shouldUseBackground = !document.visibilityState || 
-        (navigator as any).connection?.effectiveType === 'slow-2g'
+      const shouldUseBackground = (typeof document !== 'undefined' && !document.visibilityState) || 
+        (typeof navigator !== 'undefined' && (navigator as any).connection?.effectiveType === 'slow-2g')
       
       if (shouldUseBackground) {
         setIsBackgroundMode(true)
