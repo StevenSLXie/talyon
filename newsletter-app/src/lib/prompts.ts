@@ -17,6 +17,7 @@ Analyze this resume and extract information in TWO formats:
 
 1. "enhancedProfile": Extract detailed candidate profile including:
    - titles: string[] (job titles they've held)
+   - job_family: string (primary job family: Engineering|IT|Finance|Marketing|Operations|Sales|HR|Other)
    - skills: [{ name: string, level: number (1-5), last_used: string, evidence: string }]
    - education: [{ degree: string, major: string, institution: string, grad_year: number }]
    - certifications: [{ name: string, issuer: string, date: string }]
@@ -39,6 +40,16 @@ Skill extraction rules:
 - If level is not stated, assign 3 (moderate proficiency)
 - For last_used, if not found, estimate from most recent related job and use that end date
 - Evidence must quote or paraphrase exact text supporting the skill
+
+Job family extraction rules:
+- Engineering: software, developer, engineer, programmer, coding, development, technical
+- IT: information technology, system, network, database, infrastructure, technical
+- Finance: finance, accounting, financial, treasury, audit, banking, investment
+- Marketing: marketing, growth, digital, content, social media, advertising, brand
+- Operations: operations, ops, process, efficiency, logistics, supply chain
+- Sales: sales, business development, account, revenue, client, customer
+- HR: human resources, hr, talent, recruitment, people, training, learning
+- Other: if none of the above categories fit
 
 2. "jsonResume": Extract information in JSON Resume format including:
    - basics: { name, email, phone, location, summary, profiles }

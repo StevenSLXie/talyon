@@ -1,10 +1,20 @@
 // Enhanced Candidate Profile Service
 import { supabaseAdmin } from './supabase'
 
+interface SaveCounts {
+  basics: number
+  skills: number
+  education: number
+  certificates: number
+  work: number
+  total: number
+}
+
 export interface EnhancedCandidateProfile {
   titles?: string[]
   current_title?: string
   target_titles?: string[]
+  job_family?: string
   work_auth: {
     citizen_or_pr: boolean
     ep_needed: boolean
@@ -76,7 +86,8 @@ export class EnhancedCandidateProfileService {
         skills: 0,
         education: 0,
         certificates: 0,
-        work: 0
+        work: 0,
+        total: 0
       }
 
       // 1. Save to candidate_basics (enhanced)
@@ -359,7 +370,7 @@ export class EnhancedCandidateProfileService {
           degree: e.study_type || '',
           major: e.area || '',
           institution: e.institution || '',
-          grad_year: e.end_date ? new Date(e.end_date).getFullYear() : null
+          grad_year: e.end_date ? new Date(e.end_date).getFullYear() : 0
         })),
         certifications: (certificates || []).map(c => c.name),
         industries: basics.industries || [],

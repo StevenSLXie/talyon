@@ -2,9 +2,36 @@
 import { supabase } from './supabase'
 import { EnhancedCandidateProfileService } from './enhanced-candidate-profile'
 import { LLMActionSuggestionsService } from './llm-action-suggestions'
-import type { Database } from './database.types'
 
-type JobRow = Database['public']['Tables']['jobs']['Row']
+// Define JobRow type directly since it's not in database.types.ts
+interface JobRow {
+  id: string
+  title: string
+  company: string
+  location: string
+  salary_low?: number
+  salary_high?: number
+  industry?: string
+  job_type?: string
+  experience_level?: string
+  url?: string
+  job_description?: string
+  post_date?: string
+  job_family?: string
+  company_tier?: string
+  seniority_level?: string
+  remote_policy?: string
+  leadership_level?: string
+  management_required?: boolean
+  team_size_mentioned?: string
+  currency?: string
+  expires_at?: string
+  trust_score?: number
+  source_site?: string
+  source_url?: string
+  created_at?: string
+  updated_at?: string
+}
 
 export type CandidateJob = JobRow & {
   skills_required?: Array<{ name: string; level: number }>
@@ -36,7 +63,7 @@ export interface JobRecommendation {
   breakdown: RecommendationBreakdown
   why_match: MatchNarrative
   gaps_and_actions: GapAnalysis
-  personalized_suggestions?: ReturnType<typeof LLMActionSuggestionsService.generateActionSuggestions> extends Promise<infer R> ? R : unknown
+  personalized_suggestions?: ReturnType<typeof LLMActionSuggestionsService.generatePersonalizedSuggestions> extends Promise<infer R> ? R : unknown
 }
 export interface RecommendationBreakdown {
   title_match: number
@@ -67,6 +94,7 @@ export interface GapAnalysis {
 
 export interface CandidateProfile {
   titles: string[]
+  job_family?: string
   skills: Array<{ name: string; level: number }>
   experience_years: number
   salary_range_min?: number
@@ -103,6 +131,30 @@ export interface CandidateProfile {
     management_years: number
     management_evidence: string[]
   }
+}
+
+interface SkillsMatchResult {
+  score: number
+  matched_skills: string[]
+  missing_skills: string[]
+  skill_gaps: string[]
+}
+
+interface ExperienceMatchResult {
+  score: number
+  reason: string
+}
+
+interface EducationMatchResult {
+  score: number
+  reason: string
+  matched_education: string[]
+}
+
+interface CertificationMatchResult {
+  score: number
+  reason: string
+  matched_certifications: string[]
 }
 
 // Seniority and organizational keywords to filter out for better core function matching
@@ -557,6 +609,7 @@ function calculateCertificationMatch(
 
 function calculateJobFamilyMatch(
   candidateTitles: string[],
+  candidateJobFamily: string,
   jobFamily: string,
   jobTitle: string
 ): { score: number; reason: string } {
@@ -564,42 +617,73 @@ function calculateJobFamilyMatch(
     return { score: 50, reason: 'Job family not specified' }
   }
 
+  const candidateJobFamilyLower = (candidateJobFamily || '').toLowerCase()
   const jobFamilyLower = (jobFamily || '').toLowerCase()
   const jobTitleLower = (jobTitle || '').toLowerCase()
   
-  // Define job family mappings
+  // Define job family mappings (aligned with Python pipeline)
   const jobFamilyMappings: { [key: string]: string[] } = {
-    'software_engineering': ['software', 'developer', 'engineer', 'programmer', 'coding', 'development'],
-    'data_science': ['data', 'analyst', 'scientist', 'machine learning', 'ai', 'analytics'],
-    'product_management': ['product', 'manager', 'pm', 'strategy', 'roadmap'],
-    'marketing': ['marketing', 'growth', 'digital', 'content', 'social media'],
-    'sales': ['sales', 'business development', 'account', 'revenue'],
-    'finance': ['finance', 'accounting', 'financial', 'treasury', 'audit'],
-    'hr': ['human resources', 'hr', 'talent', 'recruitment', 'people'],
-    'operations': ['operations', 'ops', 'process', 'efficiency', 'logistics'],
-    'design': ['design', 'ux', 'ui', 'user experience', 'creative'],
-    'consulting': ['consultant', 'advisory', 'strategy', 'management consulting']
+    'engineering': ['software', 'developer', 'engineer', 'programmer', 'coding', 'development', 'technical'],
+    'it': ['information technology', 'system', 'network', 'database', 'infrastructure', 'technical'],
+    'finance': ['finance', 'accounting', 'financial', 'treasury', 'audit', 'banking', 'investment'],
+    'marketing': ['marketing', 'growth', 'digital', 'content', 'social media', 'advertising', 'brand'],
+    'operations': ['operations', 'ops', 'process', 'efficiency', 'logistics', 'supply chain'],
+    'sales': ['sales', 'business development', 'account', 'revenue', 'client', 'customer'],
+    'hr': ['human resources', 'hr', 'talent', 'recruitment', 'people', 'training', 'learning'],
+    'other': []
   }
 
   let bestMatch = { score: 0, reason: '' }
 
-  for (const title of candidateTitles) {
-    if (!title || typeof title !== 'string') continue
-    const titleLower = title.toLowerCase()
-    
-    // Check direct job family match
-    if (jobFamilyLower && jobFamilyMappings[jobFamilyLower]) {
-      const familyKeywords = jobFamilyMappings[jobFamilyLower]
-      for (const keyword of familyKeywords) {
+  // 1. Perfect job family match (candidate job family = job job family)
+  if (candidateJobFamilyLower && jobFamilyLower && candidateJobFamilyLower === jobFamilyLower) {
+    return { score: 100, reason: `Perfect job family match: ${candidateJobFamily} → ${jobFamily}` }
+  }
+
+  // 2. Check if candidate job family keywords match job title
+  if (candidateJobFamilyLower && jobFamilyMappings[candidateJobFamilyLower]) {
+    const candidateFamilyKeywords = jobFamilyMappings[candidateJobFamilyLower]
+    for (const keyword of candidateFamilyKeywords) {
+      if (jobTitleLower.includes(keyword)) {
+        bestMatch = { score: 90, reason: `Candidate ${candidateJobFamily} family matches job title: ${jobTitle}` }
+        break
+      }
+    }
+  }
+
+  // 3. Check if job family keywords match candidate titles
+  if (jobFamilyLower && jobFamilyMappings[jobFamilyLower]) {
+    const jobFamilyKeywords = jobFamilyMappings[jobFamilyLower]
+    for (const title of candidateTitles) {
+      if (!title || typeof title !== 'string') continue
+      const titleLower = title.toLowerCase()
+      for (const keyword of jobFamilyKeywords) {
         if (titleLower.includes(keyword)) {
-          bestMatch = { score: 100, reason: `Job family match: ${title} → ${jobFamily}` }
+          if (bestMatch.score < 80) {
+            bestMatch = { score: 80, reason: `Job ${jobFamily} family matches candidate title: ${title}` }
+          }
           break
         }
       }
     }
+  }
 
-    // Check job title similarity
-    if (jobTitleLower) {
+  // 4. Cross-family compatibility check
+  if (candidateJobFamilyLower && jobFamilyLower) {
+    const compatibilityScore = calculateFamilyCompatibility(candidateJobFamilyLower, jobFamilyLower)
+    if (compatibilityScore > bestMatch.score) {
+      bestMatch = { 
+        score: compatibilityScore, 
+        reason: `Cross-family compatibility: ${candidateJobFamily} → ${jobFamily}` 
+      }
+    }
+  }
+
+  // 5. Fallback to title similarity if no family match
+  if (bestMatch.score < 50) {
+    for (const title of candidateTitles) {
+      if (!title || typeof title !== 'string') continue
+      const titleLower = title.toLowerCase()
       const titleTokens = titleLower.split(/\s+/)
       const jobTokens = jobTitleLower.split(/\s+/)
       const commonTokens = titleTokens.filter(token => jobTokens.includes(token))
@@ -621,6 +705,27 @@ function calculateJobFamilyMatch(
   }
 
   return bestMatch
+}
+
+function calculateFamilyCompatibility(candidateFamily: string, jobFamily: string): number {
+  // Define compatible family pairs
+  const compatiblePairs: { [key: string]: string[] } = {
+    'engineering': ['it', 'other'],
+    'it': ['engineering', 'other'],
+    'finance': ['other'],
+    'marketing': ['sales', 'other'],
+    'sales': ['marketing', 'other'],
+    'operations': ['other'],
+    'hr': ['other'],
+    'other': ['engineering', 'it', 'finance', 'marketing', 'sales', 'operations', 'hr']
+  }
+  
+  const compatibleFamilies = compatiblePairs[candidateFamily] || []
+  if (compatibleFamilies.includes(jobFamily)) {
+    return 60 // Moderate compatibility
+  }
+  
+  return 0 // No compatibility
 }
 
 function calculateIndustryMatch(
@@ -824,7 +929,7 @@ function generateWhyMatch(
   if (breakdown.salary_match < 50) {
     concerns.push(`Salary expectations not aligned`)
   }
-  if (breakdown.education_match < 50 && job.education_req?.length > 0) {
+  if (breakdown.education_match < 50 && (job.education_req?.length || 0) > 0) {
     concerns.push('Education requirements not fully met')
   }
 
@@ -899,8 +1004,8 @@ function generateGapsAndActions(
   }
 
   // Analyze education gaps
-  if (educationMatch.score < 100 && job.education_req?.length > 0) {
-    for (const req of job.education_req) {
+  if (educationMatch.score < 100 && (job.education_req?.length || 0) > 0) {
+    for (const req of job.education_req || []) {
       education_gaps.push({
         requirement: req,
         action: 'Consider pursuing additional education or highlight relevant experience'
@@ -909,8 +1014,8 @@ function generateGapsAndActions(
   }
 
   // Analyze certification gaps
-  if (certificationMatch.score < 100 && job.certifications_req?.length > 0) {
-    for (const req of job.certifications_req) {
+  if (certificationMatch.score < 100 && (job.certifications_req?.length || 0) > 0) {
+    for (const req of job.certifications_req || []) {
       certification_gaps.push({
         requirement: req,
         action: 'Research certification requirements and timeline'
@@ -1125,7 +1230,8 @@ export class JobMatchingService {
         
         // Convert enhanced profile to CandidateProfile format
         const candidateProfile: CandidateProfile = {
-          titles: [enhancedProfile.current_title, ...enhancedProfile.target_titles].filter(Boolean),
+          titles: [enhancedProfile.current_title, ...(enhancedProfile.target_titles || [])].filter(Boolean) as string[],
+          job_family: enhancedProfile.job_family,
           skills: enhancedProfile.skills.map(s => ({ name: s.name, level: s.level })),
           experience_years: enhancedProfile.experience_years,
           industries: enhancedProfile.industries,
@@ -1149,7 +1255,10 @@ export class JobMatchingService {
           certifications: enhancedProfile.certifications.map(c => ({ name: c, issuer: '' })),
           company_tiers: enhancedProfile.company_tiers,
           leadership_level: enhancedProfile.leadership_level,
-          management_experience: enhancedProfile.management_experience
+          management_experience: {
+            ...enhancedProfile.management_experience,
+            team_size_range: enhancedProfile.management_experience.team_size_range || undefined
+          }
         }
         
         console.info('[JobMatching] buildCandidateProfile done (enhanced)', { 
@@ -1171,6 +1280,33 @@ export class JobMatchingService {
       // Fallback to legacy method
       return await this.buildCandidateProfileLegacy(usersId)
     }
+  }
+
+  /**
+   * Infer job family from candidate titles (legacy fallback)
+   */
+  private inferJobFamilyFromTitles(titles: string[]): string {
+    const jobFamilyMappings: { [key: string]: string[] } = {
+      'engineering': ['software', 'developer', 'engineer', 'programmer', 'coding', 'development', 'technical'],
+      'it': ['information technology', 'system', 'network', 'database', 'infrastructure', 'technical'],
+      'finance': ['finance', 'accounting', 'financial', 'treasury', 'audit', 'banking', 'investment'],
+      'marketing': ['marketing', 'growth', 'digital', 'content', 'social media', 'advertising', 'brand'],
+      'operations': ['operations', 'ops', 'process', 'efficiency', 'logistics', 'supply chain'],
+      'sales': ['sales', 'business development', 'account', 'revenue', 'client', 'customer'],
+      'hr': ['human resources', 'hr', 'talent', 'recruitment', 'people', 'training', 'learning']
+    }
+
+    const titleText = titles.join(' ').toLowerCase()
+    
+    for (const [family, keywords] of Object.entries(jobFamilyMappings)) {
+      for (const keyword of keywords) {
+        if (titleText.includes(keyword)) {
+          return family
+        }
+      }
+    }
+    
+    return 'other'
   }
 
   /**
@@ -1216,6 +1352,9 @@ export class JobMatchingService {
       // Get job titles
       const titles = workData?.map(w => w.position).filter(Boolean) || []
 
+      // Infer job family from titles (legacy fallback)
+      const jobFamily = this.inferJobFamilyFromTitles(titles)
+
       // Get candidate basics for work auth and preferences
       const { data: basicsData } = await supabase()
         .from('candidate_basics')
@@ -1237,6 +1376,7 @@ export class JobMatchingService {
 
       return {
         titles,
+        job_family: jobFamily,
         skills,
         experience_years: Math.max(experienceYears, 0),
         industries,
@@ -1298,7 +1438,8 @@ export class JobMatchingService {
               education_match: 0,
               certification_match: 0,
               job_family_match: 0,
-              work_prefs_match: 0
+              work_prefs_match: 0,
+              leadership_match: 0
             },
             why_match: {
               strengths: [],
@@ -1336,6 +1477,7 @@ export class JobMatchingService {
         // 4. Job family / discipline matching (20% weight)
         const jobFamilyMatch = calculateJobFamilyMatch(
           candidateProfile.titles,
+          candidateProfile.job_family || '',
           job.job_family || '',
           job.title || ''
         )
@@ -1463,9 +1605,7 @@ export class JobMatchingService {
             leadership_match: leadershipMatch.score
           },
           skillsMatch,
-          experienceMatch,
-          educationMatch,
-          certificationMatch
+          experienceMatch
         )
 
       const gapsAndActions = generateGapsAndActions(
@@ -1590,7 +1730,8 @@ export class JobMatchingService {
             certification_match: 50,
             job_family_match: 50,
             work_prefs_match: 50,
-            industry_match: 50
+            industry_match: 50,
+            leadership_match: 50
           },
           why_match: {
             strengths: best.score >= 70 ? [`Strong title similarity (${best.score}%)`] : [],
@@ -1681,7 +1822,8 @@ export class JobMatchingService {
           education_match: 0,
           certification_match: 0,
           job_family_match: 0,
-          work_prefs_match: 0
+          work_prefs_match: 0,
+          leadership_match: 0
         },
         why_match: {
           strengths: [],
@@ -1736,7 +1878,7 @@ export class JobMatchingService {
    */
   private inferJobLeadershipLevel(job: CandidateJob): string | null {
     const title = (job.title || '').toLowerCase()
-    const description = (job.job_description || job.raw_text || '').toLowerCase()
+    const description = (job.job_description || '').toLowerCase()
     const combinedText = `${title} ${description}`
     
     // Team Lead++ indicators (senior management)
