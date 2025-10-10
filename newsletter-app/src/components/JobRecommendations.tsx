@@ -98,9 +98,14 @@ export default function JobRecommendations({ userId, refreshTrigger = 0 }: JobRe
         <h2 className="text-3xl font-bold text-center text-gray-900 mb-8">
           Your Personalized Job Recommendations
         </h2>
-        <div className="flex justify-center items-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-          <span className="ml-4 text-gray-600">Analyzing your profile...</span>
+        <div className="flex flex-col items-center py-12">
+          <div className="flex items-center mb-4">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+            <span className="ml-4 text-gray-600">Analyzing your profile...</span>
+          </div>
+          <p className="text-sm text-gray-500 text-center max-w-md">
+            ⏱️ This process may take up to 5 minutes as we analyze and score thousands of job opportunities to find your perfect matches.
+          </p>
         </div>
       </div>
     )

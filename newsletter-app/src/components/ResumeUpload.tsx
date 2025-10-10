@@ -403,6 +403,11 @@ export default function ResumeUpload({ onUploadSuccess, onUploadError }: ResumeU
             Live AI Analysis
           </div>
           <p className="text-sm text-gray-700 leading-relaxed">{analysisMessage}</p>
+          <div className="mt-3 pt-3 border-t border-gray-200">
+            <p className="text-xs text-gray-500">
+              ⏱️ This process may take up to 5 minutes as we analyze and score thousands of job opportunities to find your perfect matches.
+            </p>
+          </div>
         </div>
       )}
 
