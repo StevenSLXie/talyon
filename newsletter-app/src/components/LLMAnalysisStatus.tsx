@@ -111,8 +111,8 @@ export default function LLMAnalysisStatus({ userId, onAnalysisComplete, onAnalys
   return (
     <div className="bg-white border border-gray-200 p-6">
       <div className="text-center mb-4">
-        <h3 className="text-lg font-semibold text-black mb-2">Job Analysis Status</h3>
-        <p className="text-sm text-gray-600">AI-powered job matching and analysis</p>
+        <h3 className="text-lg font-semibold text-black mb-2">AI Agent Scoring & Matching Status</h3>
+        <p className="text-sm text-gray-600">AI that connects the right people, instantly</p>
       </div>
 
       {hasPendingAnalyses && (
@@ -162,7 +162,7 @@ export default function LLMAnalysisStatus({ userId, onAnalysisComplete, onAnalys
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
               </svg>
-              Start AI Job Analysis
+              Start AI Agent Scoring & Matching
             </div>
           </button>
         ) : (
@@ -174,14 +174,14 @@ export default function LLMAnalysisStatus({ userId, onAnalysisComplete, onAnalys
               <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
-              Cancel Analysis
+              Cancel Scoring & Matching
             </div>
           </button>
         )}
 
         <div className="text-center">
           <p className="text-xs text-gray-500">
-            Analysis may take up to 5 minutes as we process thousands of job opportunities
+            AI agent scoring and matching may take up to 5 minutes as we process thousands of job opportunities
           </p>
         </div>
       </div>
@@ -194,7 +194,7 @@ export default function LLMAnalysisStatus({ userId, onAnalysisComplete, onAnalys
           </svg>
           <div>
             <p className="font-medium">Mobile Optimized</p>
-            <p className="mt-1">Analysis continues in background even if you lock your phone or switch apps.</p>
+            <p className="mt-1">AI agent scoring and matching continues in background even if you lock your phone or switch apps.</p>
           </div>
         </div>
       </div>

@@ -859,7 +859,7 @@ export default function ResumeUpload({ onUploadSuccess, onUploadError, onLLMAnal
                 You understand and agree that:
                 <ul className="mt-2 space-y-1 text-xs text-gray-600 list-disc list-inside">
                   <li><strong>Talyon will NEVER share your contact information</strong> with employers or recruiters without your explicit consent</li>
-                  <li>Talyon may use your resume data to analyze your profile and recommend relevant job opportunities that match your skills and experience</li>
+                  <li>Talyon's AI agent may use your resume data to score and match job opportunities, then recommend relevant positions that align with your skills and experience</li>
                 </ul>
               </span>
             </label>

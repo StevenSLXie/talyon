@@ -151,7 +151,7 @@ export default function JobRecommendations({ userId, refreshTrigger = 0 }: JobRe
             No personalized recommendations available yet.
           </p>
           <p className="text-sm text-gray-500">
-            Upload your resume to get targeted job recommendations based on your experience and skills.
+            Upload your resume to get AI agent-scored and matched with the right opportunities based on your experience and skills.
           </p>
         </div>
       </div>
@@ -165,7 +165,7 @@ export default function JobRecommendations({ userId, refreshTrigger = 0 }: JobRe
           Your Personalized Job Recommendations
         </h2>
         <p className="text-gray-600">
-          Based on your resume analysis, here are the top {limitedRecommendations.length} jobs that match your profile
+          Based on AI agent scoring and matching of job opportunities, here are the top {limitedRecommendations.length} jobs that match your profile
         </p>
       </div>
 

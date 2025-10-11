@@ -80,17 +80,16 @@ export default function Home() {
       <div className="container mx-auto px-4 py-20">
         <div className="text-center mb-16">
           <h1 className="text-4xl md:text-6xl font-light text-black mb-6 leading-snug md:leading-tight">
-            Stop Spraying 1000 Resumes
-            <span className="block font-bold">Let AI Shortlist the Roles That Matter</span>
+            AI that connects the right people, instantly
           </h1>
           <p className="text-base md:text-lg text-gray-600 mb-10 max-w-xl mx-auto leading-relaxed">
-            Upload once and breathe easy—Talyon reads your resume, scores thousands of roles, and shows you the handful that match your strengths, goals, and salary expectations.
+            Upload once and breathe easy—Talyon's AI agent analyzes your profile, scores and matches each job opportunity, then delivers personalized recommendations that align with your strengths, goals, and salary expectations.
           </p>
           
           {user ? (
             <div className="space-y-6 mb-12">
               <p className="text-gray-600">Welcome back, {user.name || user.email}</p>
-              <p className="text-gray-600">Upload your resume below to get personalized job recommendations.</p>
+              <p className="text-gray-600">Upload your resume below to get AI agent-scored and matched job recommendations tailored to your profile.</p>
             </div>
           ) : (
             <div className="space-y-6 mb-12">
@@ -195,8 +194,8 @@ export default function Home() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-medium mb-4 text-black">AI Analysis</h3>
-              <p className="text-gray-600 leading-relaxed">Our AI analyzes your resume to understand your strengths, skills, and career goals.</p>
+              <h3 className="text-xl font-medium mb-4 text-black">AI Agent Scoring & Matching</h3>
+              <p className="text-gray-600 leading-relaxed">Our AI agent analyzes your profile, scores and matches each job opportunity based on your strengths, skills, and career goals.</p>
             </div>
             <div className="text-center">
               <div className="w-16 h-16 bg-black rounded-none flex items-center justify-center mx-auto mb-6">
@@ -204,8 +203,8 @@ export default function Home() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-medium mb-4 text-black">Smart Matching</h3>
-              <p className="text-gray-600 leading-relaxed">Get matched with jobs that truly fit your profile, not just keyword matches.</p>
+              <h3 className="text-xl font-medium mb-4 text-black">Instant Connection</h3>
+              <p className="text-gray-600 leading-relaxed">AI agent connects you with the right opportunities instantly, not just keyword matches.</p>
             </div>
             <div className="text-center">
               <div className="w-16 h-16 bg-black rounded-none flex items-center justify-center mx-auto mb-6">

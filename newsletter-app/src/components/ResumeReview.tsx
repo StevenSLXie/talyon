@@ -137,7 +137,7 @@ export default function ResumeReview({ userId, triggerReview }: ResumeReviewProp
             </svg>
           </div>
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Resume Analysis</h2>
+            <h2 className="text-2xl font-bold text-gray-900">AI Agent Resume Scoring & Analysis</h2>
             <p className="text-sm text-gray-600">Honest feedback for the Singapore job market</p>
           </div>
         </div>

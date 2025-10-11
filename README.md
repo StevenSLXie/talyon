@@ -19,7 +19,7 @@ Before syncing this repository to GitHub or deploying to Vercel, make sure the f
   - Optional integrations (e.g. analytics) should also be listed here
 
 - **Supabase**
-  - Apply the SQL migrations under `newsletter-app/*.sql` (leadership/salary, candidate profile tables)
+  - Apply the SQL migrations under `talyon/*.sql` (leadership/salary, candidate profile tables)
   - Confirm Supabase REST access is enabled and `candidate_*`, `jobs` tables exist
 
 - **Local Setup**

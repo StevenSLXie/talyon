@@ -1,6 +1,6 @@
-# Singapore Job Matcher
+# Talyon
 
-A targeted job matching platform that analyzes resumes and provides personalized job recommendations instead of generic job alerts.
+Talyon is an AI-powered job matching platform for Singapore that analyzes resumes and provides personalized job recommendations instead of generic job alerts.
 
 ## Features
 

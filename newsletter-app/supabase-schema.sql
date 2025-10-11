@@ -1,4 +1,4 @@
--- Newsletter System Database Schema
+-- Talyon Database Schema
 -- Run this in your Supabase SQL Editor
 
 -- Enable UUID extension

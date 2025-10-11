@@ -1,4 +1,4 @@
--- Newsletter System Database Schema - TEST VERSION
+-- Talyon Database Schema - TEST VERSION
 -- Run this in your Supabase SQL Editor for testing
 
 -- Enable UUID extension

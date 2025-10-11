@@ -83,7 +83,7 @@ export async function POST(req: NextRequest) {
             <p>This code will expire in 10 minutes.</p>
             <p>If you didn't request this code, please ignore this email.</p>
             <hr style="margin: 30px 0; border: none; border-top: 1px solid #e5e7eb;">
-            <p style="color: #6b7280; font-size: 14px;">Talyon - AI-powered job matching for Singapore</p>
+            <p style="color: #6b7280; font-size: 14px;">Talyon - AI agent that connects the right people, instantly</p>
           </div>
         `
       })

@@ -11,7 +11,7 @@ Make sure you have:
 
 ### 2. Environment Variables Setup
 
-Create `.env.local` file in the newsletter-app directory:
+Create `.env.local` file in the talyon directory:
 
 ```env
 # Supabase Configuration
@@ -47,7 +47,7 @@ supabase db reset
 ### 4. Install Dependencies
 
 ```bash
-cd newsletter-app
+cd talyon
 npm install
 ```
 

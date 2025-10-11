@@ -21,7 +21,7 @@
 </other>
 
 <done>
-✅ 1. read through the newsletter-app and understand what it does
+✅ 1. read through the talyon app and understand what it does
 ✅ 2. for current landing pages, keep the email login using resend
 ✅ 3. delete all newsletter signup
 ✅ 4. change to allow each user to upload their pdf/docx resume 
@@ -211,7 +211,7 @@ for ths=is part, we need to do mjor revamp:
 1. Pre-deployment repo hygiene
    1.1 ✅ Remove unused imports/components (e.g., `JobCard`, `mockupJobs`) from `src/app/page.tsx`
    1.2 Sweep for other unused exports and enable lint to fail on warnings – lint currently flags legacy scripts (require calls), `any` usage across APIs/lib, and unused React hooks; need cleanup plan
-       1.2.1 ✅ Convert or archive unused Node scripts under `newsletter-app/scripts/` (CommonJS + unused vars)
+       1.2.1 ✅ Convert or archive unused Node scripts under `talyon/scripts/` (CommonJS + unused vars)
        1.2.2 ✅ Fix `any` usage in API routes (`src/app/api/**`) and surface type gaps
        1.2.3 ✅ Address lint in React pages/components (`jobs`, `saved-jobs`, `CandidateProfileManagement`, etc.)
        1.2.4 ✅ Tidy lib modules (`advanced-job-matching`, `auth`, `job-matching`, `llm-analysis`, etc.)
@@ -233,7 +233,7 @@ for ths=is part, we need to do mjor revamp:
    4.3 Gather production secrets for Vercel env **(requires user to supply actual API keys)**
 
 5. Vercel deployment steps
-   5.1 Ensure `newsletter-app` build succeeds locally (`npm run build`)
+   5.1 Ensure `talyon` build succeeds locally (`npm run build`)
    5.2 Enable Next.js experimental/server features if needed in `next.config.js`
    5.3 Connect GitHub repo to Vercel project **(user action via Vercel dashboard)**
    5.4 Configure Vercel environment variables (Supabase, OpenAI, Resend, NEXT_PUBLIC_APP_URL) **(user action)**
