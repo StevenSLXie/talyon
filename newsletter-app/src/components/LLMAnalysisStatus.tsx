@@ -112,7 +112,7 @@ export default function LLMAnalysisStatus({ userId, onAnalysisComplete, onAnalys
     <div className="bg-white border border-gray-200 p-6">
       <div className="text-center mb-4">
         <h3 className="text-lg font-semibold text-black mb-2">AI Agent Scoring & Matching Status</h3>
-        <p className="text-sm text-gray-600">AI that connects the right people, instantly</p>
+        <p className="text-sm text-gray-600">Find your perfect job match in minutes</p>
       </div>
 
       {hasPendingAnalyses && (

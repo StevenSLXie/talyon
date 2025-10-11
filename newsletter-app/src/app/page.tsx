@@ -80,7 +80,8 @@ export default function Home() {
       <div className="container mx-auto px-4 py-20">
         <div className="text-center mb-16">
           <h1 className="text-4xl md:text-6xl font-light text-black mb-6 leading-snug md:leading-tight">
-            AI that connects the right people, instantly
+            Stop Spraying Resumes to 1000 Jobs
+            <span className="block font-bold">Find Your Perfect Match in Minutes</span>
           </h1>
           <p className="text-base md:text-lg text-gray-600 mb-10 max-w-xl mx-auto leading-relaxed">
             Upload once and breathe easy—Talyon's AI agent analyzes your profile, scores and matches each job opportunity, then delivers personalized recommendations that align with your strengths, goals, and salary expectations.
@@ -203,8 +204,8 @@ export default function Home() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
               </div>
-              <h3 className="text-xl font-medium mb-4 text-black">Instant Connection</h3>
-              <p className="text-gray-600 leading-relaxed">AI agent connects you with the right opportunities instantly, not just keyword matches.</p>
+              <h3 className="text-xl font-medium mb-4 text-black">Perfect Job Matches</h3>
+              <p className="text-gray-600 leading-relaxed">AI agent finds jobs that truly fit your profile, not just keyword matches or random listings.</p>
             </div>
             <div className="text-center">
               <div className="w-16 h-16 bg-black rounded-none flex items-center justify-center mx-auto mb-6">

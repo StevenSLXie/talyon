@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Talyon",
-  description: "Talyon - AI agent that connects the right people, instantly. Get AI-scored and matched job recommendations based on your resume analysis.",
+  description: "Talyon - Stop spraying resumes to 1000 jobs. Find your perfect job match in minutes with AI-powered scoring and matching.",
 };
 
 export default function RootLayout({
