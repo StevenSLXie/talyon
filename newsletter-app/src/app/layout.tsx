@@ -15,8 +15,28 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Talyon",
-  description: "Talyon - Stop spraying resumes to 1000 jobs. Find your perfect job match in minutes with AI-powered scoring and matching.",
+  metadataBase: new URL('https://talyon.asia'),
+  title: {
+    default: 'Talyon',
+    template: '%s | Talyon',
+  },
+  description:
+    'Talyon - Stop spraying resumes to 1000 jobs. Find your perfect job match in minutes with AI-powered scoring and matching.',
+  alternates: {
+    canonical: '/',
+  },
+  openGraph: {
+    title: 'Talyon',
+    description:
+      'Upload once and get AI-scored, high-quality job matches in Singapore.',
+    url: 'https://talyon.asia',
+    siteName: 'Talyon',
+    locale: 'en_SG',
+    type: 'website',
+  },
+  twitter: {
+    card: 'summary_large_image',
+  },
 };
 
 export default function RootLayout({

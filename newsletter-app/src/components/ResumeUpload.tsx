@@ -734,6 +734,11 @@ export default function ResumeUpload({ onUploadSuccess, onUploadError, onLLMAnal
           <div>
             <p className="text-lg font-medium text-black">{selectedFile ? selectedFile.name : 'Drop your resume here'}</p>
             <p className="text-sm text-gray-500">or click to browse files</p>
+            <div className="mt-2">
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
+                ✓ 100% FREE
+              </span>
+            </div>
           </div>
           <input ref={fileInputRef} type="file" accept=".pdf,.doc,.docx" onChange={handleFileInput} className="hidden" />
           <button type="button" onClick={() => fileInputRef.current?.click()} className="bg-white text-black px-6 py-2 border border-black hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">Choose File</button>
@@ -860,6 +865,7 @@ export default function ResumeUpload({ onUploadSuccess, onUploadError, onLLMAnal
                 <ul className="mt-2 space-y-1 text-xs text-gray-600 list-disc list-inside">
                   <li><strong>Talyon will NEVER share your contact information</strong> with employers or recruiters without your explicit consent</li>
                   <li>Talyon's AI agent may use your resume data to score and match job opportunities, then recommend relevant positions that align with your skills and experience</li>
+                  <li><strong className="text-green-600">This service is completely FREE</strong> - no hidden fees, no subscription required</li>
                 </ul>
               </span>
             </label>
@@ -878,13 +884,18 @@ export default function ResumeUpload({ onUploadSuccess, onUploadError, onLLMAnal
                 : 'bg-gray-300 text-gray-500 cursor-not-allowed'
             }`}
           >
-            Upload & Analyze Resume
+            Upload & Analyze Resume (FREE)
           </button>
         </div>
       )}
 
       <div className="mt-6 text-center">
         <p className="text-sm text-gray-500">Supported formats: PDF, DOC, DOCX (max 10MB)</p>
+        <div className="mt-2">
+          <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">
+            🎉 Completely FREE - No hidden costs
+          </span>
+        </div>
         {hasPendingUploads && (
           <div className="mt-4 p-3 bg-yellow-50 border border-yellow-200 rounded">
             <div className="flex items-center text-xs text-yellow-700">
