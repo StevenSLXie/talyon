@@ -274,7 +274,8 @@ export class LLMAnalysisService {
       console.info('[LLMAnalysis] Generating combined profile from resume')
       
       // Create a combined prompt that asks for both formats
-      const combinedPrompt = RESUME_ANALYSIS_PROMPTS.combinedProfile
+      const instruction = 'If a file is attached, read it as the resume source; if no file is available, use any pasted text provided in the prompt. Always return ONLY valid JSON matching the required schema.'
+      const combinedPrompt = instruction + '\n\n' + RESUME_ANALYSIS_PROMPTS.combinedProfile
 
       const response = await this.callOpenAIWithFile(file, combinedPrompt, SYSTEM_PROMPTS.resumeAnalysis)
       const parsed = this.parseJsonResponse(response) as { enhancedProfile: EnhancedCandidateProfile; jsonResume: JsonResume }
@@ -287,35 +288,71 @@ export class LLMAnalysisService {
       }
     } catch (error) {
       console.error('Generate combined profile from file failed:', error)
-      return { enhancedProfile: {}, jsonResume: {} }
+      return { 
+        enhancedProfile: {
+          work_auth: { citizen_or_pr: false, ep_needed: true, work_permit_type: null },
+          seniority_level: 'Not specified',
+          experience_years: 0,
+          skills: [],
+          education: [],
+          certifications: [],
+          industries: [],
+          company_tiers: [],
+          salary_expect: { min: 0, max: 0, currency: 'SGD' },
+          work_prefs: { remote: 'Not specified', job_type: 'Not specified' },
+          intent: { target_industries: [], must_have: [], nice_to_have: [], blacklist_companies: [] },
+          leadership_level: 'IC',
+          management_experience: { has_management: false, direct_reports_count: 0, team_size_range: null, management_years: 0, management_evidence: [] }
+        } as EnhancedCandidateProfile,
+        jsonResume: {} as JsonResume 
+      }
     }
   }
 
-
-  /**
-   * Complete resume analysis (optimized - single LLM call)
-   */
-  async analyzeResume(resumeText: string): Promise<{
-    strengths: string[]
-    weaknesses: string[]
-    skills: string[]
-    companies: string[]
-    experience_years: number
-    salary_range_min: number
-    salary_range_max: number
-    industry_tags: string[]
-    role_tags: string[]
-  }> {
+  // New: Generate enhanced candidate profile from raw text
+  async generateCombinedProfileFromText(resumeText: string): Promise<{ enhancedProfile: EnhancedCandidateProfile; jsonResume: JsonResume }> {
     try {
-      console.info('[LLMAnalysis] analyzeResume start - using comprehensive single call')
-      const result = await this.analyzeResumeComprehensive(resumeText)
-      console.info('[LLMAnalysis] analyzeResume done - single call completed')
-      return result
+      console.info('[LLMAnalysis] Generating combined profile from pasted text')
+      const cleaned = resumeText
+        .replace(/\r/g, '')
+        .replace(/\t/g, ' ')
+        .replace(/[^\S\r\n]+/g, ' ') // collapse spaces
+        .replace(/\n{3,}/g, '\n\n')
+        .trim()
+        .slice(0, 50000)
+      const instruction = 'If a file is attached, read it as the resume source; if no file is available, use the pasted text below. Always return ONLY valid JSON matching the required schema.'
+      const combinedPrompt = instruction + '\n\n' + RESUME_ANALYSIS_PROMPTS.combinedProfile.replace('{RESUME_TEXT}', cleaned)
+      const response = await this.callOpenAI(combinedPrompt, SYSTEM_PROMPTS.resumeAnalysis)
+      const parsed = this.parseJsonResponse<{ enhancedProfile: EnhancedCandidateProfile; jsonResume: JsonResume }>(response)
+      return {
+        enhancedProfile: (parsed.enhancedProfile || {}) as unknown as EnhancedCandidateProfile,
+        jsonResume: (parsed.jsonResume || {}) as JsonResume
+      }
     } catch (error) {
-      console.error('Complete resume analysis failed:', error)
-      throw new Error(`Resume analysis failed: ${error}`)
+      console.error('Generate combined profile from text failed:', error)
+      return { 
+        enhancedProfile: {
+          work_auth: { citizen_or_pr: false, ep_needed: true, work_permit_type: null },
+          seniority_level: 'Not specified',
+          experience_years: 0,
+          skills: [],
+          education: [],
+          certifications: [],
+          industries: [],
+          company_tiers: [],
+          salary_expect: { min: 0, max: 0, currency: 'SGD' },
+          work_prefs: { remote: 'Not specified', job_type: 'Not specified' },
+          intent: { target_industries: [], must_have: [], nice_to_have: [], blacklist_companies: [] },
+          leadership_level: 'IC',
+          management_experience: { has_management: false, direct_reports_count: 0, team_size_range: null, management_years: 0, management_evidence: [] }
+        } as EnhancedCandidateProfile,
+        jsonResume: {} as JsonResume 
+      }
     }
   }
+
+
+  // analyzeResume method removed (unused)
 
   /**
    * Batch analyze multiple jobs for a candidate
@@ -351,7 +388,7 @@ CANDIDATE PROFILE:
 - Blacklist Companies: ${enhancedProfile.intent?.blacklist_companies?.join(', ') || 'None'}
 `
 
-    const jobDetails = jobSummaries.map(job => `
+      const jobDetails = jobSummaries.map(job => `
 === JOB ${job.id} START ===
 job_id: "${job.id}"
 title: "${job.job.title}"
@@ -363,12 +400,12 @@ experience_level: "${job.job.experience_level}"
 job_type: "${job.job.job_type}"
 post_date: "${job.job.post_date}"
 url: "${job.job.url || 'N/A'}"
-job_category: "${job.job.job_category || 'N/A'}"
+job_category: "${(job.job as any).job_category || 'N/A'}"
 leadership_level: "${job.job.leadership_level || 'Not specified'}"
 company_tier: "${job.job.company_tier || 'Not specified'}"
 
 FULL JOB DESCRIPTION:
-${job.job.job_description || job.job.raw_text || 'No description available'}
+${job.job.job_description || (job.job as any).raw_text || 'No description available'}
 
 stage1_score: ${job.stage1_score}/100
 stage1_reasons: ${job.stage1_reasons.join(', ')}

@@ -65,6 +65,8 @@ export default function ResumeUpload({ onUploadSuccess, onUploadError, onLLMAnal
   const [llmAnalysisId, setLlmAnalysisId] = useState<string | null>(null)
   const [isBackgroundAnalysis, setIsBackgroundAnalysis] = useState(false)
   const [hasPendingAnalyses, setHasPendingAnalyses] = useState(false)
+  const [showTextMode, setShowTextMode] = useState(false)
+  const [textResume, setTextResume] = useState('')
   const analysisTickerRef = useRef<AnalysisTickerState>({
     queue: [],
     isActive: false,
@@ -446,6 +448,12 @@ export default function ResumeUpload({ onUploadSuccess, onUploadError, onLLMAnal
   }
 
   const handleFile = (file: File) => {
+    const extension = file.name.toLowerCase().split('.').pop()
+    if (extension !== 'pdf') {
+      onUploadError?.('PDF only. If you don\'t have a PDF, click \"paste text resume\" below.')
+      setShowTextMode(true)
+      return
+    }
     const validation = validateResumeFile(file)
     if (!validation.valid) {
       onUploadError?.(validation.error || 'Invalid file')
@@ -702,6 +710,49 @@ export default function ResumeUpload({ onUploadSuccess, onUploadError, onLLMAnal
     }
   }
 
+  const handleTextSubmit = async () => {
+    if (!textResume || textResume.trim().length < 50) {
+      onUploadError?.('Please paste at least 50 characters of resume text')
+      return
+    }
+
+    try {
+      setIsUploading(true)
+      setUploadStage('Analyzing pasted text with AI...')
+      resetAnalysis()
+      enqueueMessages([
+        'Processing your pasted resume text…',
+        'Extracting experience and skills…',
+        'Generating enhanced profile…'
+      ])
+
+      const response = await fetch('/api/resume/upload-text', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ resumeText: textResume, salaryMin, salaryMax })
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || 'Text upload failed')
+      }
+
+      const resumeData: ResumeUploadResponse = await response.json()
+      enqueueMessages(buildProfileMessages(resumeData.enhancedProfile, resumeData.jsonResume), { reset: true })
+      onUploadSuccess?.(resumeData)
+      showFinalMessage(buildCompletionMessage(resumeData.enhancedProfile))
+
+      setIsUploading(false)
+      setUploadStage('')
+    } catch (error) {
+      console.error('Text upload error:', error)
+      onUploadError?.(error instanceof Error ? error.message : 'Text upload failed')
+      setIsUploading(false)
+      setUploadStage('')
+      resetAnalysis()
+    }
+  }
+
   // Expose triggerLLMAnalysis function to parent component
   useEffect(() => {
     if (onLLMAnalysisTrigger) {
@@ -732,18 +783,50 @@ export default function ResumeUpload({ onUploadSuccess, onUploadError, onLLMAnal
             </svg>
           </div>
           <div>
-            <p className="text-lg font-medium text-black">{selectedFile ? selectedFile.name : 'Drop your resume here'}</p>
-            <p className="text-sm text-gray-500">or click to browse files</p>
+            <p className="text-lg font-medium text-black">{selectedFile ? selectedFile.name : 'Drop your PDF resume here'}</p>
+            <p className="text-sm text-gray-500">PDF only. Or click to browse files</p>
             <div className="mt-2">
               <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold bg-green-100 text-green-800">
                 ✓ 100% FREE
               </span>
             </div>
+            <div className="mt-2">
+              <button
+                type="button"
+                onClick={() => setShowTextMode((s) => !s)}
+                className="text-sm underline text-black"
+              >
+                Not a PDF? Click here to paste your text resume
+              </button>
+            </div>
           </div>
-          <input ref={fileInputRef} type="file" accept=".pdf,.doc,.docx" onChange={handleFileInput} className="hidden" />
+          <input ref={fileInputRef} type="file" accept=".pdf" onChange={handleFileInput} className="hidden" />
           <button type="button" onClick={() => fileInputRef.current?.click()} className="bg-white text-black px-6 py-2 border border-black hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">Choose File</button>
         </div>
       </div>
+
+      {showTextMode && (
+        <div className="mt-4 p-4 border border-gray-200 bg-gray-50">
+          <label className="block text-sm font-medium text-black mb-2">Paste your text resume</label>
+          <textarea
+            value={textResume}
+            onChange={(e) => setTextResume(e.target.value)}
+            rows={8}
+            className="w-full p-3 border border-gray-300 text-black focus:outline-none focus:ring-2 focus:ring-gray-500 focus:border-transparent"
+            placeholder="Paste your resume text here (no PDF? paste raw text)"
+          />
+          <div className="mt-3 flex items-center justify-between">
+            <p className="text-xs text-gray-600">Minimum 50 characters. We will analyze this as your resume.</p>
+            <button
+              type="button"
+              onClick={handleTextSubmit}
+              className="bg-black text-white px-6 py-2 hover:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
+            >
+              Analyze Pasted Resume (FREE)
+            </button>
+          </div>
+        </div>
+      )}
 
       {selectedFile && (
         <div className="mt-4 p-4 bg-gray-50 border border-gray-200">
@@ -890,7 +973,7 @@ export default function ResumeUpload({ onUploadSuccess, onUploadError, onLLMAnal
       )}
 
       <div className="mt-6 text-center">
-        <p className="text-sm text-gray-500">Supported formats: PDF, DOC, DOCX (max 10MB)</p>
+        <p className="text-sm text-gray-500">Supported formats: PDF only (max 10MB). Not a PDF? Use the paste option above.</p>
         <div className="mt-2">
           <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-800">
             🎉 Completely FREE - No hidden costs
