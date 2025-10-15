@@ -28,21 +28,28 @@ export async function GET(_req: NextRequest) {
       return NextResponse.json({ error: 'Failed to fetch new jobs' }, { status: 500 })
     }
 
-    // Companies (distinct). PostgREST distinct can be emulated via `select('company', { count: 'exact', head: true })`
-    // Note: This counts rows, not strictly distinct in some setups; adjust to RPC if exact distinct is needed.
-    const { count: totalCompaniesCount, error: companiesErr } = await db
+    // Companies (distinct): fetch company column and dedupe in memory (MVP-safe)
+    const { data: companyRows, error: companiesErr } = await db
       .from('jobs')
-      .select('company', { count: 'exact', head: true })
+      .select('company')
       .not('company', 'is', null)
+      .neq('company', '')
+      .limit(10000)
 
     if (companiesErr) {
-      console.error('[Stats] companies count error:', companiesErr)
-      return NextResponse.json({ error: 'Failed to fetch companies count' }, { status: 500 })
+      console.error('[Stats] companies fetch error:', companiesErr)
+      return NextResponse.json({ error: 'Failed to fetch companies' }, { status: 500 })
     }
+
+    const totalCompaniesCount = new Set(
+      (companyRows || [])
+        .map((r: any) => (typeof r.company === 'string' ? r.company.trim().toLowerCase() : ''))
+        .filter(Boolean)
+    ).size
 
     return NextResponse.json({
       totalJobs: totalJobs || 0,
-      totalCompanies: totalCompaniesCount || 0,
+      totalCompanies: totalCompaniesCount,
       newJobsToday: newJobsToday || 0,
     })
   } catch (error) {
