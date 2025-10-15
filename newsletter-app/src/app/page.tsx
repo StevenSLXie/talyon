@@ -26,13 +26,13 @@ export default function Home() {
   const loadJobStats = async () => {
     setStatsLoading(true)
     try {
-      const response = await fetch('/api/jobs')
+      const response = await fetch('/api/jobs/stats')
       if (response.ok) {
         const data = await response.json()
         setJobStats({
-          totalJobs: data.total || 1351,
-          totalCompanies: Math.floor((data.total || 1351) / 3), // Estimate
-          newJobsToday: Math.floor((data.total || 1351) * 0.02) // Estimate 2% new today
+          totalJobs: data.totalJobs ?? 1351,
+          totalCompanies: data.totalCompanies ?? 500,
+          newJobsToday: data.newJobsToday ?? 23
         })
       }
     } catch (error) {
@@ -171,7 +171,7 @@ export default function Home() {
 
         {/* Resume Review - appears after upload (HIDDEN - not mature yet) */}
         {false && user && refreshKey > 0 && (
-          <ResumeReview userId={user.id} triggerReview={refreshKey} />
+          <ResumeReview userId={user?.id as string} triggerReview={refreshKey} />
         )}
 
         {/* Job Recommendations for logged-in users */}
