@@ -42,8 +42,27 @@ export async function POST(request: NextRequest) {
     const usersId = existingUser?.id as string
     if (!usersId) return NextResponse.json({ error: 'User profile not initialized.' }, { status: 404 })
 
-    // Create a UUID resumeId for text uploads (matches DB uuid type)
-    const resumeId = randomUUID()
+    // Create a DB row in resumes to satisfy FK constraints
+    const supa = supabaseAdmin()
+    const syntheticPath = `text/${Date.now()}-${Math.random().toString(36).slice(2)}.txt`
+    const { data: resumeRow, error: resumeErr } = await supa
+      .from('resumes')
+      .insert({
+        user_id: usersId,
+        file_path: syntheticPath,
+        filename: 'pasted-text.txt',
+        file_type: 'text/plain',
+        file_size: resumeText.length,
+        created_at: new Date().toISOString()
+      })
+      .select('id')
+      .single()
+
+    if (resumeErr || !resumeRow?.id) {
+      return NextResponse.json({ error: 'Failed to initialize resume record' }, { status: 500 })
+    }
+
+    const resumeId = resumeRow.id as string
 
     const { enhancedProfile, jsonResume } = await llmAnalysisService.generateCombinedProfileFromText(resumeText)
 
