@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { randomUUID } from 'crypto'
 import { llmAnalysisService } from '@/lib/llm-analysis'
 import { supabaseAdmin } from '@/lib/supabase'
 import { EnhancedCandidateProfileService } from '@/lib/enhanced-candidate-profile'
@@ -41,8 +42,8 @@ export async function POST(request: NextRequest) {
     const usersId = existingUser?.id as string
     if (!usersId) return NextResponse.json({ error: 'User profile not initialized.' }, { status: 404 })
 
-    // Create a synthetic resumeId for text uploads
-    const resumeId = `text_${Date.now()}`
+    // Create a UUID resumeId for text uploads (matches DB uuid type)
+    const resumeId = randomUUID()
 
     const { enhancedProfile, jsonResume } = await llmAnalysisService.generateCombinedProfileFromText(resumeText)
 
