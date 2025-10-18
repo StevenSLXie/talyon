@@ -10,6 +10,20 @@ interface ArticlePageProps {
 
 const articlesDirectory = path.join(process.cwd(), 'public/articles')
 
+export async function generateStaticParams() {
+  try {
+    const files = fs.readdirSync(articlesDirectory)
+    return files
+      .filter(file => file.endsWith('.md'))
+      .map(file => ({
+        slug: file.replace('.md', ''),
+      }))
+  } catch (error) {
+    console.error('Error generating static params:', error)
+    return []
+  }
+}
+
 export async function generateMetadata({ params }: ArticlePageProps): Promise<Metadata> {
   const slug = params.slug
   
