@@ -11,8 +11,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   // Article pages
   const articlePages: MetadataRoute.Sitemap = [
-    { url: `${base}/articles/singapore-tech-salary-guide-2025`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.7 },
-    { url: `${base}/articles/tech-resume-guide-singapore`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.7 },
+    { url: `${base}/articles/local-banks`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.7 },
   ]
 
   // Singapore programmatic routes (role collections)

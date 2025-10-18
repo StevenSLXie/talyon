@@ -1,3 +1,10 @@
+---
+title: "A Complete Comparison Between the 3 Local Banks"
+date: "2025-10-15"
+description: "Comprehensive analysis of DBS, UOB, and OCBC covering salaries, culture, career progression, and work-life balance based on real employee insights."
+excerpt: "Detailed comparison of Singapore's three major local banks - DBS, UOB, and OCBC - covering salary competitiveness, role variety, career progression, culture, work-life balance, and leadership opportunities."
+---
+
 # A complete comparison between the 3 local banks
 
 ## Scoreboard
