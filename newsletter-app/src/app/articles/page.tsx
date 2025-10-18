@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import fs from 'fs'
 import path from 'path'
 import matter from 'gray-matter'
+import Navigation from '@/components/Navigation'
 
 export const metadata: Metadata = {
   title: 'Tech Career Insights & Analysis | Talyon',
@@ -37,8 +38,21 @@ export default function ArticlesPage() {
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
 
   return (
-    <main className="container mx-auto px-4 py-12">
-      <div className="max-w-4xl mx-auto">
+    <div className="min-h-screen bg-white">
+      {/* Header */}
+      <header className="bg-white border-b border-gray-200">
+        <div className="container mx-auto px-4 py-6 flex justify-between items-center">
+          <div className="flex items-center space-x-8">
+            <div className="flex items-center space-x-2">
+              <h1 className="text-2xl font-bold text-black">Talyon</h1>
+            </div>
+            <Navigation />
+          </div>
+        </div>
+      </header>
+
+      <main className="container mx-auto px-4 py-12">
+        <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl md:text-4xl font-bold text-black mb-6">Tech Career Insights</h1>
         <p className="text-lg text-gray-600 mb-12">
           Expert insights on Singapore tech careers, salary guides, resume tips, and industry trends.
@@ -76,7 +90,8 @@ export default function ArticlesPage() {
             Upload Resume for Personalized Insights
           </a>
         </div>
-      </div>
-    </main>
+        </div>
+      </main>
+    </div>
   )
 }

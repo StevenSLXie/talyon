@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation'
 import fs from 'fs'
 import path from 'path'
 import matter from 'gray-matter'
+import Navigation from '@/components/Navigation'
 
 interface ArticlePageProps {
   params: { slug: string }
@@ -136,13 +137,26 @@ export default function ArticlePage({ params }: ArticlePageProps) {
     }
 
     return (
-      <main className="container mx-auto px-4 py-12">
-        <div className="max-w-4xl mx-auto">
-          <nav className="mb-8">
-            <a href="/articles" className="text-gray-600 hover:text-black">
-              ← Back to Insights
-            </a>
-          </nav>
+      <div className="min-h-screen bg-white">
+        {/* Header */}
+        <header className="bg-white border-b border-gray-200">
+          <div className="container mx-auto px-4 py-6 flex justify-between items-center">
+            <div className="flex items-center space-x-8">
+              <div className="flex items-center space-x-2">
+                <h1 className="text-2xl font-bold text-black">Talyon</h1>
+              </div>
+              <Navigation />
+            </div>
+          </div>
+        </header>
+
+        <main className="container mx-auto px-4 py-12">
+          <div className="max-w-4xl mx-auto">
+            <nav className="mb-8">
+              <a href="/articles" className="text-gray-600 hover:text-black">
+                ← Back to Insights
+              </a>
+            </nav>
 
           <article className="prose prose-lg max-w-none">
             <header className="mb-8">
@@ -173,7 +187,8 @@ export default function ArticlePage({ params }: ArticlePageProps) {
             </a>
           </div>
         </div>
-      </main>
+        </main>
+      </div>
     )
   } catch (error) {
     notFound()
