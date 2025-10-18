@@ -6,6 +6,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticPages: MetadataRoute.Sitemap = [
     { url: `${base}/`, lastModified: new Date(), changeFrequency: 'daily', priority: 1 },
     { url: `${base}/insights`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.7 },
+    { url: `${base}/articles`, lastModified: new Date(), changeFrequency: 'weekly', priority: 0.8 },
+  ]
+
+  // Article pages
+  const articlePages: MetadataRoute.Sitemap = [
+    { url: `${base}/articles/singapore-tech-salary-guide-2025`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.7 },
+    { url: `${base}/articles/tech-resume-guide-singapore`, lastModified: new Date(), changeFrequency: 'monthly', priority: 0.7 },
   ]
 
   // Singapore programmatic routes (role collections)
@@ -25,7 +32,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.8,
   }))
 
-  return [...staticPages, ...sgRolePages]
+  return [...staticPages, ...articlePages, ...sgRolePages]
 }
 
 

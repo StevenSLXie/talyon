@@ -5,6 +5,7 @@ import JobRecommendations from '@/components/JobRecommendations'
 import ResumeReview from '@/components/ResumeReview'
 import LoginForm from '@/components/LoginForm'
 import UserMenu from '@/components/UserMenu'
+import Navigation from '@/components/Navigation'
 import { useAuth } from '@/components/AuthProvider'
 import { useState, useEffect } from 'react'
 
@@ -58,8 +59,11 @@ export default function Home() {
       {/* Header */}
       <header className="bg-white border-b border-gray-200">
         <div className="container mx-auto px-4 py-6 flex justify-between items-center">
-          <div className="flex items-center space-x-2">
-            <h1 className="text-2xl font-bold text-black">Talyon</h1>
+          <div className="flex items-center space-x-8">
+            <div className="flex items-center space-x-2">
+              <h1 className="text-2xl font-bold text-black">Talyon</h1>
+            </div>
+            <Navigation />
           </div>
           
           <div className="flex items-center space-x-4">
