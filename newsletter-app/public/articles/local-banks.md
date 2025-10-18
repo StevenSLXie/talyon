@@ -5,19 +5,18 @@ description: "Comprehensive analysis of DBS, UOB, and OCBC covering salaries, cu
 excerpt: "Detailed comparison of Singapore's three major local banks - DBS, UOB, and OCBC - covering salary competitiveness, role variety, career progression, culture, work-life balance, and leadership opportunities."
 ---
 
-# A complete comparison between the 3 local banks
+Glassdoor? ❌ Overrated. Most other review platforms? Same story
 
-## Scoreboard
+If you really want to understand a local company — or a big firm with strong local presence — you need to dig into those old-school Web1.0 forums. Hidden in those threads are the real, unfiltered experiences that employees share.
 
-| Dimension                   | DBS | UOB | OCBC |
-|-----------------------------|-----|-----|------|
-| Salary Competitiveness       | 8️⃣  | 7️⃣  | 7️⃣   |
-| Role Variety & Clarity      | 7️⃣  | 8️⃣  | 6️⃣   |
-| Career Progression           | 7️⃣  | 8️⃣  | 6️⃣   |
-| Culture & Work Environment   | 6️⃣  | 8️⃣  | 7️⃣   |
-| Work–Life Balance            | 5️⃣  | 6️⃣  | 7️⃣   |
-| Meaningfulness of Work       | 6️⃣  | 6️⃣  | 6️⃣   |
-| Leadership                   | 7️⃣  | 8️⃣  | 7️⃣   |
+Now, with AI, we can extract and summarize those voices. Even though forums feel like relics, the posts here are fresh — all from the last 2 years. And surprisingly, these communities are still active after all this time.
+
+Credits: salary.sg/forum 
+
+Disclaimer: Opinions belong to the original posters. They are not necessarily true. While every effort was made to improve accuracy, AI can hallucinate occasionally.
+
+Here comes the review 👇
+
 
 ### Salary by Title and Function (Front/Middle/Back Office)
 - Analyst Salary: "around 10-15k range" ([source](https://forums.salary.sg/income-jobs/10418-factual-local-bank-salaries-dbs-united-overseas-bank-oversea-chinese-banking-corporation-commoner-climbing-up-ranks-100.html))
