@@ -5,7 +5,18 @@ description: "Comprehensive analysis of DBS, UOB, and OCBC covering salaries, cu
 excerpt: "Detailed comparison of Singapore's three major local banks - DBS, UOB, and OCBC - covering salary competitiveness, role variety, career progression, culture, work-life balance, and leadership opportunities."
 ---
 
-# A complete comparison between the 3 local banks
+Glassdoor? ❌ Overrated. Most other review platforms? Same story
+
+If you really want to understand a local company — or a big firm with strong local presence — you need to dig into those old-school Web1.0 forums. Hidden in those threads are the real, unfiltered experiences that employees share.
+
+Now, with AI, we can extract and summarize those voices. Even though forums feel like relics, the posts here are fresh — all from the last 2 years. And surprisingly, these communities are still active after all this time.
+
+Credits: salary.sg/forum 
+
+Disclaimer: Opinions belong to the original posters. They are not necessarily true. While every effort was made to improve accuracy, AI can hallucinate occasionally.
+
+Here comes the review 👇
+
 
 ## Scoreboard
 

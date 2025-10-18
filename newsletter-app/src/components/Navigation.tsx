@@ -8,7 +8,7 @@ export default function Navigation() {
 
   const navItems = [
     { href: '/', label: 'Find Jobs', active: pathname === '/' },
-    { href: '/articles', label: 'Articles', active: pathname.startsWith('/articles') },
+    { href: '/articles', label: 'Insights', active: pathname.startsWith('/articles') },
   ]
 
   return (

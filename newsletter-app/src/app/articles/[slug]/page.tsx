@@ -3,6 +3,8 @@ import { notFound } from 'next/navigation'
 import fs from 'fs'
 import path from 'path'
 import matter from 'gray-matter'
+import { remark } from 'remark'
+import html from 'remark-html'
 
 interface ArticlePageProps {
   params: { slug: string }
@@ -74,10 +76,16 @@ export default function ArticlePage({ params }: ArticlePageProps) {
     const fileContents = fs.readFileSync(filePath, 'utf8')
     const { data, content } = matter(fileContents)
     
+    // Process markdown content
+    const processedContent = await remark()
+      .use(html)
+      .process(content)
+    const contentHtml = processedContent.toString()
+    
     const article = {
       title: data.title || slug.replace(/-/g, ' '),
       date: data.date || new Date().toISOString().split('T')[0],
-      content: content
+      content: contentHtml
     }
 
     return (
@@ -85,7 +93,7 @@ export default function ArticlePage({ params }: ArticlePageProps) {
         <div className="max-w-4xl mx-auto">
           <nav className="mb-8">
             <a href="/articles" className="text-gray-600 hover:text-black">
-              ← Back to Articles
+              ← Back to Insights
             </a>
           </nav>
 
@@ -100,18 +108,8 @@ export default function ArticlePage({ params }: ArticlePageProps) {
             </header>
 
             <div 
-              className="prose prose-lg max-w-none"
-              dangerouslySetInnerHTML={{ 
-                __html: article.content
-                  .replace(/^# (.*$)/gim, '<h1>$1</h1>')
-                  .replace(/^## (.*$)/gim, '<h2>$1</h2>')
-                  .replace(/^### (.*$)/gim, '<h3>$1</h3>')
-                  .replace(/^\- (.*$)/gim, '<li>$1</li>')
-                  .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                  .replace(/\*(.*?)\*/g, '<em>$1</em>')
-                  .replace(/```(.*?)```/gs, '<pre><code>$1</code></pre>')
-                  .replace(/\n/g, '<br>')
-              }}
+              className="prose prose-lg max-w-none prose-headings:text-black prose-p:text-gray-700 prose-strong:text-black prose-table:text-sm"
+              dangerouslySetInnerHTML={{ __html: article.content }}
             />
           </article>
 

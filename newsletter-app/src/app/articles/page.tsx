@@ -4,11 +4,11 @@ import path from 'path'
 import matter from 'gray-matter'
 
 export const metadata: Metadata = {
-  title: 'Tech Career Articles & Insights | Talyon',
+  title: 'Tech Career Insights & Analysis | Talyon',
   description: 'Expert insights on Singapore tech careers, salary guides, resume tips, and industry trends. Stay ahead in your tech career journey.',
   alternates: { canonical: 'https://talyon.asia/articles' },
   openGraph: {
-    title: 'Tech Career Articles & Insights | Talyon',
+    title: 'Tech Career Insights & Analysis | Talyon',
     description: 'Expert insights on Singapore tech careers, salary guides, and industry trends.',
     url: 'https://talyon.asia/articles',
   },
@@ -39,7 +39,7 @@ export default function ArticlesPage() {
   return (
     <main className="container mx-auto px-4 py-12">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl md:text-4xl font-bold text-black mb-6">Tech Career Articles</h1>
+        <h1 className="text-3xl md:text-4xl font-bold text-black mb-6">Tech Career Insights</h1>
         <p className="text-lg text-gray-600 mb-12">
           Expert insights on Singapore tech careers, salary guides, resume tips, and industry trends.
         </p>
